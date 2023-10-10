@@ -6,13 +6,12 @@
 int main()
 {
     //Window
-    const int width = 1280, height = 720;
     sf::RenderWindow window(sf::VideoMode(width, height), "Program", sf::Style::Close, sf::ContextSettings(24, 8, 8));
 
     sf::Clock clock;
 
 
-    Map map(50, height - 600 - 50, 10, 10, window);
+    Map map(50, height - 240 - 50, 10, 10, window);
     Player player(2, 2, map, window);
 
     while (window.isOpen())
@@ -29,14 +28,17 @@ int main()
         
         cout << floor(1 / dt) << "\n";
 
+        handleKeys(player, dt);
+
 
         window.clear();
         
+        player.shootRays();
         
         map.drawMap();
         player.draw();
-        handleKeys(player, dt);
         
+        player.drawCrosshair();
 
         window.display();
     }

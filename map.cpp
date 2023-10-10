@@ -21,7 +21,6 @@ Map::Map(int x, int y, int w, int h, sf::RenderWindow& window) : position(x, y),
 	width = w;
 	height = h;
 
-	cellSize = 60;
 }
 
 int Map::getCell(int x, int y)
@@ -31,10 +30,10 @@ int Map::getCell(int x, int y)
 
 void Map::drawMap()
 {
-	sf::RectangleShape cell(v2(cellSize, cellSize));
+	sf::RectangleShape cell(v2f(cellSize, cellSize));
 
 	cell.setOutlineColor(sf::Color(70, 70, 80));
-	cell.setOutlineThickness(1);
+	cell.setOutlineThickness(-1);
 
 	sf::Color colors[]{
 		sf::Color::Black,
@@ -51,4 +50,16 @@ void Map::drawMap()
 			window.draw(cell);
 		}
 	}
+}
+
+void Map::drawPoint(float x, float y)
+{
+	sf::CircleShape dot(5);
+
+	dot.setFillColor(sf::Color::Red);
+
+	dot.setPosition(position.x + cellSize * x - 2.5f, position.y + cellSize * y - 2.5f);
+	
+	window.draw(dot);
+		
 }

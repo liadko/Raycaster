@@ -2,6 +2,9 @@
 #include "player.hpp"
 #include "graphics.hpp"
 
+#include <cstdlib>
+#include <time.h>
+
 Player::Player(int x, int y, Map& map, sf::RenderWindow& window) : position(x, y), map(map), window(window)
 {
 
@@ -12,15 +15,16 @@ Player::Player(int x, int y, Map& map, sf::RenderWindow& window) : position(x, y
 	}
 
 	sprite.setTexture(texture);
-	//sprite.setScale(0.07, 0.07); // scale 0.07 works for cellSize=24
-	sprite.setScale(0.175, 0.175);
-	sprite.setPosition(v2(map.position) + position * (float)map.cellSize);
+	sprite.setScale(0.07, 0.07); // scale 0.07 works for cellSize=24
+	//sprite.setScale(0.175, 0.175); // scale 0.175 works for cellSize=60
+	sprite.setPosition(v2f(map.position) + position * (float)map.cellSize);
 
 	// set anchor point
 	sf::Vector2f center(sprite.getLocalBounds().width / 2.0f, sprite.getLocalBounds().height / 2.0f);
 	sprite.setOrigin(center);
-
-	rotation = 0;
+	
+	srand(time(0));
+	rotation = 0.1;
 
 }
 
@@ -35,12 +39,15 @@ void Player::rotate(float alpha, float dt)
 	sprite.setRotation(rotation / PI * 180);
 }
 
-
-void Player::move(float rotation_offset, float dt)
+void Player::move(float angle_offset, float dt)
 {
-	v2 potential_position;
-	potential_position.x = position.x + speed * dt * cos(rotation - rotation_offset);
-	potential_position.y = position.y + speed * dt * sin(rotation - rotation_offset);
+	float current_speed = speed;
+	if (running)
+		current_speed *= run_multiplier;
+
+	v2f potential_position;
+	potential_position.x = position.x + current_speed * run_multiplier * dt * cos(rotation - angle_offset);
+	potential_position.y = position.y + current_speed * run_multiplier * dt * sin(rotation - angle_offset);
 
 	v2i ones(1, 1);
 	v2i predicted_cell = v2i(floor(potential_position.x), floor(potential_position.y));
@@ -61,13 +68,13 @@ void Player::move(float rotation_offset, float dt)
 			// is wall
 			if (map.getCell(cell_x, cell_y) == 1)
 			{
-				v2 nearest_point;
+				v2f nearest_point;
 				nearest_point.x = std::max(float(cell_x), std::min(potential_position.x, float(cell_x + 1)));
 				nearest_point.y = std::max(float(cell_y), std::min(potential_position.y, float(cell_y + 1)));
 
-				v2 ray_to_nearest = nearest_point - potential_position;
+				v2f ray_to_nearest = nearest_point - potential_position;
 
-				float overlap = radius - mag(ray_to_nearest);
+				float overlap = body_radius - mag(ray_to_nearest);
 
 				if (std::isnan(overlap)) overlap = 0;
 
@@ -81,5 +88,128 @@ void Player::move(float rotation_offset, float dt)
 	}
 
 	position = potential_position;
-	sprite.setPosition(v2(map.position) + position * (float)map.cellSize);
+	sprite.setPosition(v2f(map.position) + position * (float)map.cellSize);
+}
+
+// returns distance in that direction
+Player::HitInfo Player::shootRay(float angle_offset)
+{
+	v2f ray_dir(cos(rotation + angle_offset), sin(rotation + angle_offset));
+
+	v2f ray_unit_step_size;
+	ray_unit_step_size.x = sqrt(1 + (ray_dir.y/ ray_dir.x) * (ray_dir.y / ray_dir.x));
+	ray_unit_step_size.y = sqrt(1 + (ray_dir.x/ ray_dir.y) * (ray_dir.x / ray_dir.y));
+
+
+	v2i current_cell(floor(position.x), floor(position.y));
+
+	v2f ray_length;
+	v2i cell_step;
+
+	if (ray_dir.x < 0)
+	{
+		cell_step.x = -1;
+		ray_length.x = (position.x - (float)current_cell.x) * ray_unit_step_size.x;
+	}
+	else
+	{
+		cell_step.x = 1;
+		ray_length.x = (float(current_cell.x + 1) - position.x) * ray_unit_step_size.x;
+	}
+
+	if (ray_dir.y < 0)
+	{
+		cell_step.y = -1;
+		ray_length.y = (position.y - (float)current_cell.y) * ray_unit_step_size.y;
+	}
+	else
+	{
+		cell_step.y = 1;
+		ray_length.y = (float(current_cell.y + 1) - position.y) * ray_unit_step_size.y;
+	}
+
+	float distance = 0;
+	bool tile_found = false;
+	bool latest_hit_on_x;
+	while (!tile_found)
+	{
+		if (ray_length.x < ray_length.y)
+		{
+			current_cell.x += cell_step.x;
+			distance = ray_length.x;
+			latest_hit_on_x = true;
+			ray_length.x += ray_unit_step_size.x;
+		}
+		else
+		{
+			current_cell.y += cell_step.y;
+			distance = ray_length.y;
+			latest_hit_on_x = false;
+			ray_length.y += ray_unit_step_size.y;
+
+		}
+
+		if (current_cell.x < 0 || current_cell.y < 0 || current_cell.x >= map.width || current_cell.y >= map.height)
+			return { -1 };
+
+		//hit wall
+		if (map.getCell(current_cell.x, current_cell.y) == 1)
+		{
+			return { distance, latest_hit_on_x };
+		}
+
+	}
+
+
+}
+
+
+void Player::shootRays()
+{
+	sf::RectangleShape rect(v2f(1, 720));
+	rect.setFillColor(sf::Color::White);
+
+	float offset = -FOV / 2;
+	float step = FOV / 1280;
+
+
+	for (int x = 0; x < 1280; x++)
+	{
+		HitInfo hit_info = shootRay(offset);
+
+		float dist = hit_info.distance * cos(offset);
+		float len = 1000 / dist;
+
+		if(!hit_info.on_x_axis)
+			rect.setFillColor(sf::Color(140, 140, 150));
+		else
+			rect.setFillColor(sf::Color(240, 240, 245));
+
+		rect.setPosition(x, 360 - len / 2);
+		rect.setSize(v2f(1, len));
+		window.draw(rect);
+
+		offset += step;
+	}
+}
+
+void Player::drawCrosshair()
+{
+	sf::RectangleShape rect(v2f(4, 12));
+	rect.setFillColor(sf::Color::Cyan);
+	
+	rect.setPosition(v2f(width/2 - 2, height/2 - 16));
+	window.draw(rect);
+
+	rect.setPosition(v2f(width / 2 - 2, height / 2 + 4));
+	window.draw(rect);
+
+
+	rect.setSize(v2f(12, 4));
+	rect.setPosition(v2f(width / 2 - 16, height / 2 - 2));
+	window.draw(rect);
+
+	rect.setPosition(v2f(width / 2 + 4, height / 2 - 2));
+	window.draw(rect);
+
 }

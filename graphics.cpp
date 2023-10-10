@@ -18,7 +18,10 @@ void handleKeys(Player& player, float dt)
 		player.rotate(-1, dt);
 	if (KEY_PRESSED(Right))
 		player.rotate(1, dt);
-
+	if (KEY_PRESSED(LShift))
+		player.running = true;
+	else
+		player.running = false;
 }
 
 v2i min(v2i first, v2i second)
@@ -31,12 +34,12 @@ v2i max(v2i first, v2i second)
 	return v2i(std::max(first.x, second.x), std::max(first.y, second.y));
 }
 
-float mag(v2 vec)
+float mag(v2f vec)
 {
 	return sqrtf(vec.x * vec.x + vec.y * vec.y);
 }
 
-v2 norm(v2 vec)
+v2f norm(v2f vec)
 {
 	return vec / mag(vec);
 }

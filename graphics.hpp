@@ -8,6 +8,6 @@ v2i min(v2i first, v2i second);
 
 v2i max(v2i first, v2i second);
 
-float mag(v2 vec);
+float mag(v2f vec);
 
-v2 norm(v2 vec);
+v2f norm(v2f vec);
