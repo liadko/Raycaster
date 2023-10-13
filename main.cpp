@@ -11,8 +11,8 @@ int main()
     sf::Clock clock;
 
 
-    Map map(50, HEIGHT - 240 - 50, 10, 10, window);
-    Player player(2, 2, map, window);
+    Map map(20, window);
+    Player player(40, 21, map, window);
 
     while (window.isOpen())
     {
@@ -26,7 +26,7 @@ int main()
                 cout << sf::Mouse::getPosition(window).x << " " << sf::Mouse::getPosition(window).y << "\n";
 
         
-        cout << floor(1 / dt) << "\n";
+//        cout << floor(1 / dt) << "\n";
 
         handleKeys(player, dt);
 

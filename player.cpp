@@ -15,7 +15,7 @@ Player::Player(int x, int y, Map& map, sf::RenderWindow& window) : position(x, y
 	}
 
 	sprite.setTexture(texture);
-	sprite.setScale(0.07, 0.07); // scale 0.07 works for cellSize=24
+	sprite.setScale(0.025, 0.025); // scale 0.07 works for cellSize=24
 	//sprite.setScale(0.175, 0.175); // scale 0.175 works for cellSize=60
 	sprite.setPosition(v2f(map.position) + position * (float)map.cell_size);
 

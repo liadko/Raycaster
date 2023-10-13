@@ -28,7 +28,7 @@ public:
 	float speed = 3;
 
 	bool running = false;
-	float run_multiplier = 1.5;
+	float run_multiplier = 1.75f;
 
 	float FOV = 1.22173;
 

@@ -2,26 +2,32 @@
 #include "map.hpp"
 
 
-Map::Map(int x, int y, int w, int h, sf::RenderWindow& window) : position(x, y), window(window)
+Map::Map(int dist_from_side, sf::RenderWindow& window) : window(window)
 {
-	data = new int[100]
+	sf::Image map_texture;
+	map_texture.loadFromFile("map.png");
+
+	width = map_texture.getSize().x;
+	height = map_texture.getSize().y;
+
+	
+
+	data = new int[width * height];
+	
+	for(int i = 0; i < width; i++)
+		for (int j = 0; j < height; j++)
 		{
-			1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-			1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-			1, 0, 0, 0, 1, 1, 1, 0, 0, 1,
-			1, 0, 0, 0, 0, 1, 1, 0, 0, 1,
-			1, 0, 0, 0, 0, 0, 1, 0, 0, 1,
-			1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-			1, 0, 0, 0, 0, 0, 1, 0, 0, 1,
-			1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-			1, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-			1, 1, 1, 1, 1, 1, 1, 1, 1, 1
-		};
+			//cout << map_texture.getPixel(x, y).r << '\n';
+			if (map_texture.getPixel(i, j).r == 255)
+				data[i + j * width] = 1;
+			else
+				data[i + j * width] = 0;
 
-	width = w;
-	height = h;
+		}
 
 
+	position.x = dist_from_side;
+	position.y = HEIGHT - dist_from_side - cell_size * height;
 
 }
 
@@ -34,13 +40,14 @@ void Map::drawMap()
 {
 	sf::RectangleShape cell(v2f(cell_size, cell_size));
 
-	cell.setOutlineColor(sf::Color(70, 70, 80));
-	cell.setOutlineThickness(1);
+	// cell.setOutlineColor(sf::Color(70, 70, 80));
+	// cell.setOutlineThickness(1);
 
 	sf::Color colors[]{
 		sf::Color::Black,
 		sf::Color::White
 	};
+
 
 	for (int i = 0; i < width; i++)
 	{
