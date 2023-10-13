@@ -5,19 +5,27 @@
 #define KEY_PRESSED(key) sf::Keyboard::isKeyPressed(sf::Keyboard::Key::key)
 void handleKeys(Player& player, float dt)
 {
-
+	// move
+	v2f movement(0, 0);
 	if (KEY_PRESSED(W))
-		player.move(0, dt);
+		movement.y += +1;
 	if (KEY_PRESSED(A))
-		player.move(HALF_PI, dt);
+		movement.x += 1;
 	if (KEY_PRESSED(S))
-		player.move(PI, dt);
+		movement.y += -1;
 	if (KEY_PRESSED(D))
-		player.move(3 * HALF_PI, dt);
+		movement.x += -1;
+	
+	if(!(movement.x==0 && movement.y == 0))
+		player.move(atan2(movement.x, movement.y), dt);
+
+	// rotate
 	if (KEY_PRESSED(Left))
 		player.rotate(-1, dt);
 	if (KEY_PRESSED(Right))
 		player.rotate(1, dt);
+
+	// run
 	if (KEY_PRESSED(LShift))
 		player.running = true;
 	else
