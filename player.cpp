@@ -17,7 +17,7 @@ Player::Player(int x, int y, Map& map, sf::RenderWindow& window) : position(x, y
 	sprite.setTexture(texture);
 	sprite.setScale(0.07, 0.07); // scale 0.07 works for cellSize=24
 	//sprite.setScale(0.175, 0.175); // scale 0.175 works for cellSize=60
-	sprite.setPosition(v2f(map.position) + position * (float)map.cellSize);
+	sprite.setPosition(v2f(map.position) + position * (float)map.cell_size);
 
 	// set anchor point
 	sf::Vector2f center(sprite.getLocalBounds().width / 2.0f, sprite.getLocalBounds().height / 2.0f);
@@ -88,7 +88,7 @@ void Player::move(float angle_offset, float dt)
 	}
 
 	position = potential_position;
-	sprite.setPosition(v2f(map.position) + position * (float)map.cellSize);
+	sprite.setPosition(v2f(map.position) + position * (float)map.cell_size);
 }
 
 // returns distance in that direction
@@ -101,7 +101,7 @@ Player::HitInfo Player::shootRay(float angle_offset)
 	ray_unit_step_size.y = sqrt(1 + (ray_dir.x/ ray_dir.y) * (ray_dir.x / ray_dir.y));
 
 
-	v2i current_cell(floor(position.x), floor(position.y));
+	v2i current_cell(position);
 
 	v2f ray_length;
 	v2i cell_step;
@@ -166,18 +166,19 @@ Player::HitInfo Player::shootRay(float angle_offset)
 
 void Player::shootRays()
 {
-	sf::RectangleShape rect(v2f(1, 720));
+	sf::RectangleShape rect(v2f(1, HEIGHT));
 	rect.setFillColor(sf::Color::White);
 
-	float offset = -FOV / 2;
-	float step = FOV / 1280;
+	float angle_offset = -FOV / 2;
+	float step = FOV / WIDTH;
 
 
-	for (int x = 0; x < 1280; x++)
+	// For each column of pixels
+	for (int x = 0; x < WIDTH; x++)
 	{
-		HitInfo hit_info = shootRay(offset);
+		HitInfo hit_info = shootRay(angle_offset);
 
-		float dist = hit_info.distance * cos(offset);
+		float dist = hit_info.distance * cos(angle_offset);
 		float len = 1000 / dist;
 
 		if(!hit_info.on_x_axis)
@@ -189,7 +190,7 @@ void Player::shootRays()
 		rect.setSize(v2f(1, len));
 		window.draw(rect);
 
-		offset += step;
+		angle_offset += step;
 	}
 }
 
@@ -198,18 +199,18 @@ void Player::drawCrosshair()
 	sf::RectangleShape rect(v2f(4, 12));
 	rect.setFillColor(sf::Color::Cyan);
 	
-	rect.setPosition(v2f(width/2 - 2, height/2 - 16));
+	rect.setPosition(v2f(WIDTH /2 - 2, HEIGHT /2 - 16));
 	window.draw(rect);
 
-	rect.setPosition(v2f(width / 2 - 2, height / 2 + 4));
+	rect.setPosition(v2f(WIDTH / 2 - 2, HEIGHT / 2 + 4));
 	window.draw(rect);
 
 
 	rect.setSize(v2f(12, 4));
-	rect.setPosition(v2f(width / 2 - 16, height / 2 - 2));
+	rect.setPosition(v2f(WIDTH / 2 - 16, HEIGHT / 2 - 2));
 	window.draw(rect);
 
-	rect.setPosition(v2f(width / 2 + 4, height / 2 - 2));
+	rect.setPosition(v2f(WIDTH / 2 + 4, HEIGHT / 2 - 2));
 	window.draw(rect);
 
 }

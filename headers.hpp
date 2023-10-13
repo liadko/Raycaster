@@ -15,7 +15,7 @@ const double PI = 3.14159265358979323846;
 const double HALF_PI = 3.14159265358979323846/2;
 
 
-const int width = 1280, height = 720;
+const int WIDTH = 1280, HEIGHT = 720;
 
 
 #endif // !HEADERS.HPP

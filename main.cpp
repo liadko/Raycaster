@@ -6,12 +6,12 @@
 int main()
 {
     //Window
-    sf::RenderWindow window(sf::VideoMode(width, height), "Program", sf::Style::Close, sf::ContextSettings(24, 8, 8));
+    sf::RenderWindow window(sf::VideoMode(WIDTH, HEIGHT), "Program", sf::Style::Close, sf::ContextSettings(24, 8, 8));
 
     sf::Clock clock;
 
 
-    Map map(50, height - 240 - 50, 10, 10, window);
+    Map map(50, HEIGHT - 240 - 50, 10, 10, window);
     Player player(2, 2, map, window);
 
     while (window.isOpen())
@@ -31,12 +31,17 @@ int main()
         handleKeys(player, dt);
 
 
-        window.clear();
+        window.clear(sf::Color(70, 170, 255));
         
+        
+        map.drawGround();
+
         player.shootRays();
         
+
         map.drawMap();
         player.draw();
+
         
         player.drawCrosshair();
 

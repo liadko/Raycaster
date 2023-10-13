@@ -24,8 +24,8 @@ public:
 	v2f position;
 	
 	float rotation;
-	float rotation_speed = 3;
-	float speed = 4;
+	float rotation_speed = 2.5f;
+	float speed = 3;
 
 	bool running = false;
 	float run_multiplier = 1.5;
