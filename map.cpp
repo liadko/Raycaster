@@ -26,9 +26,13 @@ Map::Map(int dist_from_side, sf::RenderWindow& window) : window(window)
 		}
 
 
+	map_texture.~Image();
+
 	position.x = dist_from_side;
 	position.y = HEIGHT - dist_from_side - cell_size * height;
 
+	sky_color = sf::Color(70, 170, 255);
+	ground_color = sf::Color(7, 130, 33);
 }
 
 int Map::getCell(int x, int y)
@@ -73,12 +77,14 @@ void Map::drawPoint(float x, float y)
 		
 }
 
-void Map::drawGround()
+void Map::drawGround(float ground_level)
 {
 	//cout << width << " "<< height << "\n";
-	sf::RectangleShape ground(v2f(WIDTH, HEIGHT/ 2));
+	float ground_height = HEIGHT - ground_level;
 
-	ground.setFillColor(sf::Color(7, 140, 43));
-	ground.setPosition(v2f(0, HEIGHT / 2));
+	sf::RectangleShape ground(v2f(WIDTH, ground_height));
+
+	ground.setFillColor(ground_color);
+	ground.setPosition(v2f(0, ground_level));
 	window.draw(ground);
 }

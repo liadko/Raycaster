@@ -20,22 +20,29 @@ public:
 		bool on_x_axis;
 	};
 
-	float body_radius = 0.4;
+	float body_radius = 0.4f;
 	v2f position;
 	
-	float rotation;
-	float rotation_speed = 2.5f;
-	float speed = 3;
-
+	float speed = 3.0f;
 	bool running = false;
 	float run_multiplier = 1.75f;
 
-	float FOV = 1.22173;
+	float rotation_x = -0.1f;
+	float rotation_y = -0.52f;
+
+	float mouse_sensetivity = 0.4f;
+	float fov_y = 0.8f;
+
+
+	float fov_x = 1.22173f;
+	float render_distance = 20.0f;
 
 	Player(int x, int y, Map& map, sf::RenderWindow& window);
 
 	void draw();
-	void rotate(float alpha, float dt);
+	void handleKeys(float dt);
+	//void rotate(float alpha, float dt);
+	void rotateHead(int delta_x, int delta_y, float dt);
 	void move(float angle_offset, float dt);
 	void shootRays();
 	Player::HitInfo shootRay(float angle_offset);

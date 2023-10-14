@@ -139,13 +139,13 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="graphics.cpp" />
+    <ClCompile Include="tools.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="map.cpp" />
     <ClCompile Include="player.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="graphics.hpp" />
+    <ClInclude Include="tools.hpp" />
     <ClInclude Include="headers.hpp" />
     <ClInclude Include="map.hpp" />
     <ClInclude Include="player.hpp" />

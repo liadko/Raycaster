@@ -21,7 +21,7 @@
     <ClCompile Include="player.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="graphics.cpp">
+    <ClCompile Include="tools.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="map.cpp">
@@ -35,7 +35,7 @@
     <ClInclude Include="player.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="graphics.hpp">
+    <ClInclude Include="tools.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="map.hpp">

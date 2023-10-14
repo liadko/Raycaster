@@ -1,5 +1,5 @@
 #include "headers.hpp"
-#include "graphics.hpp"
+#include "tools.hpp"
 #include "player.hpp"
 #include "map.hpp"
 
@@ -7,12 +7,16 @@ int main()
 {
     //Window
     sf::RenderWindow window(sf::VideoMode(WIDTH, HEIGHT), "Program", sf::Style::Close, sf::ContextSettings(24, 8, 8));
+    v2i screen_center(WIDTH / 2, HEIGHT / 2);
 
     sf::Clock clock;
 
 
     Map map(20, window);
     Player player(40, 21, map, window);
+
+    v2i prev_mouse_position = sf::Mouse::getPosition(window);
+    window.setMouseCursorVisible(false);
 
     while (window.isOpen())
     {
@@ -24,26 +28,36 @@ int main()
                 window.close();
             else if (event.type == sf::Event::MouseButtonPressed)
                 cout << sf::Mouse::getPosition(window).x << " " << sf::Mouse::getPosition(window).y << "\n";
+            else if (event.type == sf::Event::MouseMoved)
+            {
+                v2i current_pos = sf::Mouse::getPosition(window);
+                //cout << current_pos.x << " " << current_pos.y << "\n";
+                player.rotateHead(current_pos.x - screen_center.x,
+                    current_pos.y - screen_center.y, dt);
+
+                sf::Mouse::setPosition(screen_center, window);
+            }
+        
 
         
-//        cout << floor(1 / dt) << "\n";
+        cout << floor(1 / dt) << "\n";
+        
+        player.handleKeys(dt);
 
-        handleKeys(player, dt);
 
-
-        window.clear(sf::Color(70, 170, 255));
+        window.clear(map.sky_color);
         
         
-        map.drawGround();
 
         player.shootRays();
         
 
-        map.drawMap();
-        player.draw();
+        //map.drawMap();
 
-        
+        //player.draw();
+
         player.drawCrosshair();
+        
 
         window.display();
     }
