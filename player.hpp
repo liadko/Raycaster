@@ -11,13 +11,16 @@ private:
 	Map& map;
 	sf::RenderWindow& window;
 
+	vector<sf::Texture> textures;
 	
+	float cos_a, sin_a, tan_a; // cached trig values of rotation
 
 public:
 	
 	struct HitInfo {
 		float distance;
 		bool on_x_axis;
+		float texture_x;
 	};
 
 	float body_radius = 0.4f;
@@ -39,13 +42,14 @@ public:
 
 	Player(int x, int y, Map& map, sf::RenderWindow& window);
 
-	void draw();
 	void handleKeys(float dt);
-	//void rotate(float alpha, float dt);
 	void rotateHead(int delta_x, int delta_y, float dt);
 	void move(float angle_offset, float dt);
+
 	void shootRays();
 	Player::HitInfo shootRay(float angle_offset);
+	
+	void draw();
 	void drawCrosshair();
 
 };

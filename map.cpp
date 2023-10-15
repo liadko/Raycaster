@@ -32,7 +32,7 @@ Map::Map(int dist_from_side, sf::RenderWindow& window) : window(window)
 	position.y = HEIGHT - dist_from_side - cell_size * height;
 
 	sky_color = sf::Color(70, 170, 255);
-	ground_color = sf::Color(7, 130, 33);
+	ground_color = sf::Color(33, 43, 35);
 }
 
 int Map::getCell(int x, int y)

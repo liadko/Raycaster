@@ -31,7 +31,7 @@ int main()
             else if (event.type == sf::Event::MouseMoved)
             {
                 v2i current_pos = sf::Mouse::getPosition(window);
-                //cout << current_pos.x << " " << current_pos.y << "\n";
+                
                 player.rotateHead(current_pos.x - screen_center.x,
                     current_pos.y - screen_center.y, dt);
 
@@ -40,7 +40,7 @@ int main()
         
 
         
-        cout << floor(1 / dt) << "\n";
+         cout << floor(1 / dt) << "\n";
         
         player.handleKeys(dt);
 

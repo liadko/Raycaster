@@ -15,7 +15,9 @@ Player::Player(int x, int y, Map& map, sf::RenderWindow& window) : position(x, y
 	sf::Vector2f center(sprite.getLocalBounds().width / 2.0f, sprite.getLocalBounds().height / 2.0f);
 	sprite.setOrigin(center);
 	
-
+	sf::Texture wall;
+	wall.loadFromFile("1.png");
+	textures.push_back(wall);
 }
 
 void Player::draw()
@@ -40,17 +42,6 @@ void Player::handleKeys(float dt)
 	if (!(movement.x == 0 && movement.y == 0))
 		move(atan2(movement.x, movement.y), dt);
 
-	// rotate
-	/* if (KEY_PRESSED(Left))
-		player.rotate(-1, dt);
-	if (KEY_PRESSED(Right))
-		player.rotate(1, dt);
-
-	if (KEY_PRESSED(Up))
-		player.rotate_vertical(1, dt);
-	if (KEY_PRESSED(Down))
-		player.rotate_vertical(-1, dt); */
-
 		// run
 	if (KEY_PRESSED(LShift))
 		running = true;
@@ -61,17 +52,6 @@ void Player::handleKeys(float dt)
 	if (KEY_PRESSED(Escape))
 		window.close();
 }
-//void Player::rotate(float alpha, float dt)
-//{
-//	rotation += alpha * rotation_speed * dt;
-//	sprite.setRotation(rotation / PI * 180);
-//}
-//
-//void Player::rotate_vertical(float alpha, float dt)
-//{
-//	rotation_vertical += alpha * rotation_vertical_speed * dt;
-//	cout << rotation_vertical << "\n";
-//}
 
 void Player::rotateHead(int delta_x, int delta_y, float dt)
 {
@@ -79,9 +59,11 @@ void Player::rotateHead(int delta_x, int delta_y, float dt)
 	rotation_x += delta_x * mouse_sensetivity * dt;
 	sprite.setRotation(rotation_x / PI * 180);
 
+	float &a = rotation_x;
+	cos_a = cos(a); sin_a = sin(a); tan_a = tan(a);
+
 	rotation_y += delta_y * -mouse_sensetivity * dt;
 
-	//cout << rotation_y << "\n";
 
 	if (rotation_y > 0.95f)
 		rotation_y = 0.95f;
@@ -152,7 +134,6 @@ Player::HitInfo Player::shootRay(float angle_offset)
 	ray_unit_step_size.x = sqrt(1 + (ray_dir.y/ ray_dir.x) * (ray_dir.y / ray_dir.x));
 	ray_unit_step_size.y = sqrt(1 + (ray_dir.x/ ray_dir.y) * (ray_dir.x / ray_dir.y));
 
-
 	v2i current_cell(position);
 
 	v2f ray_length;
@@ -189,14 +170,14 @@ Player::HitInfo Player::shootRay(float angle_offset)
 		{
 			current_cell.x += cell_step.x;
 			distance = ray_length.x;
-			latest_hit_on_x = true;
+			latest_hit_on_x = false;
 			ray_length.x += ray_unit_step_size.x;
 		}
 		else
 		{
 			current_cell.y += cell_step.y;
 			distance = ray_length.y;
-			latest_hit_on_x = false;
+			latest_hit_on_x = true;
 			ray_length.y += ray_unit_step_size.y;
 
 		}
@@ -207,7 +188,23 @@ Player::HitInfo Player::shootRay(float angle_offset)
 		//hit wall
 		if (map.getCell(current_cell.x, current_cell.y) == 1)
 		{
-			return { distance, latest_hit_on_x };
+			v2f hit_position = position + ray_dir * distance;
+			//getting the x offset on the texture
+			float texture_x;
+			
+			if (latest_hit_on_x)
+			{
+				texture_x = hit_position.x - floor(hit_position.x);
+				if (sin_a > 0) texture_x = 1 - texture_x;
+			}
+			else
+			{
+				texture_x = hit_position.y - floor(hit_position.y);
+				if (cos_a < 0) texture_x = 1 - texture_x;
+			}
+			
+
+			return { distance, latest_hit_on_x, texture_x };
 		}
 
 	}
@@ -218,8 +215,9 @@ Player::HitInfo Player::shootRay(float angle_offset)
 
 void Player::shootRays()
 {
-	sf::RectangleShape rect(v2f(1, HEIGHT));
-	//rect.setFillColor(sf::Color::White);
+	sf::Sprite sprite;
+	sprite.setTexture(textures[0]);
+
 
 	float angle_offset = -fov_x / 2;
 	float step = fov_x / WIDTH;
@@ -235,22 +233,22 @@ void Player::shootRays()
 
 		float dist = hit_info.distance * cos(angle_offset);
 		
-
 		float len = 1000 / dist;
 
-		
 		sf::Color color(240, 240, 245);
-		if (!hit_info.on_x_axis)
+		if (hit_info.on_x_axis)
 			color = sf::Color(140, 140, 150);
 		
-		//float brightness = std::min<float>(1, std::max<float>(0, hit_info.distance / render_distance ));
-		//color = lerp(color, map.sky_color, 1-brightness);
 
-		rect.setFillColor(color);
+		color = sf::Color(hit_info.texture_x * 255, 0, 0);
 
-		rect.setPosition(x, floor_level - len / 2);
-		rect.setSize(v2f(1, len));
-		window.draw(rect);
+
+		sprite.setTextureRect(sf::IntRect(v2i(hit_info.texture_x*1024, 0), v2i(1, 1024)));
+		sprite.setScale(1, len / 1024);
+		sprite.setPosition(x, floor_level - len / 2);
+		window.draw(sprite);
+
+
 
 		angle_offset += step;
 	}
