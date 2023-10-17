@@ -15,13 +15,14 @@ private:
 	
 	float cos_a, sin_a, tan_a; // cached trig values of rotation
 
-public:
-	
 	struct HitInfo {
 		float distance;
 		bool on_x_axis;
 		float texture_x;
 	};
+
+public:
+	
 
 	float body_radius = 0.4f;
 	v2f position;
@@ -33,8 +34,8 @@ public:
 	float rotation_x = -0.1f;
 	float rotation_y = -0.52f;
 
-	float mouse_sensetivity = 0.4f;
-	float fov_y = 0.8f;
+	float mouse_sensetivity = 0.6f;
+	float fov_y = 0.7f;
 
 
 	float fov_x = 1.22173f;

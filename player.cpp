@@ -16,7 +16,9 @@ Player::Player(int x, int y, Map& map, sf::RenderWindow& window) : position(x, y
 	sprite.setOrigin(center);
 	
 	sf::Texture wall;
-	wall.loadFromFile("1.png");
+	wall.loadFromFile("1L.png");
+	textures.push_back(wall);
+	wall.loadFromFile("1D.png");
 	textures.push_back(wall);
 }
 
@@ -48,6 +50,10 @@ void Player::handleKeys(float dt)
 	else
 		running = false;
 
+	
+	//if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up))
+	//	map.sky_offset += 1833*map.sky_scale;
+
 
 	if (KEY_PRESSED(Escape))
 		window.close();
@@ -55,21 +61,33 @@ void Player::handleKeys(float dt)
 
 void Player::rotateHead(int delta_x, int delta_y, float dt)
 {
+	// ignore enourmous rotation requests
+	if (mag(v2f(delta_x, delta_y)) > 120)
+	{
+		cout << mag(v2f(delta_x, delta_y)) << "\n";
+		return;
+	}
 
 	rotation_x += delta_x * mouse_sensetivity * dt;
-	sprite.setRotation(rotation_x / PI * 180);
+	sprite.setRotation(rotation_x / PI * 180);		// update player map sprite
+	map.shiftSky(delta_x * mouse_sensetivity * dt); // shift sky
 
 	float &a = rotation_x;
 	cos_a = cos(a); sin_a = sin(a); tan_a = tan(a);
 
+	
+	
+
 	rotation_y += delta_y * -mouse_sensetivity * dt;
 
+	map.floor_level = HEIGHT / 2 * (1 + tan(rotation_y)) / tan(fov_y / 2);
 
-	if (rotation_y > 0.95f)
-		rotation_y = 0.95f;
+	// cap y rotation
+	if (rotation_y > 0.75f)
+		rotation_y = 0.75f;
 
-	if (rotation_y < -1.4f)
-		rotation_y = -1.4f;
+	if (rotation_y < -1.05f)
+		rotation_y = -1.05f;
 	
 }
 
@@ -128,6 +146,8 @@ void Player::move(float angle_offset, float dt)
 // returns distance in that direction
 Player::HitInfo Player::shootRay(float angle_offset)
 {
+	//angle_offset = angle_offset * (tan(angle_offset));
+
 	v2f ray_dir(cos(rotation_x + angle_offset), sin(rotation_x + angle_offset));
 
 	v2f ray_unit_step_size;
@@ -222,9 +242,8 @@ void Player::shootRays()
 	float angle_offset = -fov_x / 2;
 	float step = fov_x / WIDTH;
 
-	float floor_level = HEIGHT / 2 * (1 + tan(rotation_y)) / tan(fov_y / 2);
 
-	map.drawGround(floor_level);
+	map.drawGround();
 
 	// For each column of pixels
 	for (int x = 0; x < WIDTH; x++)
@@ -235,17 +254,18 @@ void Player::shootRays()
 		
 		float len = 1000 / dist;
 
-		sf::Color color(240, 240, 245);
+		//sf::Color color(240, 240, 245);
 		if (hit_info.on_x_axis)
-			color = sf::Color(140, 140, 150);
-		
+			sprite.setTexture(textures[1]);
+		else
+			sprite.setTexture(textures[0]);
 
-		color = sf::Color(hit_info.texture_x * 255, 0, 0);
+		//color = sf::Color(hit_info.texture_x * 255, 0, 0);
 
 
-		sprite.setTextureRect(sf::IntRect(v2i(hit_info.texture_x*1024, 0), v2i(1, 1024)));
-		sprite.setScale(1, len / 1024);
-		sprite.setPosition(x, floor_level - len / 2);
+		sprite.setTextureRect(sf::IntRect(v2i(hit_info.texture_x * textures[0].getSize().x, 0), v2i(1, textures[0].getSize().y)));
+		sprite.setScale(1, len / textures[0].getSize().y);
+		sprite.setPosition(x, map.floor_level - len / 2);
 		window.draw(sprite);
 
 

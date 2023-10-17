@@ -37,17 +37,21 @@ int main()
 
                 sf::Mouse::setPosition(screen_center, window);
             }
+            else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up))
+                map.sky_offset += map.sky_width * map.sky_scale;
+            else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down))
+                map.sky_offset -= map.sky_width * map.sky_scale;
         
 
         
-         cout << floor(1 / dt) << "\n";
+        // cout << floor(1 / dt) << "\n";
         
         player.handleKeys(dt);
 
 
-        window.clear(map.sky_color);
+        window.clear(sf::Color::Red);
         
-        
+        map.drawSky();
 
         player.shootRays();
         
