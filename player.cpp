@@ -4,28 +4,16 @@
 
 Player::Player(int x, int y, Map& map, sf::RenderWindow& window) : position(x, y), map(map), window(window)
 {
-
-	texture.loadFromFile("turret.png");
-
-	sprite.setTexture(texture);
-	sprite.setScale(0.025, 0.025);
-	sprite.setPosition(v2f(map.position) + position * (float)map.cell_size);
+	loadTextures();
 
 	// set anchor point
-	sf::Vector2f center(sprite.getLocalBounds().width / 2.0f, sprite.getLocalBounds().height / 2.0f);
-	sprite.setOrigin(center);
-	
-	sf::Texture wall;
-	wall.loadFromFile("1L.png");
-	textures.push_back(wall);
-	wall.loadFromFile("1D.png");
-	textures.push_back(wall);
+	//sf::Vector2f center(sprite.getLocalBounds().width / 2.0f, sprite.getLocalBounds().height / 2.0f);
+	//sprite.setOrigin(center);
+
+
 }
 
-void Player::draw()
-{
-	window.draw(sprite);
-}
+
 
 #define KEY_PRESSED(key) sf::Keyboard::isKeyPressed(sf::Keyboard::Key::key)
 void Player::handleKeys(float dt)
@@ -44,13 +32,13 @@ void Player::handleKeys(float dt)
 	if (!(movement.x == 0 && movement.y == 0))
 		move(atan2(movement.x, movement.y), dt);
 
-		// run
+	// run
 	if (KEY_PRESSED(LShift))
 		running = true;
 	else
 		running = false;
 
-	
+
 	//if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up))
 	//	map.sky_offset += 1833*map.sky_scale;
 
@@ -68,17 +56,15 @@ void Player::rotateHead(int delta_x, int delta_y, float dt)
 		return;
 	}
 
-	rotation_x += delta_x * mouse_sensetivity * dt;
-	sprite.setRotation(rotation_x / PI * 180);		// update player map sprite
-	map.shiftSky(delta_x * mouse_sensetivity * dt); // shift sky
 
-	float &a = rotation_x;
-	cos_a = cos(a); sin_a = sin(a); tan_a = tan(a);
+	// horizontal
+	rotation_x += delta_x * mouse_sensitivity * dt;
+	//sprite.setRotation(rotation_x / PI * 180);		// update player map sprite
+	map.shiftSky(delta_x * mouse_sensitivity * dt); // shift sky
 
-	
-	
 
-	rotation_y += delta_y * -mouse_sensetivity * dt;
+	// vertical
+	rotation_y += delta_y * -mouse_sensitivity * dt;
 
 	map.floor_level = HEIGHT / 2 * (1 + tan(rotation_y)) / tan(fov_y / 2);
 
@@ -88,7 +74,7 @@ void Player::rotateHead(int delta_x, int delta_y, float dt)
 
 	if (rotation_y < -1.05f)
 		rotation_y = -1.05f;
-	
+
 }
 
 void Player::move(float angle_offset, float dt)
@@ -140,7 +126,7 @@ void Player::move(float angle_offset, float dt)
 	}
 
 	position = potential_position;
-	sprite.setPosition(v2f(map.position) + position * (float)map.cell_size);
+	//gun_sprite.setPosition(v2f(map.position) + position * (float)map.cell_size);
 }
 
 // returns distance in that direction
@@ -151,8 +137,8 @@ Player::HitInfo Player::shootRay(float angle_offset)
 	v2f ray_dir(cos(rotation_x + angle_offset), sin(rotation_x + angle_offset));
 
 	v2f ray_unit_step_size;
-	ray_unit_step_size.x = sqrt(1 + (ray_dir.y/ ray_dir.x) * (ray_dir.y / ray_dir.x));
-	ray_unit_step_size.y = sqrt(1 + (ray_dir.x/ ray_dir.y) * (ray_dir.x / ray_dir.y));
+	ray_unit_step_size.x = sqrt(1 + (ray_dir.y / ray_dir.x) * (ray_dir.y / ray_dir.x));
+	ray_unit_step_size.y = sqrt(1 + (ray_dir.x / ray_dir.y) * (ray_dir.x / ray_dir.y));
 
 	v2i current_cell(position);
 
@@ -211,18 +197,18 @@ Player::HitInfo Player::shootRay(float angle_offset)
 			v2f hit_position = position + ray_dir * distance;
 			//getting the x offset on the texture
 			float texture_x;
-			
+
 			if (latest_hit_on_x)
 			{
 				texture_x = hit_position.x - floor(hit_position.x);
-				if (sin_a > 0) texture_x = 1 - texture_x;
+				if (sin(rotation_x) > 0) texture_x = 1 - texture_x;
 			}
 			else
 			{
 				texture_x = hit_position.y - floor(hit_position.y);
-				if (cos_a < 0) texture_x = 1 - texture_x;
+				if (cos(rotation_x) < 0) texture_x = 1 - texture_x;
 			}
-			
+
 
 			return { distance, latest_hit_on_x, texture_x };
 		}
@@ -232,11 +218,10 @@ Player::HitInfo Player::shootRay(float angle_offset)
 
 }
 
-
 void Player::shootRays()
 {
 	sf::Sprite sprite;
-	sprite.setTexture(textures[0]);
+	sprite.setTexture(wall_texs[0]);
 
 
 	float angle_offset = -fov_x / 2;
@@ -251,20 +236,20 @@ void Player::shootRays()
 		HitInfo hit_info = shootRay(angle_offset);
 
 		float dist = hit_info.distance * cos(angle_offset);
-		
+
 		float len = 1000 / dist;
 
 		//sf::Color color(240, 240, 245);
 		if (hit_info.on_x_axis)
-			sprite.setTexture(textures[1]);
+			sprite.setTexture(wall_texs[1]);
 		else
-			sprite.setTexture(textures[0]);
+			sprite.setTexture(wall_texs[0]);
 
 		//color = sf::Color(hit_info.texture_x * 255, 0, 0);
 
 
-		sprite.setTextureRect(sf::IntRect(v2i(hit_info.texture_x * textures[0].getSize().x, 0), v2i(1, textures[0].getSize().y)));
-		sprite.setScale(1, len / textures[0].getSize().y);
+		sprite.setTextureRect(sf::IntRect(v2i(hit_info.texture_x * wall_texs[0].getSize().x, 0), v2i(1, wall_texs[0].getSize().y)));
+		sprite.setScale(1, len / wall_texs[0].getSize().y);
 		sprite.setPosition(x, map.floor_level - len / 2);
 		window.draw(sprite);
 
@@ -274,12 +259,13 @@ void Player::shootRays()
 	}
 }
 
+
 void Player::drawCrosshair()
 {
 	sf::RectangleShape rect(v2f(4, 12));
 	rect.setFillColor(sf::Color::Cyan);
-	
-	rect.setPosition(v2f(WIDTH /2 - 2, HEIGHT /2 - 16));
+
+	rect.setPosition(v2f(WIDTH / 2 - 2, HEIGHT / 2 - 16));
 	window.draw(rect);
 
 	rect.setPosition(v2f(WIDTH / 2 - 2, HEIGHT / 2 + 4));
@@ -293,4 +279,60 @@ void Player::drawCrosshair()
 	rect.setPosition(v2f(WIDTH / 2 + 4, HEIGHT / 2 - 2));
 	window.draw(rect);
 
+}
+
+
+void Player::loadTextures()
+{
+	// walls
+	wall_texs = new sf::Texture[2]; // (sf::Texture*)malloc(sizeof(sf::Texture) * 2);
+
+	sf::Texture wall;
+	wall.loadFromFile("1L.png");
+	wall_texs[0] = wall;
+	wall.loadFromFile("1D.png");
+	wall_texs[1] = wall;
+
+
+	// gun
+	gun_texs = new sf::Texture[6]();
+
+
+	for (int i = 0; i < 6; i++)
+	{
+		char filename[] = "gun_animation/gun_X.png";
+		filename[18] = i + '0';
+		gun_texs[i].loadFromFile(filename);
+	}
+
+	gun_sprite.setTexture(gun_texs[0]);
+	gun_sprite.setScale(0.8, 0.8);
+	gun_sprite.setPosition(WIDTH / 2 - gun_texs[0].getSize().x * gun_sprite.getScale().x / 2 + 20,
+		HEIGHT - gun_texs[0].getSize().y * gun_sprite.getScale().x);
+
+	gun_animation_timer = 0;
+}
+
+void Player::drawGun(float dt)
+{
+	
+	window.draw(gun_sprite);
+
+	gun_animation_timer += dt;
+
+	// if frame bigger than zero, we animating
+	if (gun_animation_frame && gun_animation_timer >= 0.08f)
+	{
+		gun_animation_frame = (gun_animation_frame + 1) % 6;
+		gun_animation_timer = 0;
+		gun_sprite.setTexture(gun_texs[gun_animation_frame]);
+	}
+}
+
+
+void Player::shootGun()
+{
+	gun_animation_frame = 1;
+	gun_sprite.setTexture(gun_texs[gun_animation_frame]);
+	gun_animation_timer = 0;
 }

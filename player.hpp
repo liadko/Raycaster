@@ -6,14 +6,17 @@
 class Player
 {
 private:
-	sf::Texture texture;
-	sf::Sprite sprite;
-	Map& map;
 	sf::RenderWindow& window;
-
-	vector<sf::Texture> textures;
+	Map& map;
 	
-	float cos_a, sin_a, tan_a; // cached trig values of rotation
+
+	sf::Texture* wall_texs;
+	
+	int gun_animation_frame;
+	float gun_animation_timer;
+	sf::Sprite gun_sprite;
+	sf::Texture* gun_texs;
+	
 
 	struct HitInfo {
 		float distance;
@@ -34,7 +37,7 @@ public:
 	float rotation_x = -0.1f;
 	float rotation_y = -0.52f;
 
-	float mouse_sensetivity = 0.6f;
+	float mouse_sensitivity = 1.1f;
 	float fov_y = 0.7f;
 
 
@@ -43,6 +46,7 @@ public:
 
 	Player(int x, int y, Map& map, sf::RenderWindow& window);
 
+
 	void handleKeys(float dt);
 	void rotateHead(int delta_x, int delta_y, float dt);
 	void move(float angle_offset, float dt);
@@ -50,7 +54,10 @@ public:
 	void shootRays();
 	Player::HitInfo shootRay(float angle_offset);
 	
-	void draw();
+	void drawGun(float dt);
 	void drawCrosshair();
+	void shootGun();
+
+	void loadTextures();
 
 };

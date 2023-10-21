@@ -92,7 +92,7 @@ void Map::drawSky()
 	sky_sprite.setPosition(sky_offset, sky_y);
 	window.draw(sky_sprite);
 
-	cout << "Floor Level: " << floor_level << "\n";
+	//cout << "Floor Level: " << floor_level << "\n";
 }
 
 void Map::shiftSky(float offset)

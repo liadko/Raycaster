@@ -20,7 +20,7 @@ public:
 	float sky_offset = 0;
 	float sky_scale = 2.5f;
 	float sky_width = 1833;
-	float sky_sensitivity = -800;
+	float sky_sensitivity = -1000;
 
 	sf::Color sky_color, ground_color;
 
