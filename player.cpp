@@ -10,7 +10,6 @@ Player::Player(int x, int y, Map& map, sf::RenderWindow& window) : position(x, y
 	//sf::Vector2f center(sprite.getLocalBounds().width / 2.0f, sprite.getLocalBounds().height / 2.0f);
 	//sprite.setOrigin(center);
 
-
 }
 
 
@@ -23,14 +22,17 @@ void Player::handleKeys(float dt)
 	if (KEY_PRESSED(W))
 		movement.y += +1;
 	if (KEY_PRESSED(A))
-		movement.x += 1;
+		movement.x += +1;
 	if (KEY_PRESSED(S))
 		movement.y += -1;
 	if (KEY_PRESSED(D))
 		movement.x += -1;
 
-	if (!(movement.x == 0 && movement.y == 0))
+	moving = (movement.x != 0 || movement.y != 0);
+
+	if (moving)
 		move(atan2(movement.x, movement.y), dt);
+
 
 	// run
 	if (KEY_PRESSED(LShift))
@@ -63,6 +65,8 @@ void Player::rotateHead(int delta_x, int delta_y, float dt)
 	map.shiftSky(delta_x * mouse_sensitivity * dt); // shift sky
 
 
+	// cout << rotation_x << "\n";
+
 	// vertical
 	rotation_y += delta_y * -mouse_sensitivity * dt;
 
@@ -79,6 +83,7 @@ void Player::rotateHead(int delta_x, int delta_y, float dt)
 
 void Player::move(float angle_offset, float dt)
 {
+
 	float current_speed = speed;
 	if (running)
 		current_speed *= run_multiplier;
@@ -201,12 +206,12 @@ Player::HitInfo Player::shootRay(float angle_offset)
 			if (latest_hit_on_x)
 			{
 				texture_x = hit_position.x - floor(hit_position.x);
-				if (sin(rotation_x) > 0) texture_x = 1 - texture_x;
+				//if (sin(rotation_x) > 0) texture_x = 1 - texture_x;
 			}
 			else
 			{
 				texture_x = hit_position.y - floor(hit_position.y);
-				if (cos(rotation_x) < 0) texture_x = 1 - texture_x;
+				//if (cos(rotation_x) < 0) texture_x = 1 - texture_x;
 			}
 
 
@@ -295,10 +300,9 @@ void Player::loadTextures()
 
 
 	// gun
-	gun_texs = new sf::Texture[6]();
+	gun_texs = new sf::Texture[5]();
 
-
-	for (int i = 0; i < 6; i++)
+	for (int i = 0; i < 5; i++)
 	{
 		char filename[] = "gun_animation/gun_X.png";
 		filename[18] = i + '0';
@@ -307,23 +311,43 @@ void Player::loadTextures()
 
 	gun_sprite.setTexture(gun_texs[0]);
 	gun_sprite.setScale(0.8, 0.8);
-	gun_sprite.setPosition(WIDTH / 2 - gun_texs[0].getSize().x * gun_sprite.getScale().x / 2 + 20,
-		HEIGHT - gun_texs[0].getSize().y * gun_sprite.getScale().x);
+	gun_position = { WIDTH / 2 - gun_texs[0].getSize().x * gun_sprite.getScale().x / 2 + 25,
+	HEIGHT - gun_texs[0].getSize().y * gun_sprite.getScale().x + 30 };
+	gun_sprite.setPosition(gun_position);
 
 	gun_animation_timer = 0;
+	gun_movement_stopwatch = 0;
+
+	gun_animation_duration = new float[5];
+	gun_animation_duration[1] = 0.08f;
+	gun_animation_duration[2] = 0.12f;
+	gun_animation_duration[3] = gun_animation_duration[4] = 0.2f;
 }
 
 void Player::drawGun(float dt)
 {
+	gun_animation_timer += dt;
+	gun_movement_stopwatch += dt * 7;
 	
+	if (moving)
+		hand_move_range = lerp(hand_move_range, max_hand_range, 0.007f);
+	else
+		hand_move_range = lerp(hand_move_range, 0, 0.001f);
+	
+
+	float gun_offset_x = sin(gun_movement_stopwatch) * hand_move_range;
+	float gun_offset_y = 0.3f * cos(gun_movement_stopwatch) * cos(gun_movement_stopwatch) * hand_move_range;
+	gun_offset = { gun_offset_x , gun_offset_y };
+
+	gun_sprite.setPosition(gun_position + gun_offset);
+
+	//cout << "\n";
 	window.draw(gun_sprite);
 
-	gun_animation_timer += dt;
-
 	// if frame bigger than zero, we animating
-	if (gun_animation_frame && gun_animation_timer >= 0.08f)
+	if (gun_animation_frame && gun_animation_timer >= gun_animation_duration[gun_animation_frame])
 	{
-		gun_animation_frame = (gun_animation_frame + 1) % 6;
+		gun_animation_frame = (gun_animation_frame + 1) % 5;
 		gun_animation_timer = 0;
 		gun_sprite.setTexture(gun_texs[gun_animation_frame]);
 	}

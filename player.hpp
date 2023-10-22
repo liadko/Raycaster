@@ -6,16 +6,9 @@
 class Player
 {
 private:
+	// game logic
 	sf::RenderWindow& window;
 	Map& map;
-	
-
-	sf::Texture* wall_texs;
-	
-	int gun_animation_frame;
-	float gun_animation_timer;
-	sf::Sprite gun_sprite;
-	sf::Texture* gun_texs;
 	
 
 	struct HitInfo {
@@ -24,28 +17,39 @@ private:
 		float texture_x;
 	};
 
+	sf::Texture* wall_texs;
+
+	// gun animation
+	int gun_animation_frame;
+	float gun_animation_timer, gun_movement_stopwatch;
+	float* gun_animation_duration;
+	sf::Sprite gun_sprite;
+	sf::Texture* gun_texs;
+	v2f gun_position;
+	v2f gun_offset;
+	float max_hand_range = 60;
+	float hand_move_range;
+
+	// movement
+	v2f position;
+	float speed = 3.0f;
+	bool running = false, moving = false;
+	float run_multiplier = 1.75f;
+
+	// orientation
+	float rotation_x = -0.1f;
+	float rotation_y = -0.52f;
+	float mouse_sensitivity = 1.1f;
+	float fov_y = 0.7f;
+	float fov_x = 1.22173f; // 70 degrees
+
+	// map
+	float body_radius = 0.4f;
+
 public:
 	
 
-	float body_radius = 0.4f;
-	v2f position;
-	
-	float speed = 3.0f;
-	bool running = false;
-	float run_multiplier = 1.75f;
-
-	float rotation_x = -0.1f;
-	float rotation_y = -0.52f;
-
-	float mouse_sensitivity = 1.1f;
-	float fov_y = 0.7f;
-
-
-	float fov_x = 1.22173f;
-	float render_distance = 20.0f;
-
 	Player(int x, int y, Map& map, sf::RenderWindow& window);
-
 
 	void handleKeys(float dt);
 	void rotateHead(int delta_x, int delta_y, float dt);

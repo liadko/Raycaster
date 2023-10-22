@@ -43,8 +43,8 @@ int main()
                 map.sky_sensitivity -= 100;
         
 
-        if(frame_count % 1000 == 0)
-            cout << floor(1 / dt) << "\n";
+        //if(frame_count % 1000 == 0)
+        //    cout << floor(1 / dt) << "\n";
 
         //cout << map.sky_sensitivity << '\n';
 
@@ -59,7 +59,7 @@ int main()
         player.shootRays();
         
 
-        //map.drawMap();
+        //map.drawMap(); 
 
         player.drawGun(dt);
 
