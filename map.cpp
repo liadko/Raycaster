@@ -11,18 +11,15 @@ Map::Map(int dist_from_side, sf::RenderWindow& window) : window(window)
 	height = map_texture.getSize().y;
 
 	
-
 	data = new int[width * height];
 	
 	for(int i = 0; i < width; i++)
 		for (int j = 0; j < height; j++)
 		{
-			//cout << map_texture.getPixel(x, y).r << '\n';
 			if (map_texture.getPixel(i, j).r == 255)
 				data[i + j * width] = 1;
 			else
 				data[i + j * width] = 0;
-
 		}
 
 

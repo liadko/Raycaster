@@ -3,6 +3,9 @@
 
 
 #include <SFML/Graphics.hpp>
+#include <SFML/Network.hpp>
+
+
 #include <vector>
 #include <iostream>
 #include <cmath>

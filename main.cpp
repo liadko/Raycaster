@@ -2,6 +2,7 @@
 #include "tools.hpp"
 #include "player.hpp"
 #include "map.hpp"
+#include "client.hpp"
 
 int main()
 {
@@ -31,16 +32,17 @@ int main()
             else if (event.type == sf::Event::MouseMoved)
             {
                 v2i current_pos = sf::Mouse::getPosition(window);
-                
+
                 player.rotateHead(current_pos.x - screen_center.x,
                     current_pos.y - screen_center.y, dt);
 
                 sf::Mouse::setPosition(screen_center, window);
             }
-            else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up))
-                map.sky_sensitivity += 100;
-            else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Down))
-                map.sky_sensitivity -= 100;
+            else if (event.type == sf::Event::KeyReleased)
+            {
+                //if (event.key.code == sf::Keyboard::Space)
+                //    sendUDP();
+            }
         
 
         //if(frame_count % 1000 == 0)
@@ -54,19 +56,17 @@ int main()
         // Graphics
         window.clear(sf::Color::Red);
         
-        map.drawSky();
+        map.drawSky(); // Sky
 
-        player.shootRays();
+
+        player.shootRays(); // World
+        
+        player.drawGun(dt); // Gun
+
+        player.drawCrosshair(); // Crosshair
         
 
-        //map.drawMap(); 
-
-        player.drawGun(dt);
-
-        player.drawCrosshair();
-        
-
-        window.display();
+        window.display(); // Render to screen
 
         frame_count++;
     }

@@ -1,6 +1,7 @@
 #include "headers.hpp"
 #include "player.hpp"
 #include "tools.hpp"
+#include "client.hpp"
 
 Player::Player(int x, int y, Map& map, sf::RenderWindow& window) : position(x, y), map(map), window(window)
 {
@@ -131,7 +132,6 @@ void Player::move(float angle_offset, float dt)
 	}
 
 	position = potential_position;
-	//gun_sprite.setPosition(v2f(map.position) + position * (float)map.cell_size);
 }
 
 // returns distance in that direction
@@ -244,16 +244,16 @@ void Player::shootRays()
 
 		float len = 1000 / dist;
 
-		//sf::Color color(240, 240, 245);
 		if (hit_info.on_x_axis)
 			sprite.setTexture(wall_texs[1]);
 		else
 			sprite.setTexture(wall_texs[0]);
 
-		//color = sf::Color(hit_info.texture_x * 255, 0, 0);
 
-
-		sprite.setTextureRect(sf::IntRect(v2i(hit_info.texture_x * wall_texs[0].getSize().x, 0), v2i(1, wall_texs[0].getSize().y)));
+		// drawing 
+		sprite.setTextureRect(sf::IntRect(
+			v2i(hit_info.texture_x * wall_texs[0].getSize().x, 0), v2i(1, wall_texs[0].getSize().y)
+		));
 		sprite.setScale(1, len / wall_texs[0].getSize().y);
 		sprite.setPosition(x, map.floor_level - len / 2);
 		window.draw(sprite);
@@ -324,6 +324,11 @@ void Player::loadTextures()
 	gun_animation_duration[3] = gun_animation_duration[4] = 0.2f;
 }
 
+
+
+
+// draws the hand holding the gun at the bottom of the screen
+// dt - deltaTime, the time in seconds since the beginning of the last frame
 void Player::drawGun(float dt)
 {
 	gun_animation_timer += dt;
@@ -356,6 +361,8 @@ void Player::drawGun(float dt)
 
 void Player::shootGun()
 {
+	sendUDP();
+
 	gun_animation_frame = 1;
 	gun_sprite.setTexture(gun_texs[gun_animation_frame]);
 	gun_animation_timer = 0;

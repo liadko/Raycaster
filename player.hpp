@@ -39,7 +39,7 @@ private:
 	// orientation
 	float rotation_x = -0.1f;
 	float rotation_y = -0.52f;
-	float mouse_sensitivity = 1.1f;
+	float mouse_sensitivity = 1.0f;
 	float fov_y = 0.7f;
 	float fov_x = 1.22173f; // 70 degrees
 
