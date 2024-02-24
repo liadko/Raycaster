@@ -38,6 +38,9 @@ Map::Map(int dist_from_side, sf::RenderWindow& window) : window(window)
 
 }
 
+
+
+
 int Map::getCell(int x, int y)
 {
 	return data[x + width * y];
@@ -113,4 +116,13 @@ void Map::drawGround()
 	ground.setFillColor(ground_color);
 	ground.setPosition(v2f(0, floor_level));
 	window.draw(ground);
+}
+
+void Map::darkenScreen()
+{
+	sf::RectangleShape rect(v2f(WIDTH, HEIGHT));
+	
+	rect.setFillColor(sf::Color(0, 0, 0, 50));
+	
+	window.draw(rect);
 }

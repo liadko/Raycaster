@@ -37,8 +37,8 @@ private:
 	float run_multiplier = 1.75f;
 
 	// orientation
-	float rotation_x = -0.1f;
-	float rotation_y = -0.52f;
+	float rotation_x = -3.169f;
+	float rotation_y = -0.56f;
 	float mouse_sensitivity = 1.0f;
 	float fov_y = 0.7f;
 	float fov_x = 1.22173f; // 70 degrees
@@ -63,5 +63,8 @@ public:
 	void shootGun();
 
 	void loadTextures();
+
+	//
+	void debug();
 
 };

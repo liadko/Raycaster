@@ -15,7 +15,7 @@ public:
 
 	int cell_size = 4;
 
-	float floor_level = 0;
+	float floor_level = 354;
 
 	float sky_offset = 0;
 	float sky_scale = 2.5f;
@@ -25,6 +25,8 @@ public:
 	sf::Color sky_color, ground_color;
 
 	Map(int dist_from_side, sf::RenderWindow& window);
+
+
 	int getCell(int x, int y);
 	void drawMap();
 	void drawPoint(float x, float y);
@@ -32,4 +34,5 @@ public:
 	void drawGround();
 	void drawSky();
 	void shiftSky(float offset);
+	void darkenScreen();
 };

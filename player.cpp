@@ -53,7 +53,7 @@ void Player::handleKeys(float dt)
 void Player::rotateHead(int delta_x, int delta_y, float dt)
 {
 	// ignore enourmous rotation requests
-	if (mag(v2f(delta_x, delta_y)) > 120)
+	if (dt != -1 && mag(v2f(delta_x, delta_y)) > 120)
 	{
 		cout << mag(v2f(delta_x, delta_y)) << "\n";
 		return;
@@ -366,4 +366,14 @@ void Player::shootGun()
 	gun_animation_frame = 1;
 	gun_sprite.setTexture(gun_texs[gun_animation_frame]);
 	gun_animation_timer = 0;
+}
+
+
+
+
+void Player::debug()
+{
+	cout << rotation_x << '\n'
+		 << rotation_y << '\n'
+		 << map.floor_level << '\n';
 }

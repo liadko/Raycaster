@@ -36,3 +36,18 @@ sf::Color lerp(sf::Color c1, sf::Color c2, float t)
 		t * c1.b + (1 - t) * c2.b
 	);
 }
+
+bool inBounds(const v2f& box_pos, const v2f& box_size, const v2i& pos)
+{
+	if (pos.x < box_pos.x || pos.x > box_pos.x + box_size.x) {
+		return false;
+	}
+
+	// Check if the point's y coordinate is within the box's vertical bounds.
+	if (pos.y < box_pos.y || pos.y > box_pos.y + box_size.y) {
+		return false;
+	}
+
+	// If both checks pass, the point is within the box.
+	return true;
+}
