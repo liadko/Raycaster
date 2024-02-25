@@ -3,6 +3,7 @@
 
 #include <SFML/Network.hpp>
 
+
 void sendUDP()
 {
     sf::UdpSocket socket;
@@ -27,4 +28,19 @@ void sendUDP()
 
     std::cout << "Sent UDP packet to " << "127.0.0.1" << ":" << 4321 << std::endl;
 
+}
+
+bool tryLogIn(const string& username, const string& password)
+{
+    sf::TcpSocket socket;
+    
+    // Connect to server
+    if (socket.connect("127.0.0.1", 21567) != sf::Socket::Done)
+    {
+        std::cerr << "Error binding Tcp socket" << std::endl;
+        return true;
+    }
+
+    string message = "Hello!";
+    int amount_sent = socket.send(message.c_str(), message.size());
 }

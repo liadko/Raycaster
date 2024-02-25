@@ -29,10 +29,9 @@ void loginPage(sf::RenderWindow& window, Map& map, Player& player)
     box_shadow.setPosition(username_box_position);
     box_shadow.setFillColor(sf::Color(0, 0, 0, 70));
 
-
+    TextBox username(v2f(194, 271), v2f(461, 70), "liadkoren123", input_font);
     sf::Text username_text("liadko21567", input_font, 30);
-    username_text.setFillColor(sf::Color::Black);
-    username_text.setPosition(username_box_position + text_offset);
+    
 
     sf::Text password_text("password123", input_font, 30);
     password_text.setFillColor(sf::Color::Black);
@@ -47,6 +46,10 @@ void loginPage(sf::RenderWindow& window, Map& map, Player& player)
 
     string typed_text = "";
     int backspace_counter = 0;
+
+
+
+    v2f button_position(194, 492), button_size(460, 60);
 
     while (window.isOpen())
     {
@@ -82,6 +85,11 @@ void loginPage(sf::RenderWindow& window, Map& map, Player& player)
 
                 cursor_visible = true;
                 cursor_timer.restart();
+
+                bool success = false;
+                if (inBounds(button_position, button_size, mousePos))
+                    success = tryLogIn(username_text.getString(), password_text.getString());
+
             }
 
 

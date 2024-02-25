@@ -51,3 +51,11 @@ bool inBounds(const v2f& box_pos, const v2f& box_size, const v2i& pos)
 	// If both checks pass, the point is within the box.
 	return true;
 }
+
+TextBox::TextBox(const v2f& pos, const v2f& size, const string& str, const sf::Font& font)
+	: position(pos), size(size), text(str, font, 30),
+	in_shadow(true)
+{
+	text.setFillColor(sf::Color::Black);
+	text.setPosition(position + text_offset);
+}

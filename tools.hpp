@@ -14,3 +14,16 @@ float lerp(float a, float b, float t);
 sf::Color lerp(sf::Color c1, sf::Color c2, float t);
 
 bool inBounds(const v2f& box_pos, const v2f& box_size, const v2i& pos);
+
+class TextBox
+{
+    v2f position, size;
+
+    sf::Text text;
+
+    bool in_shadow;
+
+    
+
+    TextBox(const v2f& pos, const v2f& size, const string& str, const sf::Font& font);
+};
