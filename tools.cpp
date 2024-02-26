@@ -54,8 +54,36 @@ bool inBounds(const v2f& box_pos, const v2f& box_size, const v2i& pos)
 
 TextBox::TextBox(const v2f& pos, const v2f& size, const string& str, const sf::Font& font)
 	: position(pos), size(size), text(str, font, 30),
-	in_shadow(true)
+	is_focused(true), shadow(size), cursor(v2f(1.5f, 30))
 {
 	text.setFillColor(sf::Color::Black);
 	text.setPosition(position + text_offset);
+
+	shadow.setPosition(position);
+	shadow.setFillColor(sf::Color(0, 0, 0, 70));
+
+	cursor.setFillColor(sf::Color::Black);
+}
+
+string TextBox::getString()
+{
+	return text.getString();
+}
+
+void TextBox::draw(sf::RenderWindow& window)
+{
+	if (!is_focused)
+	{
+		
+	}
+}
+
+void TextBox::addText(const string& added_text)
+{
+	text.setString(getString() + added_text);
+}
+
+bool TextBox::inBounds(const v2i& pos)
+{
+	return inBounds();
 }

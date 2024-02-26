@@ -25,24 +25,15 @@ void loginPage(sf::RenderWindow& window, Map& map, Player& player)
     v2f username_box_position(194, 271), password_box_position(194, 377);
     v2f text_offset(20, 16);
 
-    sf::RectangleShape box_shadow(box_size);
-    box_shadow.setPosition(username_box_position);
-    box_shadow.setFillColor(sf::Color(0, 0, 0, 70));
-
     TextBox username(v2f(194, 271), v2f(461, 70), "liadkoren123", input_font);
-    sf::Text username_text("liadko21567", input_font, 30);
+    TextBox password(v2f(194, 377), v2f(461, 70), "password432", input_font);
+    //sf::Text username_text("liadko21567", input_font, 30);
     
+    TextBox* text_boxes[3] = { nullptr, &username, &password };
 
-    sf::Text password_text("password123", input_font, 30);
-    password_text.setFillColor(sf::Color::Black);
-    password_text.setPosition(password_box_position + text_offset);
 
     int box_focused = 1;
 
-    sf::Clock cursor_timer;
-    sf::RectangleShape cursor(v2f(1.5f, 30));
-    cursor.setFillColor(sf::Color::Black);
-    bool cursor_visible = true;
 
     string typed_text = "";
     int backspace_counter = 0;
@@ -71,11 +62,15 @@ void loginPage(sf::RenderWindow& window, Map& map, Player& player)
                     box_focused ^= 3;
                 if (event.text.unicode == 127)
                     backspace_counter = -100;
-                cursor_visible = true;
+                //cursor_visible = true;
             }
             else if (event.type == sf::Event::MouseButtonPressed) {
                 // Check if mouse click is within the text box
                 v2i mousePos = sf::Mouse::getPosition(window);
+                for (int i = 1; i < 3; i++)
+                {
+                    if((*text_boxes[i]).inBounds())
+                }
                 if (inBounds(username_box_position, box_size, mousePos))
                     box_focused = 1;
                 else if (inBounds(password_box_position, box_size, mousePos))
@@ -83,12 +78,12 @@ void loginPage(sf::RenderWindow& window, Map& map, Player& player)
                 else
                     box_focused = 0;
 
-                cursor_visible = true;
-                cursor_timer.restart();
+                //cursor_visible = true;
+                //cursor_timer.restart();
 
                 bool success = false;
                 if (inBounds(button_position, button_size, mousePos))
-                    success = tryLogIn(username_text.getString(), password_text.getString());
+                    success = tryLogIn(username.getString(), password_text.getString());
 
             }
 
@@ -100,9 +95,12 @@ void loginPage(sf::RenderWindow& window, Map& map, Player& player)
         
         window.draw(bg_sprite);
 
+        username.draw(window);
+
         //box highlight
         if (box_focused)
         {
+            
             if (box_focused == 1)
             {
                 box_shadow.setPosition(password_box_position);
@@ -111,7 +109,7 @@ void loginPage(sf::RenderWindow& window, Map& map, Player& player)
                     username_text.getPosition() +
                     v2f(username_text.getGlobalBounds().getSize().x + 6, 4));
                 if (typed_text.size())
-                    username_text.setString(username_text.getString() + typed_text);
+                    
                 if (backspace_counter)
                     username_text.setString(username_text.getString()
                         .substring(0, username_text.getString().getSize() - backspace_counter));
@@ -134,7 +132,6 @@ void loginPage(sf::RenderWindow& window, Map& map, Player& player)
             }
                     
             
-            window.draw(box_shadow);
             if(cursor_visible) window.draw(cursor);
 
             //cursor timer
@@ -145,17 +142,10 @@ void loginPage(sf::RenderWindow& window, Map& map, Player& player)
             }
 
         }
-        else // no box pressed
-        {
-            box_shadow.setPosition(username_box_position);
-            window.draw(box_shadow);
-            box_shadow.setPosition(password_box_position);
-            window.draw(box_shadow);
-        }
 
         //window.draw(password_box);
-        window.draw(password_text);
-        window.draw(username_text);
+        //window.draw(password_text);
+        //window.draw(username_text);
 
         window.display();
 

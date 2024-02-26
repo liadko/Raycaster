@@ -15,15 +15,27 @@ sf::Color lerp(sf::Color c1, sf::Color c2, float t);
 
 bool inBounds(const v2f& box_pos, const v2f& box_size, const v2i& pos);
 
-class TextBox
+struct TextBox
 {
     v2f position, size;
 
     sf::Text text;
+    v2f text_offset = { 20, 16 };
 
-    bool in_shadow;
+    bool is_focused;
+    sf::RectangleShape shadow;
 
-    
+    sf::Clock cursor_timer;
+
+    sf::RectangleShape cursor;
+    bool cursor_visible = true;
 
     TextBox(const v2f& pos, const v2f& size, const string& str, const sf::Font& font);
+
+
+    void addText(const string& added_text);
+    void draw(sf::RenderWindow& window);
+    
+    string getString();
+    bool inBounds(const v2i& pos);
 };
