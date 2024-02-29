@@ -29,6 +29,8 @@ void loginPage(sf::RenderWindow& window, Map& map, Player& player)
     TextBox password(v2f(194, 377), v2f(461, 70), "password432", input_font);
     //sf::Text username_text("liadko21567", input_font, 30);
     
+    password.hidden = true;
+
     TextBox* text_boxes[3] = { nullptr, &username, &password };
 
 
@@ -52,38 +54,49 @@ void loginPage(sf::RenderWindow& window, Map& map, Player& player)
                 window.close();
             else if (event.type == sf::Event::TextEntered) {
                 cout << event.text.unicode << "\n";
+                // actual typing
                 if (event.text.unicode > 32 && event.text.unicode < 127) {
-                    // Append valid characters to the text
                     typed_text += event.text.unicode;
                 }
+                
+                //backspaces
                 if (event.text.unicode == '\b')
                     backspace_counter++;
-                if (event.text.unicode == '\t' && box_focused)
-                    box_focused ^= 3;
-                if (event.text.unicode == 127)
+                if (event.text.unicode == 127) // ctrl backspace
                     backspace_counter = -100;
+                
+                //
+                if (event.text.unicode == '\t' && box_focused)
+                {
+                    box_focused = (box_focused + 1) % 3;
+                    if (box_focused == 0)
+                        box_focused = 1;
+
+                    text_boxes[box_focused]->turnOnCursor();
+                }
                 //cursor_visible = true;
             }
             else if (event.type == sf::Event::MouseButtonPressed) {
                 // Check if mouse click is within the text box
                 v2i mousePos = sf::Mouse::getPosition(window);
+
+                box_focused = 0;
                 for (int i = 1; i < 3; i++)
                 {
-                    if((*text_boxes[i]).inBounds())
+                    if (text_boxes[i]->inBox(mousePos))
+                    {
+                        box_focused = i;
+                        text_boxes[i]->turnOnCursor();
+                    }
+
                 }
-                if (inBounds(username_box_position, box_size, mousePos))
-                    box_focused = 1;
-                else if (inBounds(password_box_position, box_size, mousePos))
-                    box_focused = 2;
-                else
-                    box_focused = 0;
 
                 //cursor_visible = true;
                 //cursor_timer.restart();
 
                 bool success = false;
                 if (inBounds(button_position, button_size, mousePos))
-                    success = tryLogIn(username.getString(), password_text.getString());
+                    success = tryLogIn(username.getString(), password.getString());
 
             }
 
@@ -95,30 +108,37 @@ void loginPage(sf::RenderWindow& window, Map& map, Player& player)
         
         window.draw(bg_sprite);
 
-        username.draw(window);
+
+
+        for (int i = 1; i < 3; i++)
+            text_boxes[i]->draw(window, i == box_focused);
+
 
         //box highlight
         if (box_focused)
         {
-            
+            if (typed_text.size())
+                text_boxes[box_focused]->addText(typed_text);
+            if(backspace_counter)
+                text_boxes[box_focused]->backspace(backspace_counter);
+
+
             if (box_focused == 1)
             {
-                box_shadow.setPosition(password_box_position);
 
-                cursor.setPosition(
+                /*cursor.setPosition(
                     username_text.getPosition() +
-                    v2f(username_text.getGlobalBounds().getSize().x + 6, 4));
-                if (typed_text.size())
-                    
+                    v2f(username_text.getGlobalBounds().getSize().x + 6, 4));*/
+                    /*
                 if (backspace_counter)
                     username_text.setString(username_text.getString()
                         .substring(0, username_text.getString().getSize() - backspace_counter));
                 if (backspace_counter < 0)
-                    username_text.setString("");
+                    username_text.setString("");*/
             }
             else
             {
-                box_shadow.setPosition(username_box_position);
+                /*box_shadow.setPosition(username_box_position);
                 cursor.setPosition(
                     password_text.getPosition() +
                     v2f(password_text.getGlobalBounds().getSize().x + 6, 4));
@@ -128,18 +148,18 @@ void loginPage(sf::RenderWindow& window, Map& map, Player& player)
                     password_text.setString(password_text.getString()
                         .substring(0, password_text.getString().getSize() - backspace_counter));
                 if (backspace_counter < 0)
-                    password_text.setString("");
+                    password_text.setString("");*/
             }
                     
             
-            if(cursor_visible) window.draw(cursor);
+            //if(cursor_visible) window.draw(cursor);
 
-            //cursor timer
-            if (cursor_timer.getElapsedTime().asMilliseconds() > 500)
-            {
-                cursor_visible ^= true;
-                cursor_timer.restart();
-            }
+            ////cursor timer
+            //if (cursor_timer.getElapsedTime().asMilliseconds() > 500)
+            //{
+            //    cursor_visible ^= true;
+            //    cursor_timer.restart();
+            //}
 
         }
 

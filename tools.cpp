@@ -54,7 +54,7 @@ bool inBounds(const v2f& box_pos, const v2f& box_size, const v2i& pos)
 
 TextBox::TextBox(const v2f& pos, const v2f& size, const string& str, const sf::Font& font)
 	: position(pos), size(size), text(str, font, 30),
-	is_focused(true), shadow(size), cursor(v2f(1.5f, 30))
+	 shadow(size), cursor(v2f(1.5f, 30))
 {
 	text.setFillColor(sf::Color::Black);
 	text.setPosition(position + text_offset);
@@ -63,6 +63,7 @@ TextBox::TextBox(const v2f& pos, const v2f& size, const string& str, const sf::F
 	shadow.setFillColor(sf::Color(0, 0, 0, 70));
 
 	cursor.setFillColor(sf::Color::Black);
+	cursor.setSize(v2f(1.5, 30));
 }
 
 string TextBox::getString()
@@ -70,12 +71,53 @@ string TextBox::getString()
 	return text.getString();
 }
 
-void TextBox::draw(sf::RenderWindow& window)
+void TextBox::draw(sf::RenderWindow& window, bool is_focused)
 {
+	string current_text = text.getString();
+	string hashed(current_text.size(), '*');
+	if (hidden)
+	{
+		text.setString(hashed);
+	}
+	
+
+	window.draw(text);
+
+
+
+
 	if (!is_focused)
 	{
+		window.draw(shadow);
+		return;
+	}
+
+	if (cursor_visible)
+	{
+		cursor.setPosition(text.getPosition() +
+			v2f(text.getGlobalBounds().getSize().x + 6, 4));
+		window.draw(cursor);
+
 		
 	}
+
+
+	if (cursor_timer.getElapsedTime().asMilliseconds() > 500)
+	{
+		cursor_visible ^= true;
+		cursor_timer.restart();
+	}
+
+	if (hidden)
+		text.setString(current_text);
+
+
+}
+
+void TextBox::turnOnCursor()
+{
+	cursor_visible = true;
+	cursor_timer.restart();
 }
 
 void TextBox::addText(const string& added_text)
@@ -83,7 +125,22 @@ void TextBox::addText(const string& added_text)
 	text.setString(getString() + added_text);
 }
 
-bool TextBox::inBounds(const v2i& pos)
+void TextBox::backspace(const int& backspace_counter)
 {
-	return inBounds();
+	turnOnCursor();
+
+	if (backspace_counter < 0) // ctrl backspace
+	{
+		text.setString("");
+		return;
+	}
+
+
+	text.setString(text.getString()
+		.substring(0, text.getString().getSize() - backspace_counter));
+}
+
+bool TextBox::inBox(const v2i& pos)
+{
+	return inBounds(position, size, pos);
 }

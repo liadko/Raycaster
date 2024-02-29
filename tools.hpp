@@ -22,7 +22,6 @@ struct TextBox
     sf::Text text;
     v2f text_offset = { 20, 16 };
 
-    bool is_focused;
     sf::RectangleShape shadow;
 
     sf::Clock cursor_timer;
@@ -30,12 +29,17 @@ struct TextBox
     sf::RectangleShape cursor;
     bool cursor_visible = true;
 
+    bool hidden = false;
+
     TextBox(const v2f& pos, const v2f& size, const string& str, const sf::Font& font);
 
 
     void addText(const string& added_text);
-    void draw(sf::RenderWindow& window);
+    void backspace(const int& backspace_counter);
+    void draw(sf::RenderWindow& window, bool is_focused);
     
     string getString();
-    bool inBounds(const v2i& pos);
+    bool inBox(const v2i& pos);
+
+    void turnOnCursor();
 };
