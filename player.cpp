@@ -53,7 +53,7 @@ void Player::handleKeys(float dt)
 void Player::rotateHead(int delta_x, int delta_y, float dt)
 {
 	// ignore enourmous rotation requests
-	if (dt != -1 && mag(v2f(delta_x, delta_y)) > 120)
+	if (dt != -1 && mag(v2f(delta_x, delta_y))*mouse_sensitivity > 120)
 	{
 		cout << mag(v2f(delta_x, delta_y)) << "\n";
 		return;
@@ -337,7 +337,7 @@ void Player::drawGun(float dt)
 	if (moving)
 		hand_move_range = lerp(hand_move_range, max_hand_range, 0.007f);
 	else
-		hand_move_range = lerp(hand_move_range, 0, 0.001f);
+		hand_move_range = lerp(hand_move_range, 0, 0.005f);
 	
 
 	float gun_offset_x = sin(gun_movement_stopwatch) * hand_move_range;

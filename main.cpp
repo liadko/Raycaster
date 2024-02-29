@@ -4,6 +4,33 @@
 #include "map.hpp"
 #include "client.hpp"
 
+void loginPage(sf::RenderWindow& window, Map& map, Player& player);
+void mainLoop(sf::RenderWindow& window, Map& map, Player& player);
+
+
+
+
+int main()
+{
+    //Window
+    sf::RenderWindow window(sf::VideoMode(WIDTH, HEIGHT), "Program", sf::Style::Close, sf::ContextSettings(24, 8, 8));
+  
+    Map map(20, window);
+    
+    Player player(40, 21, map, window);
+
+
+    
+    loginPage(window, map, player);
+
+    window.setMouseCursorVisible(false);
+    
+    // Game loop
+    mainLoop(window, map, player);
+
+    return 0;
+}
+
 
 void loginPage(sf::RenderWindow& window, Map& map, Player& player)
 {
@@ -11,7 +38,7 @@ void loginPage(sf::RenderWindow& window, Map& map, Player& player)
     sf::Texture bg_tex;
     bg_tex.loadFromFile("Ps/BG.jpg");
     sf::Sprite bg_sprite(bg_tex);
-    
+
     // font
     sf::Font input_font;
     if (!input_font.loadFromFile("Fonts/Roboto-Regular.ttf"))
@@ -21,14 +48,10 @@ void loginPage(sf::RenderWindow& window, Map& map, Player& player)
     }
 
     // text box and text
-    v2f box_size(461, 70);
-    v2f username_box_position(194, 271), password_box_position(194, 377);
-    v2f text_offset(20, 16);
 
     TextBox username(v2f(194, 271), v2f(461, 70), "liadkoren123", input_font);
     TextBox password(v2f(194, 377), v2f(461, 70), "password432", input_font);
-    //sf::Text username_text("liadko21567", input_font, 30);
-    
+
     password.hidden = true;
 
     TextBox* text_boxes[3] = { nullptr, &username, &password };
@@ -37,15 +60,16 @@ void loginPage(sf::RenderWindow& window, Map& map, Player& player)
     int box_focused = 1;
 
 
-    string typed_text = "";
-    int backspace_counter = 0;
-
-
 
     v2f button_position(194, 492), button_size(460, 60);
 
     while (window.isOpen())
     {
+
+        string typed_text = "";
+        int backspace_counter = 0;
+
+
         sf::Event event;
         while (window.pollEvent(event))
             if (event.type == sf::Event::Closed)
@@ -58,14 +82,14 @@ void loginPage(sf::RenderWindow& window, Map& map, Player& player)
                 if (event.text.unicode > 32 && event.text.unicode < 127) {
                     typed_text += event.text.unicode;
                 }
-                
-                //backspaces
+
+                // backspaces
                 if (event.text.unicode == '\b')
                     backspace_counter++;
                 if (event.text.unicode == 127) // ctrl backspace
                     backspace_counter = -100;
-                
-                //
+
+                // tab
                 if (event.text.unicode == '\t' && box_focused)
                 {
                     box_focused = (box_focused + 1) % 3;
@@ -74,7 +98,14 @@ void loginPage(sf::RenderWindow& window, Map& map, Player& player)
 
                     text_boxes[box_focused]->turnOnCursor();
                 }
-                //cursor_visible = true;
+
+                //enter
+                if (event.text.unicode == '\r')
+                {
+                    if(tryLogIn(username.getString(), password.getString()))
+                        return;
+                }
+
             }
             else if (event.type == sf::Event::MouseButtonPressed) {
                 // Check if mouse click is within the text box
@@ -91,12 +122,12 @@ void loginPage(sf::RenderWindow& window, Map& map, Player& player)
 
                 }
 
-                //cursor_visible = true;
-                //cursor_timer.restart();
 
-                bool success = false;
                 if (inBounds(button_position, button_size, mousePos))
-                    success = tryLogIn(username.getString(), password.getString());
+                {
+                    if (tryLogIn(username.getString(), password.getString()))
+                        return;
+                }
 
             }
 
@@ -105,7 +136,7 @@ void loginPage(sf::RenderWindow& window, Map& map, Player& player)
 
 
         window.clear(sf::Color::Red);
-        
+
         window.draw(bg_sprite);
 
 
@@ -119,58 +150,12 @@ void loginPage(sf::RenderWindow& window, Map& map, Player& player)
         {
             if (typed_text.size())
                 text_boxes[box_focused]->addText(typed_text);
-            if(backspace_counter)
+            if (backspace_counter)
                 text_boxes[box_focused]->backspace(backspace_counter);
-
-
-            if (box_focused == 1)
-            {
-
-                /*cursor.setPosition(
-                    username_text.getPosition() +
-                    v2f(username_text.getGlobalBounds().getSize().x + 6, 4));*/
-                    /*
-                if (backspace_counter)
-                    username_text.setString(username_text.getString()
-                        .substring(0, username_text.getString().getSize() - backspace_counter));
-                if (backspace_counter < 0)
-                    username_text.setString("");*/
-            }
-            else
-            {
-                /*box_shadow.setPosition(username_box_position);
-                cursor.setPosition(
-                    password_text.getPosition() +
-                    v2f(password_text.getGlobalBounds().getSize().x + 6, 4));
-                if (typed_text.size())
-                    password_text.setString(password_text.getString() + typed_text);
-                if (backspace_counter)
-                    password_text.setString(password_text.getString()
-                        .substring(0, password_text.getString().getSize() - backspace_counter));
-                if (backspace_counter < 0)
-                    password_text.setString("");*/
-            }
-                    
-            
-            //if(cursor_visible) window.draw(cursor);
-
-            ////cursor timer
-            //if (cursor_timer.getElapsedTime().asMilliseconds() > 500)
-            //{
-            //    cursor_visible ^= true;
-            //    cursor_timer.restart();
-            //}
-
         }
-
-        //window.draw(password_box);
-        //window.draw(password_text);
-        //window.draw(username_text);
 
         window.display();
 
-        typed_text = "";
-        backspace_counter = 0;
     }
 }
 
@@ -224,9 +209,9 @@ void mainLoop(sf::RenderWindow& window, Map& map, Player& player)
 
         player.shootRays(); // World
 
-        //player.drawGun(dt); // Gun
+        player.drawGun(dt); // Gun
 
-        //player.drawCrosshair(); // Crosshair
+        player.drawCrosshair(); // Crosshair
 
 
         window.display(); // Render to screen
@@ -234,29 +219,3 @@ void mainLoop(sf::RenderWindow& window, Map& map, Player& player)
         frame_count++;
     }
 }
-
-
-
-
-int main()
-{
-    //Window
-    sf::RenderWindow window(sf::VideoMode(WIDTH, HEIGHT), "Program", sf::Style::Close, sf::ContextSettings(24, 8, 8));
-  
-    Map map(20, window);
-    
-    Player player(40, 21, map, window);
-
-
-    v2i prev_mouse_position = sf::Mouse::getPosition(window);
-    
-    loginPage(window, map, player);
-
-    window.setMouseCursorVisible(false);
-    
-    // Game loop
-    mainLoop(window, map, player);
-
-    return 0;
-}
-

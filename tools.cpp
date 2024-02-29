@@ -122,7 +122,12 @@ void TextBox::turnOnCursor()
 
 void TextBox::addText(const string& added_text)
 {
+	turnOnCursor();
+
 	text.setString(getString() + added_text);
+
+	if (text.getString().getSize() > 16)
+		text.setString(text.getString().substring(0, 16));
 }
 
 void TextBox::backspace(const int& backspace_counter)
