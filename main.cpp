@@ -4,6 +4,8 @@
 #include "map.hpp"
 #include "client.hpp"
 
+#include <boost/multiprecision/cpp_int.hpp>
+
 void loginPage(sf::RenderWindow& window, Map& map, Player& player);
 void mainLoop(sf::RenderWindow& window, Map& map, Player& player);
 
@@ -19,7 +21,10 @@ int main()
     
     Player player(40, 21, map, window);
 
+    boost::multiprecision::cpp_int num("123341257612045876129038576124390847381295732");
 
+    cout << num  << '\n';
+    cout << num * 2 << '\n';
     
     loginPage(window, map, player);
 
