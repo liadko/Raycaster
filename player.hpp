@@ -11,12 +11,6 @@ private:
 	Map& map;
 	
 
-	struct HitInfo {
-		float distance;
-		bool on_x_axis;
-		float texture_x;
-	};
-
 	sf::Texture* wall_texs;
 
 	// gun animation
@@ -48,6 +42,13 @@ private:
 
 public:
 	
+	struct HitInfo {
+		float distance;
+		bool on_x_axis;
+		float texture_x;
+
+		float perceived_distance;
+	};
 
 	Player(int x, int y, Map& map, sf::RenderWindow& window);
 
@@ -55,7 +56,8 @@ public:
 	void rotateHead(int delta_x, int delta_y, float dt);
 	void move(float angle_offset, float dt);
 
-	void shootRays();
+	void shootRays(HitInfo*& hits);
+	void drawWorld(HitInfo*& hits);
 	Player::HitInfo shootRay(float angle_offset);
 	
 	void drawGun(float dt);
@@ -63,6 +65,8 @@ public:
 	void shootGun();
 
 	void loadTextures();
+
+	
 
 	//
 	void debug();

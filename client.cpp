@@ -41,7 +41,10 @@ bool tryLogIn(const string& username, const string& password)
         std::cerr << "Error binding Tcp socket" << std::endl;
         return true;
     }
+    
+
 
     string message = "Hello!";
     int amount_sent = socket.send(message.c_str(), message.size());
 }
+

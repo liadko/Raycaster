@@ -223,26 +223,61 @@ Player::HitInfo Player::shootRay(float angle_offset)
 
 }
 
-void Player::shootRays()
+void Player::shootRays(Player::HitInfo*& hits)
 {
-	sf::Sprite sprite;
-	sprite.setTexture(wall_texs[0]);
-
+	
 
 	float angle_offset = -fov_x / 2;
 	float step = fov_x / WIDTH;
-
-
-	map.drawGround();
 
 	// For each column of pixels
 	for (int x = 0; x < WIDTH; x++)
 	{
 		HitInfo hit_info = shootRay(angle_offset);
 
-		float dist = hit_info.distance * cos(angle_offset);
 
-		float len = 1000 / dist;
+
+		hits[x] = hit_info;
+		hits[x].perceived_distance = hit_info.distance * cos(angle_offset);
+		
+		//float dist = hit_info.distance * cos(angle_offset);
+		//float len = 1000 / dist;
+
+		//if (hit_info.on_x_axis)
+		//	sprite.setTexture(wall_texs[1]);
+		//else
+		//	sprite.setTexture(wall_texs[0]);
+
+
+		//// drawing 
+		//sprite.setTextureRect(sf::IntRect(
+		//	v2i(hit_info.texture_x * wall_texs[0].getSize().x, 0), v2i(1, wall_texs[0].getSize().y)
+		//));
+		//sprite.setScale(1, len / wall_texs[0].getSize().y);
+		//sprite.setPosition(x, map.floor_level - len / 2);
+		//window.draw(sprite);
+
+
+
+		angle_offset += step;
+	}
+
+
+}
+
+void Player::drawWorld(HitInfo*& hits)
+{
+	sf::Sprite sprite;
+	sprite.setTexture(wall_texs[0]);
+
+	
+
+	// For each column of pixels
+	for (int x = 0; x < WIDTH; x++)
+	{
+		Player::HitInfo hit_info = hits[x];
+
+		float len = 1000 / hits[x].perceived_distance;
 
 		if (hit_info.on_x_axis)
 			sprite.setTexture(wall_texs[1]);
@@ -259,11 +294,8 @@ void Player::shootRays()
 		window.draw(sprite);
 
 
-
-		angle_offset += step;
 	}
 }
-
 
 void Player::drawCrosshair()
 {
