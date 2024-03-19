@@ -60,6 +60,7 @@ void Player::rotateHead(int delta_x, int delta_y, float dt)
 	}
 
 
+
 	// horizontal
 	rotation_x += delta_x * mouse_sensitivity * dt;
 	//sprite.setRotation(rotation_x / PI * 180);		// update player map sprite
@@ -223,6 +224,35 @@ Player::HitInfo Player::shootRay(float angle_offset)
 
 }
 
+
+void Player::drawObject(Object& object)
+{
+
+	float frame_angle = 2*PI * map.cell_size / object.tex.getSize().x;
+	float projection_distance = 0.5f * map.cell_size / tan(fov_y/2);
+	//We're getting Steven's direction relative to ours.
+
+
+
+	float steven_direction = atan2(position.y - object.position.y, object.position.x - position.x ) + rotation_x;
+
+	//float shifted_direction = object.direction + 0.5f * (PI + frame_angle) - rotation_x - steven_direction;
+	float steven_projection_position = 0.5f * tan(steven_direction) / tan(fov_x / 2);
+
+	float screen_x = WIDTH * (0.5f - steven_projection_position);
+
+	float steven_distance = sqrt(pow(position.x - object.position.x, 2) + pow(position.y - object.position.y, 2));
+	float screen_size = HEIGHT * projection_distance / (steven_distance * cos(steven_direction));
+
+	screen_size *= object.size_multiplier;
+
+	object.sprite.setScale(screen_size / map.cell_size, screen_size / map.cell_size);
+	object.sprite.setPosition(screen_x - object.tex.getSize().x * object.sprite.getScale().x / 2, map.floor_level - object.tex.getSize().y * object.sprite.getScale().y / 2);
+
+	window.draw(object.sprite);
+}
+
+
 void Player::shootRays(Player::HitInfo*& hits)
 {
 	
@@ -325,9 +355,9 @@ void Player::loadTextures()
 	wall_texs = new sf::Texture[2]; // (sf::Texture*)malloc(sizeof(sf::Texture) * 2);
 
 	sf::Texture wall;
-	wall.loadFromFile("1L.png");
+	wall.loadFromFile("sprites/1L.png");
 	wall_texs[0] = wall;
-	wall.loadFromFile("1D.png");
+	wall.loadFromFile("sprites/1D.png");
 	wall_texs[1] = wall;
 
 
@@ -405,7 +435,7 @@ void Player::shootGun()
 
 void Player::debug()
 {
-	cout << rotation_x << '\n'
-		 << rotation_y << '\n'
-		 << map.floor_level << '\n';
+	cout << position.x << ": X\n"
+		 << position.y << ": Y\n"
+		 << map.floor_level << ": map floor level\n\n";
 }

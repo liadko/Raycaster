@@ -2,6 +2,7 @@
 #include "tools.hpp"
 #include "player.hpp"
 #include "map.hpp"
+#include "object.hpp"
 #include "client.hpp"
 
 
@@ -21,7 +22,7 @@ int main()
     Player player(40, 21, map, window);
 
     
-    loginPage(window, map, player);
+    //loginPage(window, map, player);
 
     window.setMouseCursorVisible(false);
     
@@ -208,16 +209,19 @@ void mainLoop(sf::RenderWindow& window, Map& map, Player& player)
 
         map.drawSky(); // Sky
 
-
         map.drawGround();
 
+
         
-        player.shootRays(hits); 
+        player.shootRays(hits); // populate hits[]
 
         // World
-        player.drawWorld(hits);
+        player.drawWorld(hits); 
 
-        
+        //player.debug(); 
+
+        Object cop(38, 19);
+        player.drawObject(cop);
 
         player.drawGun(dt); // Gun
 

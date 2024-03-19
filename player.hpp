@@ -2,6 +2,7 @@
 
 #include "headers.hpp"
 #include "map.hpp"
+#include "object.hpp"
 
 class Player
 {
@@ -60,12 +61,12 @@ public:
 	void drawWorld(HitInfo*& hits);
 	Player::HitInfo shootRay(float angle_offset);
 	
+	void drawObject(Object& object);
 	void drawGun(float dt);
 	void drawCrosshair();
 	void shootGun();
 
 	void loadTextures();
-
 	
 
 	//

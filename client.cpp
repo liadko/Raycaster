@@ -48,3 +48,15 @@ bool tryLogIn(const string& username, const string& password)
     int amount_sent = socket.send(message.c_str(), message.size());
 }
 
+void c()
+{
+
+    /*previous_column = SHRT_MIN;
+
+    steven_sprite.setColor(sf::Color(255, 255, 255, static_cast<unsigned char>(round(255 * std::min<float>(1, 2 * (1 - steven_distance / RENDER_DISTANCE))))));
+    steven_sprite.setPosition(round(steven_screen_x - 0.5f * steven_size), round(floor_level - 0.5f * steven_size));
+    steven_sprite.setScale(steven_size / static_cast<float>(CELL_SIZE), steven_size / static_cast<float>(CELL_SIZE));
+    steven_sprite.setTextureRect(sf::IntRect(static_cast<unsigned short>(CELL_SIZE * floor(shifted_direction / frame_angle)), 0, CELL_SIZE, CELL_SIZE));
+
+    i_window.draw(steven_sprite);*/
+}

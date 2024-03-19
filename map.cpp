@@ -5,7 +5,7 @@
 Map::Map(int dist_from_side, sf::RenderWindow& window) : window(window)
 {
 	sf::Image map_texture;
-	map_texture.loadFromFile("map.png");
+	map_texture.loadFromFile("sprites/map.png");
 
 	width = map_texture.getSize().x;
 	height = map_texture.getSize().y;
@@ -31,7 +31,7 @@ Map::Map(int dist_from_side, sf::RenderWindow& window) : window(window)
 	sky_color = sf::Color(70, 170, 255);
 	ground_color = sf::Color(33, 43, 35);
 
-	sky_tex.loadFromFile("sky.png");
+	sky_tex.loadFromFile("sprites/sky.png");
 	sky_sprite.setTexture(sky_tex);
 	//sky_sprite.setTextureRect(sf::IntRect(0, 30, 1833, 460));
 	sky_sprite.setScale(sky_scale, sky_scale);
