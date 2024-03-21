@@ -2,6 +2,7 @@
 #include "client.hpp"
 
 #include <SFML/Network.hpp>
+#include <boost/multiprecision/cpp_int.hpp>
 
 
 void sendUDP()
@@ -42,6 +43,10 @@ bool tryLogIn(const string& username, const string& password)
         return true;
     }
     
+    boost::multiprecision::cpp_int p("170141183460469231731687303715884105757");
+    boost::multiprecision::cpp_int g("340282366920938463463374607431768211507");
+
+
 
 
     string message = "Hello!";
