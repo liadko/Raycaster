@@ -170,7 +170,16 @@ void mainLoop(sf::RenderWindow& window, Map& map, Player& player)
 
     Player::HitInfo* hits = new Player::HitInfo[WIDTH];
 
-    //vector<Object> objects();
+
+    sf::Texture* textures = new sf::Texture[3];
+    textures[0].loadFromFile("sprites/cop.png");
+    textures[1].loadFromFile("sprites/missing_texture.png");
+    float scalers[3] = { 0.00135f, 0.002f, 0.5f };
+
+    vector<Object> objects;
+    objects.emplace_back(32.5f, 19.2f, textures[0], scalers[0]);
+    objects.emplace_back(3, 3, textures[1], scalers[1]);
+    objects.emplace_back(10, 4, textures[0], scalers[0]);
 
 
 
@@ -215,17 +224,13 @@ void mainLoop(sf::RenderWindow& window, Map& map, Player& player)
 
         map.drawGround();
 
-
         
         player.shootRays(hits); // populate hits[]
 
         // World
-        player.drawWorld(hits); 
+        player.drawWorld(hits, objects); 
 
-        //player.debug(); 
-
-        Object cop(3, 3);
-        player.drawObject(cop);
+        //player.debug();
 
         player.drawGun(dt); // Gun
 

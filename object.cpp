@@ -3,16 +3,15 @@
 
 
 
-Object::Object(int x, int y)
-    : position(x, y), direction(0), size_multiplier(0.0018f)
+Object::Object(float x, float y, const sf::Texture& tex, float scaler)
+    : position(x, y), direction(0), size_multiplier(scaler)
 {
-    tex.loadFromFile("sprites/cop.png");
-
+    tex_size = (v2f)tex.getSize();
     sprite.setTexture(tex);
-    sprite.setPosition(WIDTH / 2, HEIGHT / 2);
+    
 }
 
-void Object::setScale(float scale)
+float Object::distFrom(const v2f& pos)
 {
-
+    return sqrtf(pow(pos.x - position.x, 2) + pow(pos.y - position.y, 2));
 }

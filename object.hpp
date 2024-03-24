@@ -5,17 +5,16 @@ class Object
 {
 
 public:
-    sf::Texture tex;
     sf::Sprite sprite;
 
+    v2f tex_size;
     float size_multiplier;
 
     v2f position;
     v2f rotation;
     float direction;
 
-    Object(int x, int y);
-    void setScale(float scale);
-
+    Object(float x, float y, const sf::Texture& tex, float scaler);
+    float distFrom(const v2f& pos);
 };
 

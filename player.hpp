@@ -13,6 +13,7 @@ private:
 	
 
 	sf::Texture* wall_texs;
+	sf::Sprite wall_sprite;
 
 	// gun animation
 	int gun_animation_frame;
@@ -34,7 +35,7 @@ private:
 	// orientation
 	float rotation_x = -3.169f;
 	float rotation_y = -0.56f;
-	float mouse_sensitivity = 0.15f;
+	float mouse_sensitivity = 0.8f;
 	float fov_y = 0.7f;
 	float fov_x = 1.22173f; // 70 degrees
 
@@ -58,7 +59,8 @@ public:
 	void move(float angle_offset, float dt);
 
 	void shootRays(HitInfo*& hits);
-	void drawWorld(HitInfo*& hits);
+	void drawWorld(HitInfo*& hits, vector<Object>& objects);
+	void drawColumn(int x, const Player::HitInfo& hit_info);
 	Player::HitInfo shootRay(float angle_offset);
 	
 	void drawObject(Object& object);

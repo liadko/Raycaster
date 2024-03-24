@@ -229,7 +229,6 @@ Player::HitInfo Player::shootRay(float angle_offset)
 void Player::drawObject(Object& object)
 {
 
-	float frame_angle = 2*PI * map.cell_size / object.tex.getSize().x;
 	float projection_distance = 0.5f * map.cell_size / tan(fov_y/2);
 	//We're getting Steven's direction relative to ours.
 
@@ -237,7 +236,7 @@ void Player::drawObject(Object& object)
 
 	float angle_to_object = atan2(position.y - object.position.y, object.position.x - position.x ) + rotation_x;
 
-	cout << angle_to_object << "\n";
+	//cout << angle_to_object << "\n";
 
 	//float shifted_direction = object.direction + 0.5f * (PI + frame_angle) - rotation_x - steven_direction;
 	float steven_projection_position = 0.5f * tan(angle_to_object) / tan(fov_x / 2);
@@ -249,8 +248,14 @@ void Player::drawObject(Object& object)
 
 	screen_size *= object.size_multiplier;
 
+	if (screen_size < 0) // behind us
+		return;
+
 	object.sprite.setScale(screen_size / map.cell_size, screen_size / map.cell_size);
-	object.sprite.setPosition(screen_x - object.tex.getSize().x * object.sprite.getScale().x / 2, map.floor_level - object.tex.getSize().y * object.sprite.getScale().y / 2);
+	object.sprite.setPosition(
+		screen_x		- object.tex_size.x * object.sprite.getScale().x / 2,
+		map.floor_level - object.tex_size.y * object.sprite.getScale().y / 2);
+
 
 	window.draw(object.sprite);
 }
@@ -259,10 +264,6 @@ void Player::drawObject(Object& object)
 void Player::shootRays(Player::HitInfo*& hits)
 {
 	
-
-	float angle_offset = -fov_x / 2;
-	float step = fov_x / WIDTH;
-
 	// For each column of pixels
 	for (int x = 0; x < WIDTH; x++)
 	{
@@ -270,66 +271,85 @@ void Player::shootRays(Player::HitInfo*& hits)
 		float angle = atan(2* y * tan(fov_x / 2));
 		HitInfo hit_info = shootRay(angle);
 
-		//cout << adjusted_angle << " ";
 
 		hits[x] = hit_info;
 		hits[x].perceived_distance = hit_info.distance * cos(angle);
 		
-		//float dist = hit_info.distance * cos(angle_offset);
-		//float len = 1000 / dist;
 
-		//if (hit_info.on_x_axis)
-		//	sprite.setTexture(wall_texs[1]);
-		//else
-		//	sprite.setTexture(wall_texs[0]);
-
-
-		//// drawing 
-		//sprite.setTextureRect(sf::IntRect(
-		//	v2i(hit_info.texture_x * wall_texs[0].getSize().x, 0), v2i(1, wall_texs[0].getSize().y)
-		//));
-		//sprite.setScale(1, len / wall_texs[0].getSize().y);
-		//sprite.setPosition(x, map.floor_level - len / 2);
-		//window.draw(sprite);
-
-
-
-		angle_offset += step;
 	}
 
-	cout << "\n\n";
 }
 
-void Player::drawWorld(HitInfo*& hits)
+void Player::drawWorld(HitInfo*& hits, vector<Object>& objects)
 {
-	sf::Sprite sprite;
-	sprite.setTexture(wall_texs[0]);
-
 	
+	//Sort objects and get the distances
+	bool column_drawn[WIDTH];
+	for (int x = 0; x < WIDTH; x++)
+		column_drawn[x] = false;
 
-	// For each column of pixels
+	for(int i = 0; i < objects.size(); i++)
+		for (int j = 0; j < objects.size()-1; j++)
+		{
+			if (objects[j].distFrom(position) < objects[j + 1].distFrom(position))
+			{
+				Object temp = objects[j];
+				objects[j] = objects[j+1];
+				objects[j+1] = temp;
+			}
+		}
+
+
+	/*cout << "Objects: ";
+	for (int i = 0; i < objects.size(); i++)
+	{
+		cout << objects[i].distFrom(position) << " ";
+	}
+	cout << "enough of objects\n";*/
+
+	for (Object& object : objects)
+	{
+		float object_distance = object.distFrom(position);
+		for (int x = 0; x < WIDTH; x++)
+		{
+			if (!column_drawn[x] && hits[x].distance > object_distance)
+			{
+				drawColumn(x, hits[x]);
+				column_drawn[x] = true;
+			}
+
+		}
+
+		drawObject(object);
+	}
+
 	for (int x = 0; x < WIDTH; x++)
 	{
-		Player::HitInfo hit_info = hits[x];
-
-		float len = 1000 / hits[x].perceived_distance;
-
-		if (hit_info.on_x_axis)
-			sprite.setTexture(wall_texs[1]);
-		else
-			sprite.setTexture(wall_texs[0]);
-
-
-		// drawing 
-		sprite.setTextureRect(sf::IntRect(
-			v2i(hit_info.texture_x * wall_texs[0].getSize().x, 0), v2i(1, wall_texs[0].getSize().y)
-		));
-		sprite.setScale(1, len / wall_texs[0].getSize().y);
-		sprite.setPosition(x, map.floor_level - len / 2);
-		window.draw(sprite);
-
+		if (!column_drawn[x])
+		{
+			drawColumn(x, hits[x]);
+		}
 
 	}
+}
+
+void Player::drawColumn(int x, const Player::HitInfo& hit_info)
+{
+	float len = 1000 / hit_info.perceived_distance;
+
+	if (hit_info.on_x_axis)
+		wall_sprite.setTexture(wall_texs[1]);
+	else
+		wall_sprite.setTexture(wall_texs[0]);
+
+
+	// drawing 
+	wall_sprite.setTextureRect(sf::IntRect(
+		v2i(hit_info.texture_x * wall_texs[0].getSize().x, 0), v2i(1, wall_texs[0].getSize().y)
+	));
+	wall_sprite.setScale(1, len / wall_texs[0].getSize().y);
+	wall_sprite.setPosition(x, map.floor_level - len / 2);
+	window.draw(wall_sprite);
 }
 
 void Player::drawCrosshair()
