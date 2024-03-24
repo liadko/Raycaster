@@ -72,14 +72,15 @@ void Player::rotateHead(int delta_x, int delta_y, float dt)
 	// vertical
 	rotation_y += delta_y * -mouse_sensitivity * dt;
 
-	map.floor_level = HEIGHT / 2 * (1 + tan(rotation_y)) / tan(fov_y / 2);
 
 	// cap y rotation
-	if (rotation_y > 0.75f)
-		rotation_y = 0.75f;
+	if (rotation_y > -0.15f)
+		rotation_y = -0.15f;
 
 	if (rotation_y < -1.05f)
 		rotation_y = -1.05f;
+
+	map.floor_level = HEIGHT / 2 * (1 + tan(rotation_y)) / tan(fov_y / 2);
 
 }
 
@@ -234,15 +235,17 @@ void Player::drawObject(Object& object)
 
 
 
-	float steven_direction = atan2(position.y - object.position.y, object.position.x - position.x ) + rotation_x;
+	float angle_to_object = atan2(position.y - object.position.y, object.position.x - position.x ) + rotation_x;
+
+	cout << angle_to_object << "\n";
 
 	//float shifted_direction = object.direction + 0.5f * (PI + frame_angle) - rotation_x - steven_direction;
-	float steven_projection_position = 0.5f * tan(steven_direction) / tan(fov_x / 2);
+	float steven_projection_position = 0.5f * tan(angle_to_object) / tan(fov_x / 2);
 
 	float screen_x = WIDTH * (0.5f - steven_projection_position);
 
 	float steven_distance = sqrt(pow(position.x - object.position.x, 2) + pow(position.y - object.position.y, 2));
-	float screen_size = HEIGHT * projection_distance / (steven_distance * cos(steven_direction));
+	float screen_size = HEIGHT * projection_distance / (steven_distance * cos(angle_to_object));
 
 	screen_size *= object.size_multiplier;
 
@@ -263,12 +266,14 @@ void Player::shootRays(Player::HitInfo*& hits)
 	// For each column of pixels
 	for (int x = 0; x < WIDTH; x++)
 	{
-		HitInfo hit_info = shootRay(angle_offset);
+		float y = x / float(WIDTH - 1) - 0.5f;
+		float angle = atan(2* y * tan(fov_x / 2));
+		HitInfo hit_info = shootRay(angle);
 
-
+		//cout << adjusted_angle << " ";
 
 		hits[x] = hit_info;
-		hits[x].perceived_distance = hit_info.distance * cos(angle_offset);
+		hits[x].perceived_distance = hit_info.distance * cos(angle);
 		
 		//float dist = hit_info.distance * cos(angle_offset);
 		//float len = 1000 / dist;
@@ -292,7 +297,7 @@ void Player::shootRays(Player::HitInfo*& hits)
 		angle_offset += step;
 	}
 
-
+	cout << "\n\n";
 }
 
 void Player::drawWorld(HitInfo*& hits)

@@ -170,6 +170,10 @@ void mainLoop(sf::RenderWindow& window, Map& map, Player& player)
 
     Player::HitInfo* hits = new Player::HitInfo[WIDTH];
 
+    //vector<Object> objects();
+
+
+
     while (window.isOpen())
     {
         float dt = clock.restart().asSeconds();
@@ -220,7 +224,7 @@ void mainLoop(sf::RenderWindow& window, Map& map, Player& player)
 
         //player.debug(); 
 
-        Object cop(38, 19);
+        Object cop(3, 3);
         player.drawObject(cop);
 
         player.drawGun(dt); // Gun
