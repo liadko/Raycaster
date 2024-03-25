@@ -192,7 +192,7 @@ void mainLoop(sf::RenderWindow& window, Map& map, Player& player)
             if (event.type == sf::Event::Closed)
                 window.close();
             else if (event.type == sf::Event::MouseButtonPressed)
-                player.shootGun();
+                player.shootGun(event.mouseButton.button == sf::Mouse::Left);
             else if (event.type == sf::Event::MouseMoved)
             {
                 v2i current_pos = sf::Mouse::getPosition(window);

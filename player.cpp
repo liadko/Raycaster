@@ -7,6 +7,13 @@ Player::Player(int x, int y, Map& map, sf::RenderWindow& window) : position(x, y
 {
 	loadTextures();
 
+	gunshot_buffer.loadFromFile("sfx/9mm-pistol.wav");
+	gun_sound.setBuffer(gunshot_buffer);
+	gun_sound.setVolume(25);
+	
+	gunclick_buffer.loadFromFile("sfx/handgun-release.wav");
+	click_sound.setBuffer(gunclick_buffer);
+
 	// set anchor point
 	//sf::Vector2f center(sprite.getLocalBounds().width / 2.0f, sprite.getLocalBounds().height / 2.0f);
 	//sprite.setOrigin(center);
@@ -446,9 +453,18 @@ void Player::drawGun(float dt)
 }
 
 
-void Player::shootGun()
+void Player::shootGun(bool left_click)
 {
+	if (!left_click)
+	{
+		click_sound.play();
+		return;
+	}
+
 	sendUDP();
+
+	
+	gun_sound.play();
 
 	gun_animation_frame = 1;
 	gun_sprite.setTexture(gun_texs[gun_animation_frame]);

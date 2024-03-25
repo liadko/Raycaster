@@ -3,6 +3,7 @@
 #include "headers.hpp"
 #include "map.hpp"
 #include "object.hpp"
+#include <SFML/Audio.hpp>
 
 class Player
 {
@@ -42,6 +43,10 @@ private:
 	// map
 	float body_radius = 0.4f;
 
+	//sound
+	sf::SoundBuffer gunshot_buffer, gunclick_buffer;
+	sf::Sound gun_sound, click_sound;
+
 public:
 	
 	struct HitInfo {
@@ -66,7 +71,7 @@ public:
 	void drawObject(Object& object);
 	void drawGun(float dt);
 	void drawCrosshair();
-	void shootGun();
+	void shootGun(bool left_click);
 
 	void loadTextures();
 	
