@@ -1,8 +1,6 @@
 #include "headers.hpp"
 #include "client.hpp"
 
-#include <SFML/Network.hpp>
-#include <boost/multiprecision/cpp_int.hpp>
 
 
 void sendUDP()
@@ -32,25 +30,44 @@ void sendUDP()
 }
 
 
-bool tryLogIn(const string& username, const string& password)
+bool tryLogIn(const string& username, const string& password, string& error)
 {
+    if (username.size() <= 5)
+    {
+        error = "Username Must Be Longer Than 5 Characters";
+        return false;
+    }
+    if (password.size() <= 5)
+    {
+        error = "Password Must Be Longer Than 5 Characters";
+        return false;
+    }
+
+
     sf::TcpSocket socket;
     
     // Connect to server
     if (socket.connect("127.0.0.1", 21567) != sf::Socket::Done)
     {
-        std::cerr << "Error binding Tcp socket" << std::endl;
-        return true;
+        error = "Failed To Connect To Server";
+        return false;
     }
     
-    boost::multiprecision::cpp_int p("170141183460469231731687303715884105757");
-    boost::multiprecision::cpp_int g("340282366920938463463374607431768211507");
+    bigint p("170141183460469231731687303715884105757");
+    bigint g("340282366920938463463374607431768211507");
+    bigint secret("5234");
+
+    bigint x1 = powm(g, secret, p);
 
 
-
-
-    string message = "Hello!";
+    string message = "X1:" + x1.str() + ":X1";
     int amount_sent = socket.send(message.c_str(), message.size());
+
+
+
+    //bigint key = powm(x2, secret, p);
+
+    return true;
 }
 
 void c()

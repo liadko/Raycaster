@@ -22,7 +22,7 @@ int main()
     Player player(40, 21, map, window);
 
     
-    //loginPage(window, map, player);
+    loginPage(window, map, player);
 
     window.setMouseCursorVisible(false);
     
@@ -103,8 +103,10 @@ void loginPage(sf::RenderWindow& window, Map& map, Player& player)
                 //enter
                 if (event.text.unicode == '\r')
                 {
-                    if(tryLogIn(username.getString(), password.getString()))
+                    string error;
+                    if(tryLogIn(username.getString(), password.getString(), error))
                         return;
+                    cout << error << '\n';
                 }
 
             }
@@ -126,8 +128,10 @@ void loginPage(sf::RenderWindow& window, Map& map, Player& player)
 
                 if (inBounds(button_position, button_size, mousePos))
                 {
-                    if (tryLogIn(username.getString(), password.getString()))
+                    string error;
+                    if (tryLogIn(username.getString(), password.getString(), error))
                         return;
+                    cout << error << '\n';
                 }
 
             }
