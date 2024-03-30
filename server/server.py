@@ -147,19 +147,17 @@ def handle_client(client_socket, address):
     
     
     key = pow(x1, secret, p)
-    print("Key: " + str(key))
     
     key_bytes = key_to_bytes(key)
     
     
-    print(f"{len(key_bytes)=}")
-    
-    print("key_bytes: " + str(key_bytes))
+    #print("key_bytes: " + str(key_bytes))
     
     ciphertext = recvfrom(client_socket)
     print("cipherbytes: " + ciphertext.hex())
     
-    print(decrypt_AES(ciphertext, key_bytes))
+    message = decrypt_AES(ciphertext, key_bytes)
+    
     
     
     # player = handle_login_request(client_socket, address)

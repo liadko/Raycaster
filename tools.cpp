@@ -53,7 +53,7 @@ bool inBounds(const v2f& box_pos, const v2f& box_size, const v2i& pos)
 }
 
 TextBox::TextBox(const v2f& pos, const v2f& size, const string& str, const sf::Font& font)
-	: position(pos), size(size), text(str, font, 30),
+	: position(pos), size(size), text_string(str), text(str, font, 30),
 	 shadow(size), cursor(v2f(1.5f, 30))
 {
 	text.setFillColor(sf::Color::Black);
@@ -68,17 +68,20 @@ TextBox::TextBox(const v2f& pos, const v2f& size, const string& str, const sf::F
 
 string TextBox::getString()
 {
-	return text.getString();
+	return text_string;
 }
 
 void TextBox::draw(sf::RenderWindow& window, bool is_focused)
 {
-	string current_text = text.getString();
-	string hashed(current_text.size(), '*');
+	text.setString(text_string);
+	
 	if (hidden)
 	{
+		string hashed(text_string.size(), '*');
 		text.setString(hashed);
 	}
+
+		
 	
 
 	window.draw(text);
@@ -108,9 +111,6 @@ void TextBox::draw(sf::RenderWindow& window, bool is_focused)
 		cursor_timer.restart();
 	}
 
-	if (hidden)
-		text.setString(current_text);
-
 
 }
 
@@ -124,10 +124,12 @@ void TextBox::addText(const string& added_text)
 {
 	turnOnCursor();
 
-	text.setString(getString() + added_text);
+	text_string = text_string + added_text;
+	if (text_string.size() > 16)
+	{
+		text_string = text_string.substr(0, 16);
+	}
 
-	if (text.getString().getSize() > 16)
-		text.setString(text.getString().substring(0, 16));
 }
 
 void TextBox::backspace(const int& backspace_counter)
@@ -136,13 +138,12 @@ void TextBox::backspace(const int& backspace_counter)
 
 	if (backspace_counter < 0) // ctrl backspace
 	{
-		text.setString("");
+		text_string = "";
 		return;
 	}
 
 
-	text.setString(text.getString()
-		.substring(0, text.getString().getSize() - backspace_counter));
+	text_string = (text_string.substr(0, text_string.size() - backspace_counter));
 }
 
 bool TextBox::inBox(const v2i& pos)

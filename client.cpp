@@ -3,6 +3,8 @@
 #include <iomanip>
 #include <openssl/evp.h>
 #include <openssl/rand.h>
+#include "sha.h"
+#define _CRT_SECURE_NO_WARNINGS
 
 void sendUDP()
 {
@@ -73,35 +75,42 @@ bool tryLogIn(const string& username, const string& password, string& error)
         return false;
     }
 
-
     string x2_str((char*)buffer, buffer_size);
-    if (x2_str == "ERROR" || x2_str[0] != 'X' || x2_str[buffer_size - 1] != 'X')
+
+    
+    if (x2_str == "ERROR" || x2_str[0] != 'X' || x2_str[x2_str.size() - 1] != 'X')
     {
         error = "Invalid X2 Received From Server: " + x2_str;
         return false;
     }
 
-    
     bigint x2(x2_str.substr(1, buffer_size - 2));
+    free(buffer);
 
     // cout << "X2: " << x2 << '\n';
 
     bigint key = powm(x2, secret, p);
 
-    unsigned char* key_bytes = bigintToBytes(key);
+    unsigned char key_bytes[16];
+    bigintToBytes(key, key_bytes); 
 
-    cout << "Key: " << key << "\n";
-    cout << "Key length: " << 16 << "\n";
-    cout << "Key Bytes: ";
-    PrintBytes(key_bytes, 16);
 
-    string encrypted = encryptAES("Nigger", key_bytes);
+    string creds = encryptAES("CREDS " + username + " " + sha256(password) + " ", key_bytes, error);
+    if (creds == "")
+    {
+        return false;
+    }
+
+    sendTCP(socket, creds);
+
     
-    cout << "encrypted: ";
-    PrintBytes(reinterpret_cast<const unsigned char*>(encrypted.c_str()), encrypted.size());
-    sendTCP(socket, encrypted);
+    /*if (!recvTCP(socket, buffer, buffer_size))
+    {
+        error = "Failed To Receive Message From Server";
+        return false;
+    }*/
 
-    cout << "Decrypted: " << decryptAES(encrypted, key_bytes) << "\n";
+
 
     return true;
 }
@@ -109,6 +118,7 @@ bool tryLogIn(const string& username, const string& password, string& error)
 // returns true on success
 bool recvTCP(sf::TcpSocket& socket, void*& buffer, int& buffer_size)
 {
+    
     //length
     short msg_len = 0;
     size_t amount_received;
@@ -171,7 +181,7 @@ void sendTCP(sf::TcpSocket& socket, const string& message)
     free(payload);
 }
 
-void PrintBytes(const unsigned char* pBytes, const uint32_t nBytes) // should more properly be std::size_t
+void printBytes(const unsigned char* pBytes, const uint32_t nBytes) // should more properly be std::size_t
 {
     for (uint32_t i = 0; i != nBytes; i++)
     {
@@ -184,15 +194,15 @@ void PrintBytes(const unsigned char* pBytes, const uint32_t nBytes) // should mo
     cout << "\n";
 }
 
-string encryptAES(const string& plaintext, unsigned char* key) {
+string encryptAES(const string& plaintext, unsigned char* key, string& error) {
     EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
     if (!ctx) {
-        cout << "Error creating EVP_CIPHER_CTX." << std::endl;
+        error = "Error creating EVP_CIPHER_CTX.";
         return "";
     }
 
     if (EVP_EncryptInit_ex(ctx, EVP_aes_128_ecb(), NULL, key, NULL) != 1) {
-        cout << "Error initializing AES encryption." << std::endl;
+        cout << "Error initializing AES encryption.";
         EVP_CIPHER_CTX_free(ctx);
         return "";
     }
@@ -200,14 +210,14 @@ string encryptAES(const string& plaintext, unsigned char* key) {
     string ciphertext(plaintext.size() + EVP_CIPHER_block_size(EVP_aes_128_ecb()), '\0');
     int outLen;
     if (EVP_EncryptUpdate(ctx, reinterpret_cast<unsigned char*>(&ciphertext[0]), &outLen, reinterpret_cast<const unsigned char*>(plaintext.c_str()), plaintext.size()) != 1) {
-        cout << "Error encrypting data." << std::endl;
+        error = "Error encrypting data.";
         EVP_CIPHER_CTX_free(ctx);
         return "";
     }
 
     int finalLen;
     if (EVP_EncryptFinal_ex(ctx, reinterpret_cast<unsigned char*>(&ciphertext[outLen]), &finalLen) != 1) {
-        cout << "Error finalizing encryption." << std::endl;
+        error = "Error finalizing encryption.";
         EVP_CIPHER_CTX_free(ctx);
         return "";
     }
@@ -217,15 +227,15 @@ string encryptAES(const string& plaintext, unsigned char* key) {
     return ciphertext;
 }
 
-string decryptAES(const string& ciphertext, unsigned char* key) {
+string decryptAES(const string& ciphertext, unsigned char* key, string& error) {
     EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
     if (!ctx) {
-        cout << "Error creating EVP_CIPHER_CTX." << std::endl;
+        error = "Error creating EVP_CIPHER_CTX.";
         return "";
     }
 
     if (EVP_DecryptInit_ex(ctx, EVP_aes_128_ecb(), NULL, key, NULL) != 1) {
-        cout << "Error initializing AES decryption." << std::endl;
+        error = "Error initializing AES decryption.";
         EVP_CIPHER_CTX_free(ctx);
         return "";
     }
@@ -233,14 +243,14 @@ string decryptAES(const string& ciphertext, unsigned char* key) {
     string plaintext(ciphertext.size(), '\0');
     int outLen;
     if (EVP_DecryptUpdate(ctx, reinterpret_cast<unsigned char*>(&plaintext[0]), &outLen, reinterpret_cast<const unsigned char*>(ciphertext.c_str()), ciphertext.size()) != 1) {
-        cout << "Error decrypting data." << std::endl;
+        error = "Error decrypting data.";
         EVP_CIPHER_CTX_free(ctx);
         return "";
     }
 
     int finalLen;
     if (EVP_DecryptFinal_ex(ctx, reinterpret_cast<unsigned char*>(&plaintext[outLen]), &finalLen) != 1) {
-        cout << "Error finalizing decryption." << std::endl;
+        error = "Error finalizing decryption.";
         EVP_CIPHER_CTX_free(ctx);
         return "";
     }
@@ -250,20 +260,15 @@ string decryptAES(const string& ciphertext, unsigned char* key) {
     return plaintext;
 }
 
-unsigned char* bigintToBytes(bigint key)
+void bigintToBytes(bigint key, unsigned char* buffer)
 {
-    unsigned char* buffer = (unsigned char*)malloc(16);
-    if (buffer == nullptr)
-        return nullptr;
-
     for (int i = 15; i >= 0; i--)
     {
-        //cout << (key & 255) << " ";
         buffer[i] = (unsigned char) (key & 255);
         key >>= 8;
     }
-    return buffer;
 }
+
 
 //string bigintToHexString(const bigint& number) {
 //    std::stringstream ss;

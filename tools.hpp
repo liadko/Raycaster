@@ -19,6 +19,7 @@ struct TextBox
 {
     v2f position, size;
 
+    string text_string;
     sf::Text text;
     v2f text_offset = { 20, 16 };
 
