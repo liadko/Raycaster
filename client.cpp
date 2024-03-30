@@ -1,6 +1,7 @@
 #include "headers.hpp"
 #include "client.hpp"
-
+#include <iomanip>
+//#include <openssl/aes.h>
 
 
 void sendUDP()
@@ -55,19 +56,122 @@ bool tryLogIn(const string& username, const string& password, string& error)
     
     bigint p("170141183460469231731687303715884105757");
     bigint g("340282366920938463463374607431768211507");
-    bigint secret("5234");
+    bigint secret("5237");
 
     bigint x1 = powm(g, secret, p);
 
 
-    string message = "X1:" + x1.str() + ":X1";
-    int amount_sent = socket.send(message.c_str(), message.size());
+    string message = "X" + x1.str() + "X";
+
+    sendTCP(socket, message);
+
+    void* buffer;
+    int buffer_size;
+    if (!recvTCP(socket, buffer, buffer_size))
+    {
+        error = "Failed To Receive Message From Server";
+        return false;
+    }
 
 
+    string x2_str((char*)buffer, buffer_size);
+    if (x2_str == "ERROR" || x2_str[0] != 'X' || x2_str[buffer_size - 1] != 'X')
+    {
+        error = "Invalid X2 Received From Server";
+        return false;
+    }
 
-    //bigint key = powm(x2, secret, p);
+    
+    bigint x2(x2_str.substr(1, buffer_size - 2));
+
+    // cout << "X2: " << x2 << '\n';
+
+    bigint key = powm(x2, secret, p);
+
+
+    cout << "Key: " << key << "\n";
+
+
 
     return true;
+}
+
+// returns true on success
+bool recvTCP(sf::TcpSocket& socket, void*& buffer, int& buffer_size)
+{
+    //length
+    short msg_len = 0;
+    size_t amount_received;
+    socket.receive(&msg_len, 2, amount_received);
+    if (amount_received != 2)
+    {
+        cout << "Error when receiving msg length\n";
+        return false;
+    }
+
+    buffer = malloc(msg_len);
+    if (buffer == 0)
+    {
+        cout << "couldn't allocate space for payload\n";
+        return false;
+    }
+
+
+    // message string
+    socket.receive(buffer, msg_len, amount_received);
+
+    //PrintBytes((char*)payload, payload_size);
+
+    if (amount_received != msg_len)
+    {
+        cout << "Error when receiving message with length: " << msg_len << "\n";
+        return false;
+    }
+
+    buffer_size = amount_received;
+    return true;
+}
+
+void sendTCP(sf::TcpSocket& socket, const string& message)
+{
+    cout << "Sending: " << message << "\n";
+
+    int payload_size = 2 + message.size();
+    void* payload = malloc(payload_size);
+    if (payload == 0)
+    {
+        cout << "couldn't allocate space for payload\n";
+        return;
+    }
+
+    // length
+    short msg_len = message.size();
+    memcpy(payload, &msg_len, 2); 
+
+    // message string
+    memcpy((char*)payload + 2, message.c_str(), msg_len);
+
+
+    size_t amount_sent;
+    socket.send(payload, payload_size, amount_sent);
+
+    if (amount_sent != payload_size)
+        cout << "Error when sending message: " << message << "\n";
+
+    free(payload);
+}
+
+void PrintBytes(const char* pBytes, const uint32_t nBytes) // should more properly be std::size_t
+{
+    for (uint32_t i = 0; i != nBytes; i++)
+    {
+        std::cout <<
+            std::hex <<           // output in hex
+            std::setw(2) <<       // each byte prints as two characters
+            std::setfill('0') <<  // fill with 0 if not enough characters
+            static_cast<unsigned int>(pBytes[i]) << " ";
+    }
+    cout << "\n";
 }
 
 void c()

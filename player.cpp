@@ -9,10 +9,11 @@ Player::Player(int x, int y, Map& map, sf::RenderWindow& window) : position(x, y
 
 	gunshot_buffer.loadFromFile("sfx/9mm-pistol.wav");
 	gun_sound.setBuffer(gunshot_buffer);
-	gun_sound.setVolume(25);
+	gun_sound.setVolume(10);
 	
 	gunclick_buffer.loadFromFile("sfx/handgun-release.wav");
 	click_sound.setBuffer(gunclick_buffer);
+	click_sound.setVolume(50);
 
 	// set anchor point
 	//sf::Vector2f center(sprite.getLocalBounds().width / 2.0f, sprite.getLocalBounds().height / 2.0f);
