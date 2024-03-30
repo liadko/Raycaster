@@ -1,8 +1,8 @@
 #include "headers.hpp"
 #include "client.hpp"
 #include <iomanip>
-//#include <openssl/aes.h>
-
+#include <openssl/evp.h>
+#include <openssl/rand.h>
 
 void sendUDP()
 {
@@ -56,7 +56,7 @@ bool tryLogIn(const string& username, const string& password, string& error)
     
     bigint p("170141183460469231731687303715884105757");
     bigint g("340282366920938463463374607431768211507");
-    bigint secret("5237");
+    bigint secret("21569");
 
     bigint x1 = powm(g, secret, p);
 
@@ -77,7 +77,7 @@ bool tryLogIn(const string& username, const string& password, string& error)
     string x2_str((char*)buffer, buffer_size);
     if (x2_str == "ERROR" || x2_str[0] != 'X' || x2_str[buffer_size - 1] != 'X')
     {
-        error = "Invalid X2 Received From Server";
+        error = "Invalid X2 Received From Server: " + x2_str;
         return false;
     }
 
@@ -88,10 +88,20 @@ bool tryLogIn(const string& username, const string& password, string& error)
 
     bigint key = powm(x2, secret, p);
 
+    unsigned char* key_bytes = bigintToBytes(key);
 
     cout << "Key: " << key << "\n";
+    cout << "Key length: " << 16 << "\n";
+    cout << "Key Bytes: ";
+    PrintBytes(key_bytes, 16);
 
+    string encrypted = encryptAES("Nigger", key_bytes);
+    
+    cout << "encrypted: ";
+    PrintBytes(reinterpret_cast<const unsigned char*>(encrypted.c_str()), encrypted.size());
+    sendTCP(socket, encrypted);
 
+    cout << "Decrypted: " << decryptAES(encrypted, key_bytes) << "\n";
 
     return true;
 }
@@ -161,7 +171,7 @@ void sendTCP(sf::TcpSocket& socket, const string& message)
     free(payload);
 }
 
-void PrintBytes(const char* pBytes, const uint32_t nBytes) // should more properly be std::size_t
+void PrintBytes(const unsigned char* pBytes, const uint32_t nBytes) // should more properly be std::size_t
 {
     for (uint32_t i = 0; i != nBytes; i++)
     {
@@ -169,10 +179,104 @@ void PrintBytes(const char* pBytes, const uint32_t nBytes) // should more proper
             std::hex <<           // output in hex
             std::setw(2) <<       // each byte prints as two characters
             std::setfill('0') <<  // fill with 0 if not enough characters
-            static_cast<unsigned int>(pBytes[i]) << " ";
+            (int)pBytes[i] << " ";
     }
     cout << "\n";
 }
+
+string encryptAES(const string& plaintext, unsigned char* key) {
+    EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+    if (!ctx) {
+        cout << "Error creating EVP_CIPHER_CTX." << std::endl;
+        return "";
+    }
+
+    if (EVP_EncryptInit_ex(ctx, EVP_aes_128_ecb(), NULL, key, NULL) != 1) {
+        cout << "Error initializing AES encryption." << std::endl;
+        EVP_CIPHER_CTX_free(ctx);
+        return "";
+    }
+
+    string ciphertext(plaintext.size() + EVP_CIPHER_block_size(EVP_aes_128_ecb()), '\0');
+    int outLen;
+    if (EVP_EncryptUpdate(ctx, reinterpret_cast<unsigned char*>(&ciphertext[0]), &outLen, reinterpret_cast<const unsigned char*>(plaintext.c_str()), plaintext.size()) != 1) {
+        cout << "Error encrypting data." << std::endl;
+        EVP_CIPHER_CTX_free(ctx);
+        return "";
+    }
+
+    int finalLen;
+    if (EVP_EncryptFinal_ex(ctx, reinterpret_cast<unsigned char*>(&ciphertext[outLen]), &finalLen) != 1) {
+        cout << "Error finalizing encryption." << std::endl;
+        EVP_CIPHER_CTX_free(ctx);
+        return "";
+    }
+
+    EVP_CIPHER_CTX_free(ctx);
+    ciphertext.resize(outLen + finalLen);
+    return ciphertext;
+}
+
+string decryptAES(const string& ciphertext, unsigned char* key) {
+    EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+    if (!ctx) {
+        cout << "Error creating EVP_CIPHER_CTX." << std::endl;
+        return "";
+    }
+
+    if (EVP_DecryptInit_ex(ctx, EVP_aes_128_ecb(), NULL, key, NULL) != 1) {
+        cout << "Error initializing AES decryption." << std::endl;
+        EVP_CIPHER_CTX_free(ctx);
+        return "";
+    }
+
+    string plaintext(ciphertext.size(), '\0');
+    int outLen;
+    if (EVP_DecryptUpdate(ctx, reinterpret_cast<unsigned char*>(&plaintext[0]), &outLen, reinterpret_cast<const unsigned char*>(ciphertext.c_str()), ciphertext.size()) != 1) {
+        cout << "Error decrypting data." << std::endl;
+        EVP_CIPHER_CTX_free(ctx);
+        return "";
+    }
+
+    int finalLen;
+    if (EVP_DecryptFinal_ex(ctx, reinterpret_cast<unsigned char*>(&plaintext[outLen]), &finalLen) != 1) {
+        cout << "Error finalizing decryption." << std::endl;
+        EVP_CIPHER_CTX_free(ctx);
+        return "";
+    }
+
+    EVP_CIPHER_CTX_free(ctx);
+    plaintext.resize(outLen + finalLen);
+    return plaintext;
+}
+
+unsigned char* bigintToBytes(bigint key)
+{
+    unsigned char* buffer = (unsigned char*)malloc(16);
+    if (buffer == nullptr)
+        return nullptr;
+
+    for (int i = 15; i >= 0; i--)
+    {
+        //cout << (key & 255) << " ";
+        buffer[i] = (unsigned char) (key & 255);
+        key >>= 8;
+    }
+    return buffer;
+}
+
+//string bigintToHexString(const bigint& number) {
+//    std::stringstream ss;
+//    ss << std::hex << number;
+//    std::string hexString = ss.str();
+//
+//    // Pad with leading zeros if necessary
+//    while (hexString.length() < 32) {
+//        hexString = "0" + hexString;
+//    }
+//
+//    return hexString;
+//}
 
 void c()
 {

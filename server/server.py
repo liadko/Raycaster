@@ -1,6 +1,7 @@
 import socket
 import threading
-
+from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
+from cryptography.hazmat.backends import default_backend
 
 # Define server address and port
 TCP_PORT = 21567  # Separate port for TCP communication
@@ -41,7 +42,7 @@ def send(client, msg):
     client.send(full_message)
 
 # returns msg bytes
-def recvfrom(client):
+def recvfrom(client) -> bytes:
 
     try:
         msg_length_bytes = client.recv(2)
@@ -62,11 +63,11 @@ def recvfrom(client):
     except socket.error as e:
         raise ConnectionError(f"Socket error while receiving data: {e}") from e
 
-# Function to send encrypted messages over TCP
-def send_tcp_message(client_socket, message, data):
-    # Encrypt message and data (implementation of encryption needed)
-    encrypted_data = encrypt((message, data))
-    client_socket.sendall(encrypted_data)
+# # Function to send encrypted messages over TCP
+# def send_tcp_message(client_socket, message, data):
+#     # Encrypt message and data (implementation of encryption needed)
+#     encrypted_data = encrypt((message, data))
+#     client_socket.sendall(encrypted_data)
 
 # # Function to handle UDP game updates
 # def handle_game_update(client_socket, address, player):
@@ -92,6 +93,28 @@ def send_tcp_message(client_socket, message, data):
 #     for player in players.values():
 #         player.udp_socket.sendto(data, (SERVER_ADDRESS, address[1]))
 
+def key_to_bytes(key):
+    s = b''
+    for i in range(16):
+        s = int.to_bytes(key & 255, 1) + s
+        key >>= 8
+    
+    return s    
+
+def encrypt_AES(plaintext, key):
+    backend = default_backend()
+    cipher = Cipher(algorithms.AES(key), modes.ECB(), backend=backend)
+    encryptor = cipher.encryptor()
+    ciphertext = encryptor.update(plaintext) + encryptor.finalize()
+    return ciphertext
+
+def decrypt_AES(cipherbytes: bytes, key):
+    backend = default_backend()
+    cipher = Cipher(algorithms.AES(key), modes.ECB(), backend=backend)
+    decryptor = cipher.decryptor()
+    plaintext = decryptor.update(cipherbytes) + decryptor.finalize()
+    return plaintext
+
 def handle_client(client_socket, address):
     global players
     
@@ -106,7 +129,6 @@ def handle_client(client_socket, address):
     
     x1 = int(x1[1:-1])
     
-    print("DEBUG: X1 is " + str(x1))
     # Encryption
     
     #CREATE AES KEY
@@ -121,16 +143,23 @@ def handle_client(client_socket, address):
     # secret color and mix
     x2 = pow(g, secret, p)
     
-    print("DEBUG: X2 is " + str(x2))
     send(client_socket, 'X' + str(x2) + 'X')
     
     
     key = pow(x1, secret, p)
     print("Key: " + str(key))
-    #ENCRYPT AES KEY WITH RSA
     
-    #SEND AES KEY TO CLIENT
+    key_bytes = key_to_bytes(key)
     
+    
+    print(f"{len(key_bytes)=}")
+    
+    print("key_bytes: " + str(key_bytes))
+    
+    ciphertext = recvfrom(client_socket)
+    print("cipherbytes: " + ciphertext.hex())
+    
+    print(decrypt_AES(ciphertext, key_bytes))
     
     
     # player = handle_login_request(client_socket, address)

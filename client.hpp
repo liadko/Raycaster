@@ -14,4 +14,11 @@ bool recvTCP(sf::TcpSocket& socket, void*& payload, int& payload_size);
 
 void sendUDP();
 
-void PrintBytes(const char* pBytes, const uint32_t nBytes);
+void PrintBytes(const unsigned char* pBytes, const uint32_t nBytes);
+
+//Encryption
+string encryptAES(const std::string& plaintext, unsigned char* key);
+string decryptAES(const string& ciphertext, unsigned char* key);
+
+//string bigintToHexString(const bigint& number);
+unsigned char* bigintToBytes(bigint key);
