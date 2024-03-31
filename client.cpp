@@ -4,7 +4,24 @@
 #include <openssl/evp.h>
 #include <openssl/rand.h>
 #include "sha.h"
-#define _CRT_SECURE_NO_WARNINGS
+
+
+Client::Client()
+{
+    p = bigint("170141183460469231731687303715884105757");
+    g = bigint("340282366920938463463374607431768211507");
+    unsigned char secret_buffer[16];
+    RAND_bytes(secret_buffer, 16);
+
+    secret = 0;
+    for (int i = 0; i < 16; i++)
+    {
+        secret <<= 8;
+        secret |= secret_buffer[i];
+    }
+
+
+}
 
 void sendUDP()
 {
@@ -32,9 +49,60 @@ void sendUDP()
 
 }
 
-
-bool tryLogIn(const string& username, const string& password, string& error)
+bool Client::connectToServer(const string& ip, int port, string& error)
 {
+    if (tcp_socket.connect(ip, port) != sf::Socket::Done)
+    {
+        error = "Failed To Connect To Server";
+        return false;
+    }
+
+    // Diffie Hellman
+    // X1
+    bigint x1 = powm(g, secret, p);
+
+    string message = "X" + x1.str() + "X";
+
+    if (!sendTCP(tcp_socket, message, error))
+        return false;
+
+
+    // X2
+    void* buffer;
+    int buffer_size;
+    if (!recvTCP(tcp_socket, buffer, buffer_size))
+    {
+        error = "Failed To Receive Message From Server";
+        return false;
+    }
+
+    string x2_str((char*)buffer, buffer_size);
+    free(buffer);
+
+
+    if (x2_str == "ERROR" || x2_str[0] != 'X' || x2_str[x2_str.size() - 1] != 'X')
+    {
+        error = "Invalid X2 Received From Server: " + x2_str;
+        return false;
+    }
+
+    bigint x2(x2_str.substr(1, x2_str.size() - 2));
+
+    // cout << "X2: " << x2 << '\n';
+
+
+    // Key
+
+    bigint key = powm(x2, secret, p);
+    bigintToBytes(key, key_bytes);
+
+
+    connected = true;
+}
+
+bool Client::tryLogIn(const string& username, const string& password, string& error)
+{
+
     if (username.size() <= 5)
     {
         error = "Username Must Be Longer Than 5 Characters";
@@ -47,72 +115,66 @@ bool tryLogIn(const string& username, const string& password, string& error)
     }
 
 
-    sf::TcpSocket socket;
+    
     
     // Connect to server
-    if (socket.connect("127.0.0.1", 21567) != sf::Socket::Done)
-    {
-        error = "Failed To Connect To Server";
-        return false;
-    }
     
-    bigint p("170141183460469231731687303715884105757");
-    bigint g("340282366920938463463374607431768211507");
-    bigint secret("21569");
-
-    bigint x1 = powm(g, secret, p);
+    if (!connectToServer("127.0.0.1", 21567, error))
+        return false;
 
 
-    string message = "X" + x1.str() + "X";
 
-    sendTCP(socket, message);
+    string creds = "CREDS " + username + " " + sha256(password) + " ";
+    sendEncryptedTCP(creds, error);
+
+    
 
     void* buffer;
     int buffer_size;
-    if (!recvTCP(socket, buffer, buffer_size))
+    if (!recvEncryptedTCP(buffer, buffer_size, error))
     {
         error = "Failed To Receive Message From Server";
         return false;
     }
 
-    string x2_str((char*)buffer, buffer_size);
-
-    
-    if (x2_str == "ERROR" || x2_str[0] != 'X' || x2_str[x2_str.size() - 1] != 'X')
-    {
-        error = "Invalid X2 Received From Server: " + x2_str;
-        return false;
-    }
-
-    bigint x2(x2_str.substr(1, buffer_size - 2));
-    free(buffer);
-
-    // cout << "X2: " << x2 << '\n';
-
-    bigint key = powm(x2, secret, p);
-
-    unsigned char key_bytes[16];
-    bigintToBytes(key, key_bytes); 
-
-
-    string creds = encryptAES("CREDS " + username + " " + sha256(password) + " ", key_bytes, error);
-    if (creds == "")
-    {
-        return false;
-    }
-
-    sendTCP(socket, creds);
-
-    
-    /*if (!recvTCP(socket, buffer, buffer_size))
-    {
-        error = "Failed To Receive Message From Server";
-        return false;
-    }*/
-
-
+    cout << "Message Received: " << string((char*)buffer, buffer_size) << "\n";
+    printBytes((unsigned char*)buffer, buffer_size);
 
     return true;
+}
+
+bool Client::sendEncryptedTCP(const string& msg, string& error)
+{
+    string encrypted = encryptAES(msg, key_bytes, error);
+    if (encrypted == "")
+        return false;
+
+    sendTCP(tcp_socket, encrypted, error);
+}
+
+bool Client::recvEncryptedTCP(void*& buffer, int& buffer_size, string& error)
+{
+    if (!recvTCP(tcp_socket, buffer, buffer_size))
+    {
+        error = "Error Trying to receive encrypted tcp";
+        return false;
+    }
+
+    string ciphertext((char*)buffer, buffer_size);
+
+    cout << "received this encrypted shit: ";
+    printBytes((unsigned char*)buffer, buffer_size);
+
+    string decrypted = decryptAES(ciphertext, key_bytes, error);
+    if (decrypted == "")
+    {
+        cout << "ERROR when decrypting the shit from the cunt: " << error << "\n";
+        return false;
+    }
+
+    
+    memcpy(buffer, decrypted.c_str(), decrypted.size());
+    
 }
 
 // returns true on success
@@ -152,33 +214,33 @@ bool recvTCP(sf::TcpSocket& socket, void*& buffer, int& buffer_size)
     return true;
 }
 
-void sendTCP(sf::TcpSocket& socket, const string& message)
+bool sendTCP(sf::TcpSocket& socket, const string& message, string& error)
 {
     cout << "Sending: " << message << "\n";
 
-    int payload_size = 2 + message.size();
-    void* payload = malloc(payload_size);
-    if (payload == 0)
+    int buffer_size = 2 + message.size();
+    void* buffer = malloc(buffer_size);
+    if (buffer == 0)
     {
-        cout << "couldn't allocate space for payload\n";
-        return;
+        error = "couldn't allocate space for message buffer";
+        return false;
     }
 
     // length
     short msg_len = message.size();
-    memcpy(payload, &msg_len, 2); 
+    memcpy(buffer, &msg_len, 2);
 
     // message string
-    memcpy((char*)payload + 2, message.c_str(), msg_len);
+    memcpy((char*)buffer + 2, message.c_str(), msg_len);
 
 
     size_t amount_sent;
-    socket.send(payload, payload_size, amount_sent);
+    socket.send(buffer, buffer_size, amount_sent);
 
-    if (amount_sent != payload_size)
+    if (amount_sent != buffer_size)
         cout << "Error when sending message: " << message << "\n";
 
-    free(payload);
+    free(buffer);
 }
 
 void printBytes(const unsigned char* pBytes, const uint32_t nBytes) // should more properly be std::size_t

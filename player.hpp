@@ -3,6 +3,7 @@
 #include "headers.hpp"
 #include "map.hpp"
 #include "object.hpp"
+#include "client.hpp"
 #include <SFML/Audio.hpp>
 
 class Player
@@ -10,7 +11,7 @@ class Player
 private:
 	// game logic
 	sf::RenderWindow& window;
-	Map& map;
+	
 	
 
 	sf::Texture* wall_texs;
@@ -48,7 +49,9 @@ private:
 	sf::Sound gun_sound, click_sound;
 
 public:
-	
+	Client client;
+	Map map;
+
 	struct HitInfo {
 		float distance;
 		bool on_x_axis;
@@ -57,7 +60,7 @@ public:
 		float perceived_distance;
 	};
 
-	Player(int x, int y, Map& map, sf::RenderWindow& window);
+	Player(int x, int y, sf::RenderWindow& window);
 
 	void handleKeys(float dt);
 	void rotateHead(int delta_x, int delta_y, float dt);

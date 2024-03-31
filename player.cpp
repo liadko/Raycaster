@@ -3,8 +3,9 @@
 #include "tools.hpp"
 #include "client.hpp"
 
-Player::Player(int x, int y, Map& map, sf::RenderWindow& window) : position(x, y), map(map), window(window)
+Player::Player(int x, int y, sf::RenderWindow& window) : map(20, window), position(x, y), window(window)
 {
+
 	loadTextures();
 
 	gunshot_buffer.loadFromFile("sfx/9mm-pistol.wav");
@@ -13,7 +14,7 @@ Player::Player(int x, int y, Map& map, sf::RenderWindow& window) : position(x, y
 	
 	gunclick_buffer.loadFromFile("sfx/handgun-release.wav");
 	click_sound.setBuffer(gunclick_buffer);
-	click_sound.setVolume(50);
+	click_sound.setVolume(25);
 
 	// set anchor point
 	//sf::Vector2f center(sprite.getLocalBounds().width / 2.0f, sprite.getLocalBounds().height / 2.0f);

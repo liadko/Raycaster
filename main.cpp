@@ -6,9 +6,8 @@
 #include "client.hpp"
 
 
-void loginPage(sf::RenderWindow& window, Map& map, Player& player);
-void mainLoop(sf::RenderWindow& window, Map& map, Player& player);
-
+void loginPage(sf::RenderWindow& window, Player& player);
+void mainLoop(sf::RenderWindow& window, Player& player);
 
 
 
@@ -17,23 +16,22 @@ int main()
     //Window
     sf::RenderWindow window(sf::VideoMode(WIDTH, HEIGHT), "Program", sf::Style::Close, sf::ContextSettings(24, 8, 8));
   
-    Map map(20, window);
     
-    Player player(40, 21, map, window);
+    Player player(40, 21, window);
 
     
-    loginPage(window, map, player);
+    loginPage(window, player);
 
     window.setMouseCursorVisible(false);
     
     // Game loop
-    mainLoop(window, map, player);
+    mainLoop(window, player);
 
     return 0;
 }
 
 
-void loginPage(sf::RenderWindow& window, Map& map, Player& player)
+void loginPage(sf::RenderWindow& window, Player& player)
 {
     // background image
     sf::Texture bg_tex;
@@ -78,7 +76,7 @@ void loginPage(sf::RenderWindow& window, Map& map, Player& player)
             else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
                 window.close();
             else if (event.type == sf::Event::TextEntered) {
-                cout << event.text.unicode << "\n";
+                //cout << event.text.unicode << "\n";
                 // actual typing
                 if (event.text.unicode > 32 && event.text.unicode < 127) {
                     typed_text += event.text.unicode;
@@ -104,7 +102,7 @@ void loginPage(sf::RenderWindow& window, Map& map, Player& player)
                 if (event.text.unicode == '\r')
                 {
                     string error;
-                    if(tryLogIn(username.getString(), password.getString(), error))
+                    if(player.client.tryLogIn(username.getString(), password.getString(), error))
                         return;
                     cout << error << '\n';
                 }
@@ -129,7 +127,7 @@ void loginPage(sf::RenderWindow& window, Map& map, Player& player)
                 if (inBounds(button_position, button_size, mousePos))
                 {
                     string error;
-                    if (tryLogIn(username.getString(), password.getString(), error))
+                    if (player.client.tryLogIn(username.getString(), password.getString(), error))
                         return;
                     cout << error << '\n';
                 }
@@ -164,7 +162,7 @@ void loginPage(sf::RenderWindow& window, Map& map, Player& player)
     }
 }
 
-void mainLoop(sf::RenderWindow& window, Map& map, Player& player)
+void mainLoop(sf::RenderWindow& window,  Player& player)
 {
     v2i screen_center(WIDTH / 2, HEIGHT / 2);
 
@@ -224,9 +222,9 @@ void mainLoop(sf::RenderWindow& window, Map& map, Player& player)
         // Graphics
         window.clear(sf::Color::Red);
 
-        map.drawSky(); // Sky
+        player.map.drawSky(); // Sky
 
-        map.drawGround();
+        player.map.drawGround();
 
         
         player.shootRays(hits); // populate hits[]

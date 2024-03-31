@@ -2,6 +2,7 @@ import socket
 import threading
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
+import secrets
 
 # Define server address and port
 TCP_PORT = 21567  # Separate port for TCP communication
@@ -34,11 +35,13 @@ def handle_login_request(client_socket, address):
 
 
 # gets socket and string to send
-def send(client, msg):
-    message = msg.encode() # string to bytes
-    msg_length = len(message) # get length int
+def send(client, msg: str):
+    send_bytes(client, msg.encode())
+    
+def send_bytes(client, msg: bytes):
+    msg_length = len(msg) # get length int
     msg_length = msg_length.to_bytes(2, byteorder='little') # int to byte
-    full_message = msg_length + message # append msg length to msg 
+    full_message = msg_length + msg # append msg length to msg 
     client.send(full_message)
 
 # returns msg bytes
@@ -101,11 +104,19 @@ def key_to_bytes(key):
     
     return s    
 
-def encrypt_AES(plaintext, key):
+def pad_bytes(message_bytes: bytes, block_size):
+    padding_size = block_size - (len(message_bytes) % block_size)
+    padding = bytes([padding_size]) * padding_size
+    return message_bytes + padding
+
+def encrypt_AES(plaintext: bytes, key):
+    blocks = pad_bytes(plaintext, 16)
+    print("encrypting this: " + ' '.join([format(byte, '02X') for byte in blocks]))
+    print(f"{len(blocks)=}")
     backend = default_backend()
     cipher = Cipher(algorithms.AES(key), modes.ECB(), backend=backend)
     encryptor = cipher.encryptor()
-    ciphertext = encryptor.update(plaintext) + encryptor.finalize()
+    ciphertext = encryptor.update(blocks) + encryptor.finalize()
     return ciphertext
 
 def decrypt_AES(cipherbytes: bytes, key):
@@ -118,11 +129,18 @@ def decrypt_AES(cipherbytes: bytes, key):
 def handle_client(client_socket, address):
     global players
     
-    # x = client_socket.recv(1000)
-    # print(x)
+    # Diffie Hellman
+    (p, g) = 170141183460469231731687303715884105757, 340282366920938463463374607431768211507
+    secret = secrets.randbits(128)
     
+    
+    # X2
+    x2 = pow(g, secret, p)
+    send(client_socket, 'X' + str(x2) + 'X')
+    
+    
+    # X1
     x1 = recvfrom(client_socket).decode()
-    
     if(not (x1[0] == 'X' and x1[-1] == 'X')):
         print("Incorrect X1 received. disconnecting client")
         send(client_socket, "ERROR")
@@ -136,29 +154,29 @@ def handle_client(client_socket, address):
     
     # Diffie Hellman
     # common paint
-    (p, g) = 170141183460469231731687303715884105757, 340282366920938463463374607431768211507
-    secret = 5261
     
 
-    # secret color and mix
-    x2 = pow(g, secret, p)
     
-    send(client_socket, 'X' + str(x2) + 'X')
-    
-    
+    # Key
     key = pow(x1, secret, p)
+    # print("Key: " + str(key))
     
     key_bytes = key_to_bytes(key)
     
     
     #print("key_bytes: " + str(key_bytes))
     
-    ciphertext = recvfrom(client_socket)
-    print("cipherbytes: " + ciphertext.hex())
+    cipherbytes = recvfrom(client_socket)
+    # print("cipherbytes: " + ciphertext.hex())
     
-    message = decrypt_AES(ciphertext, key_bytes)
+    message = decrypt_AES(cipherbytes, key_bytes)
     
+    print("got this: " + str(message))
     
+    cipherbytes = encrypt_AES(b"Bitch Nigga", key_bytes)
+    print("sending this: " + ' '.join([format(byte, '02X') for byte in cipherbytes]))
+    
+    send_bytes(client_socket, cipherbytes)
     
     # player = handle_login_request(client_socket, address)
     # if player:
