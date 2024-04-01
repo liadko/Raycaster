@@ -16,22 +16,22 @@ class Player:
         self.position = position
         self.health = health
 
-# Function to handle TCP login requests
-def handle_login_request(client_socket, address):
-    # Receive encrypted login credentials
-    data = client_socket.recv(1024)
-    # Decrypt and parse credentials (implementation of decryption needed)
-    username, password = decrypt(data)
+# # Function to handle TCP login requests
+# def handle_login_request(client_socket, address):
+#     # Receive encrypted login credentials
+#     data = client_socket.recv(1024)
+#     # Decrypt and parse credentials (implementation of decryption needed)
+#     username, password = decrypt(data)
 
-    # Validate credentials (replace with your authentication system)
-    if username == "admin" and password == "secret":
-        player_id = 1  # Replace with unique ID generation
-        player = Player(player_id, username, (0, 0), 100)
-        send_tcp_message(client_socket, "Login successful", player_id)
-        return player
-    else:
-        send_tcp_message(client_socket, "Login failed", None)
-        return None
+#     # Validate credentials (replace with your authentication system)
+#     if username == "admin" and password == "secret":
+#         player_id = 1  # Replace with unique ID generation
+#         player = Player(player_id, username, (0, 0), 100)
+#         send_tcp_message(client_socket, "Login successful", player_id)
+#         return player
+#     else:
+#         send_tcp_message(client_socket, "Login failed", None)
+#         return None
 
 
 # gets socket and string to send
@@ -111,8 +111,6 @@ def pad_bytes(message_bytes: bytes, block_size):
 
 def encrypt_AES(plaintext: bytes, key):
     blocks = pad_bytes(plaintext, 16)
-    print("encrypting this: " + ' '.join([format(byte, '02X') for byte in blocks]))
-    print(f"{len(blocks)=}")
     backend = default_backend()
     cipher = Cipher(algorithms.AES(key), modes.ECB(), backend=backend)
     encryptor = cipher.encryptor()
@@ -145,15 +143,10 @@ def handle_client(client_socket, address):
         print("Incorrect X1 received. disconnecting client")
         send(client_socket, "ERROR")
     
+
     x1 = int(x1[1:-1])
     
     # Encryption
-    
-    #CREATE AES KEY
-    #aes_key = get_random_bytes(32)
-    
-    # Diffie Hellman
-    # common paint
     
 
     
@@ -174,7 +167,7 @@ def handle_client(client_socket, address):
     print("got this: " + str(message))
     
     cipherbytes = encrypt_AES(b"Bitch Nigga", key_bytes)
-    print("sending this: " + ' '.join([format(byte, '02X') for byte in cipherbytes]))
+    #print("sending this: " + ' '.join([format(byte, '02X') for byte in cipherbytes]))
     
     send_bytes(client_socket, cipherbytes)
     

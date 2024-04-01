@@ -51,6 +51,9 @@ void sendUDP()
 
 bool Client::connectToServer(const string& ip, int port, string& error)
 {
+    this->ip = ip;
+    this->port = port;
+
     if (tcp_socket.connect(ip, port) != sf::Socket::Done)
     {
         error = "Failed To Connect To Server";
@@ -66,7 +69,6 @@ bool Client::connectToServer(const string& ip, int port, string& error)
     if (!sendTCP(tcp_socket, message, error))
         return false;
 
-
     // X2
     void* buffer;
     int buffer_size;
@@ -79,7 +81,6 @@ bool Client::connectToServer(const string& ip, int port, string& error)
     string x2_str((char*)buffer, buffer_size);
     free(buffer);
 
-
     if (x2_str == "ERROR" || x2_str[0] != 'X' || x2_str[x2_str.size() - 1] != 'X')
     {
         error = "Invalid X2 Received From Server: " + x2_str;
@@ -90,7 +91,6 @@ bool Client::connectToServer(const string& ip, int port, string& error)
 
     // cout << "X2: " << x2 << '\n';
 
-
     // Key
 
     bigint key = powm(x2, secret, p);
@@ -98,6 +98,9 @@ bool Client::connectToServer(const string& ip, int port, string& error)
 
 
     connected = true;
+    cout << "Connected To Server At ('" << ip << "', " << port << ")\n";
+    
+    return true;
 }
 
 bool Client::tryLogIn(const string& username, const string& password, string& error)
@@ -114,11 +117,9 @@ bool Client::tryLogIn(const string& username, const string& password, string& er
         return false;
     }
 
+    
 
-    
-    
     // Connect to server
-    
     if (!connectToServer("127.0.0.1", 21567, error))
         return false;
 
@@ -137,8 +138,8 @@ bool Client::tryLogIn(const string& username, const string& password, string& er
         return false;
     }
 
-    cout << "Message Received: " << string((char*)buffer, buffer_size) << "\n";
-    printBytes((unsigned char*)buffer, buffer_size);
+    //cout << "Message Received: " << string((char*)buffer, buffer_size) << "\n";
+    //printBytes((unsigned char*)buffer, buffer_size);
 
     return true;
 }
@@ -162,8 +163,6 @@ bool Client::recvEncryptedTCP(void*& buffer, int& buffer_size, string& error)
 
     string ciphertext((char*)buffer, buffer_size);
 
-    cout << "received this encrypted shit: ";
-    printBytes((unsigned char*)buffer, buffer_size);
 
     string decrypted = decryptAES(ciphertext, key_bytes, error);
     if (decrypted == "")
@@ -184,8 +183,7 @@ bool recvTCP(sf::TcpSocket& socket, void*& buffer, int& buffer_size)
     //length
     short msg_len = 0;
     size_t amount_received;
-    socket.receive(&msg_len, 2, amount_received);
-    if (amount_received != 2)
+    if (socket.receive(&msg_len, 2, amount_received) != sf::Socket::Done || amount_received != 2)
     {
         cout << "Error when receiving msg length\n";
         return false;
@@ -216,7 +214,7 @@ bool recvTCP(sf::TcpSocket& socket, void*& buffer, int& buffer_size)
 
 bool sendTCP(sf::TcpSocket& socket, const string& message, string& error)
 {
-    cout << "Sending: " << message << "\n";
+    //cout << "Sending: " << message <<  "\n";
 
     int buffer_size = 2 + message.size();
     void* buffer = malloc(buffer_size);
@@ -235,10 +233,17 @@ bool sendTCP(sf::TcpSocket& socket, const string& message, string& error)
 
 
     size_t amount_sent;
-    socket.send(buffer, buffer_size, amount_sent);
+    if (socket.send(buffer, buffer_size, amount_sent) != sf::Socket::Done)
+    {
+        error = "Failure When Sending The Message: " + message;
+        return false;
+    }
 
     if (amount_sent != buffer_size)
-        cout << "Error when sending message: " << message << "\n";
+    {
+        error = "Error sending message, not whole message sent: " + message;
+        return false;
+    }
 
     free(buffer);
 }
