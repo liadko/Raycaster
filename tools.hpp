@@ -1,5 +1,6 @@
 #pragma once
 #include "headers.hpp"
+#include <sstream>
 
 v2i min(const v2i& first, const v2i& second);
 
@@ -14,6 +15,8 @@ float lerp(float a, float b, float t);
 sf::Color lerp(sf::Color c1, sf::Color c2, float t);
 
 bool inBounds(const v2f& box_pos, const v2f& box_size, const v2i& pos);
+
+vector<string> split(const string& str);
 
 struct TextBox
 {

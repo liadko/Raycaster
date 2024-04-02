@@ -2,7 +2,8 @@ import socket
 import threading
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
-import secrets
+import secrets # for randbits, Diffie Hellman
+from sql_orm import Users_db
 
 # Define server address and port
 TCP_PORT = 21567  # Separate port for TCP communication
@@ -124,8 +125,11 @@ def decrypt_AES(cipherbytes: bytes, key):
     plaintext = decryptor.update(cipherbytes) + decryptor.finalize()
     return plaintext
 
-def handle_client(client_socket, address):
+def handle_client(client_socket, address, users_db:Users_db, lock: threading.Lock):
     global players
+    
+    
+    
     
     # Diffie Hellman
     (p, g) = 170141183460469231731687303715884105757, 340282366920938463463374607431768211507
@@ -148,8 +152,6 @@ def handle_client(client_socket, address):
     
     # Encryption
     
-
-    
     # Key
     key = pow(x1, secret, p)
     # print("Key: " + str(key))
@@ -166,10 +168,31 @@ def handle_client(client_socket, address):
     
     print("got this: " + str(message))
     
-    cipherbytes = encrypt_AES(b"Bitch Nigga", key_bytes)
-    #print("sending this: " + ' '.join([format(byte, '02X') for byte in cipherbytes]))
+    parts = message.decode().split(' ')
+    print(parts)
     
-    send_bytes(client_socket, cipherbytes)
+    lock.acquire()
+    response = "ERROR~Message Unrecognized~"
+    if(parts[0] == "LOGIN"):
+        if(users_db.user_exists(parts[1], parts[2])):
+            response = "SUCCESS~"
+        else:
+            response = "FAIL~Username Or Password Incorrect~"
+    elif(parts[0] == "SIGNUP"):
+        if(users_db.username_exists(parts[1])):
+            response = "FAIL~Username Already Exists~"
+        elif(users_db.insert_new_user(parts[1], parts[2])):
+            response = "SUCCESS~"
+        else:
+            response = "FAIL~Can't Add User For Some Reason~"
+            
+        
+    
+    
+    lock.release()
+    #print("sending this: " + ' '.join([format(byte, '02X') for byte in cipherbytes]))
+    print(f"{response=}")
+    send_bytes(client_socket, encrypt_AES(response.encode(), key_bytes))
     
     # player = handle_login_request(client_socket, address)
     # if player:
@@ -195,14 +218,18 @@ def main():
     # udp_socket.bind(SERVER_ADDRESS)
 
     players = {}
-
+    
+    users_db = Users_db()
+    lock = threading.Lock()
+    
+    
     # Threading for concurrent client handling
 
     print("Server started on", SERVER_ADDRESS)
 
     while True:
         client_socket, address = tcp_socket.accept()
-        threading.Thread(target=handle_client, args=(client_socket, address)).start()
+        threading.Thread(target=handle_client, args=(client_socket, address, users_db, lock)).start()
 
 if __name__ == "__main__":
     main()

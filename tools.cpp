@@ -52,6 +52,23 @@ bool inBounds(const v2f& box_pos, const v2f& box_size, const v2i& pos)
 	return true;
 }
 
+
+vector<string> split(const string& str)
+{
+
+	std::istringstream iss(str);
+	vector<string> tokens;
+	string token;
+
+	// Split the string by spaces and store each token in a vector
+	while (std::getline(iss, token, '~')) {
+		tokens.push_back(token);
+	}
+
+	return tokens;
+}
+
+
 TextBox::TextBox(const v2f& pos, const v2f& size, const string& str, const sf::Font& font)
 	: position(pos), size(size), text_string(str), text(str, font, 30),
 	 shadow(size), cursor(v2f(1.5f, 30))
@@ -150,3 +167,4 @@ bool TextBox::inBox(const v2i& pos)
 {
 	return inBounds(position, size, pos);
 }
+

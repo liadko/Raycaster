@@ -25,14 +25,15 @@ private:
 	sf::Texture* gun_texs;
 	v2f gun_position;
 	v2f gun_offset;
-	float max_hand_range = 60;
+	float max_hand_range = 40;
 	float hand_move_range;
 
 	// movement
 	v2f position;
-	float speed = 3.0f;
-	bool running = false, moving = false;
-	float run_multiplier = 1.75f;
+	float speed = 2.0f;
+	bool running = false, crouching = false;
+	bool moving = false;
+	float run_multiplier = 1.75f, crouch_multiplier = 0.5f;
 
 	// orientation
 	float rotation_x = -3.169f;

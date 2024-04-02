@@ -1,5 +1,6 @@
 #include "headers.hpp"
 #include "client.hpp"
+#include "tools.hpp"
 #include <iomanip>
 #include <openssl/evp.h>
 #include <openssl/rand.h>
@@ -117,6 +118,11 @@ bool Client::tryLogIn(const string& username, const string& password, string& er
         return false;
     }
 
+    if (username.find('~') != username.npos)
+    {
+        error = "Username Cannot Have Tilde ~";
+        return false;
+    }
     
 
     // Connect to server
@@ -125,7 +131,7 @@ bool Client::tryLogIn(const string& username, const string& password, string& er
 
 
 
-    string creds = "CREDS " + username + " " + sha256(password) + " ";
+    string creds = "LOGIN " + username + " " + sha256(password) + " ";
     sendEncryptedTCP(creds, error);
 
     
@@ -138,10 +144,23 @@ bool Client::tryLogIn(const string& username, const string& password, string& er
         return false;
     }
 
+    string response((char*)buffer, buffer_size);
+    free(buffer);
+
+    vector<string> parts = split(response);
+    
+    if (parts[0] == "SUCCESS")
+        return true;
+
+    if(parts.size() >= 2)
+        cout << parts[1] << "\n";
+
+    return false;
+
     //cout << "Message Received: " << string((char*)buffer, buffer_size) << "\n";
     //printBytes((unsigned char*)buffer, buffer_size);
 
-    return true;
+    
 }
 
 bool Client::sendEncryptedTCP(const string& msg, string& error)
@@ -179,7 +198,21 @@ bool Client::recvEncryptedTCP(void*& buffer, int& buffer_size, string& error)
 // returns true on success
 bool recvTCP(sf::TcpSocket& socket, void*& buffer, int& buffer_size)
 {
-    
+    socket.setBlocking(false);
+
+    sf::SocketSelector selector;
+    selector.add(socket);
+
+
+    if (!selector.wait(sf::milliseconds(1000)))
+    {
+        cout << "Nothing Received\n";
+        socket.setBlocking(true);
+        return false;
+    }
+
+    socket.setBlocking(true);
+
     //length
     short msg_len = 0;
     size_t amount_received;

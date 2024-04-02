@@ -50,6 +50,11 @@ void Player::handleKeys(float dt)
 	else
 		running = false;
 
+	if (KEY_PRESSED(LControl))
+		crouching = true;
+	else
+		crouching = false;
+
 
 	//if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up))
 	//	map.sky_offset += 1833*map.sky_scale;
@@ -99,6 +104,8 @@ void Player::move(float angle_offset, float dt)
 	float current_speed = speed;
 	if (running)
 		current_speed *= run_multiplier;
+	else if (crouching)
+		current_speed *= crouch_multiplier;
 
 	v2f potential_position;
 	potential_position.x = position.x + current_speed * run_multiplier * dt * cos(rotation_x - angle_offset);
@@ -428,16 +435,16 @@ void Player::loadTextures()
 void Player::drawGun(float dt)
 {
 	gun_animation_timer += dt;
-	gun_movement_stopwatch += dt * 7;
+	gun_movement_stopwatch += dt * 8;
 	
 	if (moving)
 		hand_move_range = lerp(hand_move_range, max_hand_range, 0.007f);
 	else
-		hand_move_range = lerp(hand_move_range, 0, 0.005f);
+		hand_move_range = lerp(hand_move_range, 0, 0.003f);
 	
 
 	float gun_offset_x = sin(gun_movement_stopwatch) * hand_move_range;
-	float gun_offset_y = 0.3f * cos(gun_movement_stopwatch) * cos(gun_movement_stopwatch) * hand_move_range;
+	float gun_offset_y = 0.2f * cos(gun_movement_stopwatch) * cos(gun_movement_stopwatch) * hand_move_range;
 	gun_offset = { gun_offset_x , gun_offset_y };
 
 	gun_sprite.setPosition(gun_position + gun_offset);
