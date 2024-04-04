@@ -131,7 +131,7 @@ bool Client::tryLogIn(const string& username, const string& password, string& er
 
 
 
-    string creds = "LOGIN " + username + " " + sha256(password) + " ";
+    string creds = "LOGIN " + username + " " + password + " ";
     sendEncryptedTCP(creds, error);
 
     

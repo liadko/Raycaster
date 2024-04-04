@@ -1,6 +1,7 @@
 import sqlite3
 import hashlib
-
+import secrets
+import string
 
 class Users_db:
     def __init__(self):
@@ -19,32 +20,56 @@ class Users_db:
 
     def create_table(self):
         self.open_DB()
-        self.cursor.execute('''CREATE TABLE IF NOT EXISTS Users
-                               (username VARCHAR(20) UNIQUE NOT NULL, 
-                               password VARCHAR(64))
-                               ''')
+        self.cursor.execute('''DROP TABLE Users''')
+        self.cursor.execute('''CREATE TABLE Users (username VARCHAR(20) UNIQUE NOT NULL, password VARCHAR(64), salt VARCHAR(5));''')
         self.commit()
         self.close_DB()
 
-    def insert_new_user(self, username, password) -> bool:
+    def insert_new_user(self, username: str, password: str) -> bool:
         self.open_DB()
         self.cursor.execute("SELECT username FROM Users WHERE username = ?", (username,))
         res = self.cursor.fetchone()
-        if res:
+        if res: # Exists
             self.close_DB()
             return False
         
-        self.cursor.execute("INSERT INTO Users (username, password) VALUES (?, ?);",
-                            (username, password))
+        salt = ''.join(secrets.choice(string.ascii_letters) for _ in range(5))
+        hash_pass = hashlib.sha256((password+salt).encode()).hexdigest()
+        self.cursor.execute("INSERT INTO Users (username, password, salt) VALUES (?, ?, ?);",
+                            (username, hash_pass, salt))
+        self.commit()
+        self.close_DB()
+        return True
+
+    def remove_user(self, username) -> bool:
+        self.open_DB()
+        self.cursor.execute("SELECT username FROM Users WHERE username = ?", (username,))
+        res = self.cursor.fetchone()
+        if res == None:
+            print("User Doesn't Exist, can't remove")
+            self.close_DB()
+            return False
+        
+        self.cursor.execute("DELETE FROM Users WHERE username=?;",
+                            (username,))
         self.commit()
         self.close_DB()
         return True
 
     def user_exists(self, username, password) -> bool:
         self.open_DB()
-        self.cursor.execute("SELECT username FROM Users WHERE username=? AND password=?;", (username, password))
+        self.cursor.execute("SELECT salt FROM Users WHERE username=?;", (username,))
+        salt = self.cursor.fetchone()
+        if salt == None:
+            self.close_DB()
+            return False
+        
+        print(f"{password + salt=}")
+        hash_pass = hashlib.sha256((password + salt).encode()).hexdigest()
+        self.cursor.execute("SELECT username FROM Users WHERE username=? AND password=?;", (username, hash_pass))
         res = self.cursor.fetchone()
         self.close_DB()
+
         if res:
             return True
         return False

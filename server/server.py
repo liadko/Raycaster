@@ -171,6 +171,9 @@ def handle_client(client_socket, address, users_db:Users_db, lock: threading.Loc
     parts = message.decode().split(' ')
     print(parts)
     
+    # users_db.insert_new_user(parts[1], parts[2])
+    # users_db.remove_user(parts[1])
+
     lock.acquire()
     response = "ERROR~Message Unrecognized~"
     if(parts[0] == "LOGIN"):
@@ -190,7 +193,7 @@ def handle_client(client_socket, address, users_db:Users_db, lock: threading.Loc
     
     
     lock.release()
-    #print("sending this: " + ' '.join([format(byte, '02X') for byte in cipherbytes]))
+    # print("sending this: " + ' '.join([format(byte, '02X') for byte in cipherbytes]))
     print(f"{response=}")
     send_bytes(client_socket, encrypt_AES(response.encode(), key_bytes))
     
