@@ -64,7 +64,8 @@ class Users_db:
             self.close_DB()
             return False
         
-        print(f"{password + salt=}")
+        salt = salt[0] # db returns tuple of return values, we need the str itself
+        
         hash_pass = hashlib.sha256((password + salt).encode()).hexdigest()
         self.cursor.execute("SELECT username FROM Users WHERE username=? AND password=?;", (username, hash_pass))
         res = self.cursor.fetchone()

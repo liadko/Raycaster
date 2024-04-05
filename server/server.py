@@ -197,16 +197,8 @@ def handle_client(client_socket, address, users_db:Users_db, lock: threading.Loc
     print(f"{response=}")
     send_bytes(client_socket, encrypt_AES(response.encode(), key_bytes))
     
-    # player = handle_login_request(client_socket, address)
-    # if player:
-    #     players[player.id] = player
-    #     player.udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-
-    #     # Start separate thread for game updates
-    #     # threading.Thread(target=handle_game_update, args=(player.udp_socket, address, player)).start()
-
-    #     # ... handle disconnections and other events ... 
-
+    
+    
     client_socket.close()
 
 # Main server function
