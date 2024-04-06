@@ -80,8 +80,8 @@ void Player::rotateHead(int delta_x, int delta_y, float dt)
 	//sprite.setRotation(rotation_x / PI * 180);		// update player map sprite
 	map.shiftSky(delta_x * mouse_sensitivity * dt); // shift sky
 
-
 	// cout << rotation_x << "\n";
+
 
 	// vertical
 	rotation_y += delta_y * -mouse_sensitivity * dt;
@@ -245,32 +245,33 @@ Player::HitInfo Player::shootRay(float angle_offset)
 void Player::drawObject(Object& object)
 {
 
-	float projection_distance = 0.5f * map.cell_size / tan(fov_y/2);
-	//We're getting Steven's direction relative to ours.
+	float projection_distance = 0.5f / tan(fov_y/2);
 
 
 
+	// object's direction relative to ours.
 	float angle_to_object = atan2(position.y - object.position.y, object.position.x - position.x ) + rotation_x;
 
 	//cout << angle_to_object << "\n";
 
-	//float shifted_direction = object.direction + 0.5f * (PI + frame_angle) - rotation_x - steven_direction;
-	float steven_projection_position = 0.5f * tan(angle_to_object) / tan(fov_x / 2);
+	float projection_position = 0.5f * tan(angle_to_object) / tan(fov_x / 2);
 
-	float screen_x = WIDTH * (0.5f - steven_projection_position);
+	float screen_x = WIDTH * (0.5f - projection_position);
 
-	float steven_distance = sqrt(pow(position.x - object.position.x, 2) + pow(position.y - object.position.y, 2));
-	float screen_size = HEIGHT * projection_distance / (steven_distance * cos(angle_to_object));
+	float object_distance = sqrt(pow(position.x - object.position.x, 2) + pow(position.y - object.position.y, 2));
+	float screen_size = HEIGHT * projection_distance / (object_distance * cos(angle_to_object));
 
 	screen_size *= object.size_multiplier;
 
 	if (screen_size < 0) // behind us
 		return;
 
-	object.sprite.setScale(screen_size / map.cell_size, screen_size / map.cell_size);
+	screen_size *= 0.8f;
+
+	object.sprite.setScale(screen_size, screen_size);
 	object.sprite.setPosition(
-		screen_x		- object.tex_size.x * object.sprite.getScale().x / 2,
-		map.floor_level - object.tex_size.y * object.sprite.getScale().y / 2);
+		screen_x		- 0.5f * object.sprite.getTextureRect().width * object.sprite.getScale().x,
+		map.floor_level - 0.5f * object.sprite.getTextureRect().height * (object.sprite.getScale().y - screen_size * 0.30f));
 
 
 	window.draw(object.sprite);
@@ -470,7 +471,7 @@ void Player::shootGun(bool left_click)
 		return;
 	}
 
-	sendUDP();
+	//sendUDP();
 
 	
 	gun_sound.play();
@@ -481,6 +482,19 @@ void Player::shootGun(bool left_click)
 }
 
 
+void Player::updateServer()
+{
+	string error;
+	string msg = "Jewface";
+	if (!client.sendEncryptedUDP((void*)msg.c_str(), msg.size(), error))
+	{
+		cout << error << '\n';
+		return;
+	}
+
+
+
+}
 
 
 void Player::debug()

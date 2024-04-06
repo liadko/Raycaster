@@ -61,6 +61,11 @@ public:
 		float perceived_distance;
 	};
 
+	struct PlayerInfo
+	{
+		float x, y, rot_x, rot_y;
+	};
+
 	Player(int x, int y, sf::RenderWindow& window);
 
 	void handleKeys(float dt);
@@ -79,6 +84,9 @@ public:
 
 	void loadTextures();
 	
+
+	//server
+	void updateServer();
 
 	//
 	void debug();

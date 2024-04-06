@@ -129,8 +129,6 @@ def handle_client(client_socket, address, users_db:Users_db, lock: threading.Loc
     global players
     
     
-    
-    
     # Diffie Hellman
     (p, g) = 170141183460469231731687303715884105757, 340282366920938463463374607431768211507
     secret = secrets.randbits(128)

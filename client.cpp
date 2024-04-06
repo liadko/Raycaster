@@ -4,7 +4,6 @@
 #include <iomanip>
 #include <openssl/evp.h>
 #include <openssl/rand.h>
-#include "sha.h"
 
 
 Client::Client()
@@ -98,9 +97,16 @@ bool Client::connectToServer(const string& ip, int port, string& error)
     bigintToBytes(key, key_bytes);
 
 
+    if (udp_socket.bind(sf::Socket::AnyPort) != sf::Socket::Done)
+    {
+        error =  "Error binding UDP socket";
+        return false;
+    }
+
     connected = true;
     cout << "Connected To Server At ('" << ip << "', " << port << ")\n";
     
+
     return true;
 }
 
@@ -163,6 +169,42 @@ bool Client::tryLogIn(const string& username, const string& password, string& er
     
 }
 
+//UDP
+
+bool Client::sendEncryptedUDP(void* buffer, int size, string& error)
+{
+    string encrypted = encryptAES(string((char*)buffer, size), key_bytes, error);
+    if (encrypted == "")
+        return false;
+
+    //sendUDP(udp_socket, encrypted, error);
+}
+
+bool Client::recvEncryptedUDP(void*& buffer, int& buffer_size, string& error)
+{
+    if (!recvTCP(tcp_socket, buffer, buffer_size))
+    {
+        error = "Error Trying to receive encrypted tcp";
+        return false;
+    }
+
+    string ciphertext((char*)buffer, buffer_size);
+
+
+    string decrypted = decryptAES(ciphertext, key_bytes, error);
+    if (decrypted == "")
+    {
+        cout << "ERROR when decrypting the shit from the cunt: " << error << "\n";
+        return false;
+    }
+
+
+    memcpy(buffer, decrypted.c_str(), decrypted.size());
+
+}
+
+
+// TCP
 bool Client::sendEncryptedTCP(const string& msg, string& error)
 {
     string encrypted = encryptAES(msg, key_bytes, error);
@@ -171,6 +213,7 @@ bool Client::sendEncryptedTCP(const string& msg, string& error)
 
     sendTCP(tcp_socket, encrypted, error);
 }
+
 
 bool Client::recvEncryptedTCP(void*& buffer, int& buffer_size, string& error)
 {
@@ -293,6 +336,40 @@ void printBytes(const unsigned char* pBytes, const uint32_t nBytes) // should mo
     }
     cout << "\n";
 }
+
+string encryptAES(const void*& buffer, int size, unsigned char* key, string& error) {
+    EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+    if (!ctx) {
+        error = "Error creating EVP_CIPHER_CTX.";
+        return "";
+    }
+
+    if (EVP_EncryptInit_ex(ctx, EVP_aes_128_ecb(), NULL, key, NULL) != 1) {
+        cout << "Error initializing AES encryption.";
+        EVP_CIPHER_CTX_free(ctx);
+        return "";
+    }
+
+    string ciphertext(size + EVP_CIPHER_block_size(EVP_aes_128_ecb()), '\0');
+    int outLen;
+    if (EVP_EncryptUpdate(ctx, reinterpret_cast<unsigned char*>(&ciphertext[0]), &outLen, reinterpret_cast<const unsigned char*>(buffer), size) != 1) {
+        error = "Error encrypting data.";
+        EVP_CIPHER_CTX_free(ctx);
+        return "";
+    }
+
+    int finalLen;
+    if (EVP_EncryptFinal_ex(ctx, reinterpret_cast<unsigned char*>(&ciphertext[outLen]), &finalLen) != 1) {
+        error = "Error finalizing encryption.";
+        EVP_CIPHER_CTX_free(ctx);
+        return "";
+    }
+
+    EVP_CIPHER_CTX_free(ctx);
+    ciphertext.resize(outLen + finalLen);
+    return ciphertext;
+}
+
 
 string encryptAES(const string& plaintext, unsigned char* key, string& error) {
     EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();

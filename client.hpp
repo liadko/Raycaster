@@ -12,7 +12,8 @@ using boost::multiprecision::powm;
 bool sendTCP(sf::TcpSocket& socket, const string& message, string& error);
 bool recvTCP(sf::TcpSocket& socket, void*& buffer, int& buffer_size);
 
-void sendUDP();
+bool sendUDP(sf::UdpSocket& socket, void* buffer, int size, string& error);
+bool recvUDP(sf::UdpSocket& socket, void*& buffer, int& buffer_size);
 
 void printBytes(const unsigned char* pBytes, const uint32_t nBytes);
 
@@ -27,6 +28,7 @@ class Client
 {
 private:
     sf::TcpSocket tcp_socket;
+    sf::UdpSocket udp_socket;
     string ip;
     int port;
 
@@ -42,6 +44,9 @@ public:
     
     bool sendEncryptedTCP(const string& msg, string& error);
     bool recvEncryptedTCP(void*& buffer, int& bufferSize, string& error);
+
+    bool sendEncryptedUDP(void* buffer, int size, string& error);
+    bool recvEncryptedUDP(void*& buffer, int& bufferSize, string& error);
         
     bool connected = false;
 };

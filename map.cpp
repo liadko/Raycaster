@@ -117,12 +117,3 @@ void Map::drawGround()
 	ground.setPosition(v2f(0, floor_level));
 	window.draw(ground);
 }
-
-void Map::darkenScreen()
-{
-	sf::RectangleShape rect(v2f(WIDTH, HEIGHT));
-	
-	rect.setFillColor(sf::Color(0, 0, 0, 50));
-	
-	window.draw(rect);
-}

@@ -20,7 +20,7 @@ int main()
     Player player(40, 21, window);
 
     
-    loginPage(window, player);
+    //loginPage(window, player);
 
     window.setMouseCursorVisible(false);
     
@@ -176,10 +176,11 @@ void mainLoop(sf::RenderWindow& window,  Player& player)
     sf::Texture* textures = new sf::Texture[3];
     textures[0].loadFromFile("sprites/cop.png");
     textures[1].loadFromFile("sprites/missing_texture.png");
-    float scalers[3] = { 0.00135f, 0.002f, 0.5f };
+    textures[2].loadFromFile("sprites/doom3.png");
+    float scalers[3] = { 0.00135f, 0.002f, 0.0095f };
 
     vector<Object> objects;
-    objects.emplace_back(32.5f, 19.2f, textures[0], scalers[0]);
+    objects.emplace_back(32.5f, 19.2f, textures[2], scalers[2]);
     objects.emplace_back(3, 3, textures[1], scalers[1]);
     objects.emplace_back(10, 4, textures[0], scalers[0]);
 
@@ -211,10 +212,12 @@ void mainLoop(sf::RenderWindow& window,  Player& player)
             }
 
 
-        //if(frame_count % 1000 == 0)
-        //    cout << floor(1 / dt) << "\n";
+        if(frame_count % 1000 == 0)
+            cout << dt*1000 << "\n";
 
         //cout << map.sky_sensitivity << '\n';
+
+        player.updateServer();
 
         player.handleKeys(dt);
 

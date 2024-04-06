@@ -8,7 +8,7 @@ public:
     sf::Sprite sprite;
 
     v2f tex_size;
-    float size_multiplier;
+    float size_multiplier, shrink_multiplier;
 
     v2f position;
     v2f rotation;
