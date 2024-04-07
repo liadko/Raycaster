@@ -181,8 +181,8 @@ void mainLoop(sf::RenderWindow& window,  Player& player)
 
     vector<Object> objects;
     objects.emplace_back(32.5f, 19.2f, textures[2], scalers[2]);
-    objects.emplace_back(3, 3, textures[1], scalers[1]);
-    objects.emplace_back(10, 4, textures[0], scalers[0]);
+    //objects.emplace_back(3, 3, textures[1], scalers[1]);
+    //objects.emplace_back(10, 4, textures[0], scalers[0]);
 
 
 
@@ -212,8 +212,9 @@ void mainLoop(sf::RenderWindow& window,  Player& player)
             }
 
 
-        if(frame_count % 1000 == 0)
-            cout << dt*1000 << "\n";
+        //if(frame_count % 1000 == 0)
+        //    cout << dt*1000 << "\n";
+
 
         //cout << map.sky_sensitivity << '\n';
 
@@ -221,6 +222,7 @@ void mainLoop(sf::RenderWindow& window,  Player& player)
 
         player.handleKeys(dt);
 
+        objects[0].position.y -= 0.0015f;
 
         // Graphics
         window.clear(sf::Color::Red);
@@ -233,7 +235,7 @@ void mainLoop(sf::RenderWindow& window,  Player& player)
         player.shootRays(hits); // populate hits[]
 
         // World
-        player.drawWorld(hits, objects); 
+        player.drawWorld(hits, objects, dt); 
 
         //player.debug();
 

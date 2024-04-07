@@ -18,6 +18,9 @@ bool inBounds(const v2f& box_pos, const v2f& box_size, const v2i& pos);
 
 vector<string> split(const string& str);
 
+float angleBetweenVectors(const v2f& v1, const v2f& v2);
+
+
 struct TextBox
 {
     v2f position, size;

@@ -27,6 +27,7 @@ def is_edging(image:Image, x, y)->int:
                 
                 point = (current[0]+i, current[1]+j)
                 index = point[0] + point[1] * image.size[0]
+                if(0 <= index >= len(visited)): continue
                 if(visited[index] == False and image.getpixel(point)[3] == 255): 
                     visited[index] = True
                     valid_spots.append(point)
@@ -43,21 +44,27 @@ def main():
     #width, height = image.size
     #print("Image size:", width, "x", height, '\n')
 
-    a = image.getpixel((18, 22))[3]
     
     
-    
-    
-    x = 20
-    while x < image.size[0]:
-        if(image.getpixel((x, 570))[3] == 255):
-            left, top, right, bottom = is_edging(image, x, 570)
-            width, height = right - left, bottom - top
+    directions_x = [30, 125, 200, 287, 360, 442, 543, 640]
+    starts_y = [33, 33, 33, 33, 33, 110, 85, 83]
+    for i in range(8):
+        print("{ ", end='')
+        n = 0
+        y = starts_y[i]
+        while y < image.size[1]:
+            if(image.getpixel((directions_x[i], y))[3] == 255):
+                left, top, right, bottom = is_edging(image, directions_x[i], y)
+                width, height = right - left, bottom - top
+                
+                print('{', f"{left}, {top}, {width}, {height}", '}, ', end='')
+                y = bottom + 1
+                n+=1
+                
+                if(n == 4): break
             
-            print(f"{left}, {top}, {width}, {height}")
-            x = right + 1
-            
-        x+=1
+            y+=1
+        print("},")
     
     
     

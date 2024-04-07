@@ -73,11 +73,11 @@ public:
 	void move(float angle_offset, float dt);
 
 	void shootRays(HitInfo*& hits);
-	void drawWorld(HitInfo*& hits, vector<Object>& objects);
+	void drawWorld(HitInfo*& hits, vector<Object>& objects, float dt);
 	void drawColumn(int x, const Player::HitInfo& hit_info);
 	Player::HitInfo shootRay(float angle_offset);
 	
-	void drawObject(Object& object);
+	void drawObject(Object& object, float dt);
 	void drawGun(float dt);
 	void drawCrosshair();
 	void shootGun(bool left_click);

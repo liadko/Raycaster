@@ -19,7 +19,7 @@ using std::string;
 
 const double PI = 3.14159265358979323846;
 const double HALF_PI = 3.14159265358979323846/2;
-
+const float TO_DEGREES = 57.29577955f;
 
 const int WIDTH = 1280, HEIGHT = 720;
 
