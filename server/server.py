@@ -8,31 +8,15 @@ from sql_orm import Users_db
 # Define server address and port
 TCP_PORT = 21567  # Separate port for TCP communication
 SERVER_ADDRESS = ("localhost", 21567)
+players = []
 
 # Player data structure
 class Player:
-    def __init__(self, id, username, position, health):
-        self.id = id
+    def __init__(self, username):
         self.username = username
-        self.position = position
-        self.health = health
-
-# # Function to handle TCP login requests
-# def handle_login_request(client_socket, address):
-#     # Receive encrypted login credentials
-#     data = client_socket.recv(1024)
-#     # Decrypt and parse credentials (implementation of decryption needed)
-#     username, password = decrypt(data)
-
-#     # Validate credentials (replace with your authentication system)
-#     if username == "admin" and password == "secret":
-#         player_id = 1  # Replace with unique ID generation
-#         player = Player(player_id, username, (0, 0), 100)
-#         send_tcp_message(client_socket, "Login successful", player_id)
-#         return player
-#     else:
-#         send_tcp_message(client_socket, "Login failed", None)
-#         return None
+        self.position = (0, 0)
+        self.rotation_x = 0
+        self.is_moving = False
 
 
 # gets socket and string to send
@@ -129,6 +113,7 @@ def handle_client(client_socket, address, users_db:Users_db, lock: threading.Loc
     global players
     
     
+
     # Diffie Hellman
     (p, g) = 170141183460469231731687303715884105757, 340282366920938463463374607431768211507
     secret = secrets.randbits(128)
@@ -195,27 +180,32 @@ def handle_client(client_socket, address, users_db:Users_db, lock: threading.Loc
     print(f"{response=}")
     send_bytes(client_socket, encrypt_AES(response.encode(), key_bytes))
     
-    
+    players.append(Player(parts[1]))
     
     client_socket.close()
 
+def handle_game():
+    # UDP
+    udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    udp_socket.bind(('127.0.0.1', 21568))
+
+    while(True):
+        pass
+
 # Main server function
 def main():
+    global players
     # TCP
     tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    tcp_socket.bind(SERVER_ADDRESS)
+    tcp_socket.bind(('127.0.0.1', 21567))
     tcp_socket.listen(5)
 
-    # UDP
-    # udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    # udp_socket.bind(SERVER_ADDRESS)
-
-    players = {}
     
     users_db = Users_db()
     lock = threading.Lock()
     
-    
+    threading.Thread(target=handle_game).start()
+
     # Threading for concurrent client handling
 
     print("Server started on", SERVER_ADDRESS)

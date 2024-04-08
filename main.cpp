@@ -20,7 +20,7 @@ int main()
     Player player(40, 21, window);
 
     
-    //loginPage(window, player);
+    loginPage(window, player);
 
     window.setMouseCursorVisible(false);
     
