@@ -176,7 +176,7 @@ void mainLoop(sf::RenderWindow& window,  Player& player)
     sf::Texture* textures = new sf::Texture[3];
     textures[0].loadFromFile("sprites/cop.png");
     textures[1].loadFromFile("sprites/missing_texture.png");
-    textures[2].loadFromFile("sprites/doom3.png");
+    textures[2].loadFromFile("sprites/spritesheet.png");
     float scalers[3] = { 0.00135f, 0.002f, 0.0095f };
 
     vector<Object> objects;
@@ -222,7 +222,7 @@ void mainLoop(sf::RenderWindow& window,  Player& player)
 
         player.handleKeys(dt);
 
-        objects[0].position.y -= 0.0015f;
+        //objects[0].position.y -= 0.001f;
 
         // Graphics
         window.clear(sf::Color::Red);

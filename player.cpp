@@ -67,9 +67,10 @@ void Player::handleKeys(float dt)
 void Player::rotateHead(int delta_x, int delta_y, float dt)
 {
     // ignore enourmous rotation requests
-    if (dt != -1 && mag(v2f(delta_x, delta_y)) * mouse_sensitivity > 100)
+    float move_size = mag(v2f(delta_x, delta_y))* mouse_sensitivity* dt;
+    if (dt != -1 && move_size > 0.6f)
     {
-        cout << mag(v2f(delta_x, delta_y)) << "\n";
+        cout << "size " << move_size << " movement suppressed" << "\n";
         return;
     }
 
@@ -270,7 +271,7 @@ void Player::drawObject(Object& object, float dt)
     v2f player2object = position - object.position;
     v2f object_direction = object.position + v2f(cos(object.rotation_x), sin(object.rotation_x));
     //float direction_offset = angleBetweenVectors(object_direction, player2object) * TO_DEGREES;// + 22.5f;
-    float direction_offset = 360 + object.rotation_x + atan2(object.position.x - position.x, object.position.y - position.y)*TO_DEGREES;
+    float direction_offset = 360+ TO_DEGREES * (object.rotation_x + atan2(object.position.x - position.x, object.position.y - position.y));
     cout <<  direction_offset  << "\n";
     //cout << "Direction Index: " << ((int)(direction_offset / 45) % 8  + 8) % 8<< "\n";
 
@@ -279,7 +280,7 @@ void Player::drawObject(Object& object, float dt)
 
     object.sprite.setScale(screen_size * object.shrink_by, screen_size * object.shrink_by);
     object.sprite.setPosition(
-        screen_x - 0.5f * 81 * object.sprite.getScale().x,
+        screen_x - 0.5f * object.sprite.getTextureRect().height * object.sprite.getScale().x,
         map.floor_level - 0.5f * object.sprite.getTextureRect().height * (object.sprite.getScale().y - screen_size * (1 - object.shrink_by)));
 
 
@@ -417,9 +418,9 @@ void Player::loadTextures()
 
     for (int i = 0; i < 5; i++)
     {
-        char filename[] = "gun_animation/gun_X.png";
-        filename[18] = i + '0';
-        gun_texs[i].loadFromFile(filename);
+        string path = "sprites/gun_animation/gun_X.png";
+        path[path.find('X')] = i + '0';
+        gun_texs[i].loadFromFile(path);
     }
 
     gun_sprite.setTexture(gun_texs[0]);
