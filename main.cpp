@@ -20,9 +20,8 @@ int main()
     Player player(40, 21, window);
 
     
-    //loginPage(window, player);
+    loginPage(window, player);
 
-    window.setMouseCursorVisible(false);
     
     // Game loop
     mainLoop(window, player);
@@ -35,8 +34,11 @@ void loginPage(sf::RenderWindow& window, Player& player)
 {
     // background image
     sf::Texture bg_tex;
-    bg_tex.loadFromFile("Ps/BG.jpg");
+    bg_tex.loadFromFile("sprites/BG.jpg");
     sf::Sprite bg_sprite(bg_tex);
+    //bg_sprite.setTexture(bg_tex.copyToImage());
+    //bg_tex.copyToImage();
+    //bg_tex.~Texture();
 
     // font
     sf::Font input_font;
@@ -46,6 +48,7 @@ void loginPage(sf::RenderWindow& window, Player& player)
         return;
     }
 
+    
     // text box and text
 
     TextBox username(v2f(194, 271), v2f(461, 70), "liadkoren123", input_font);
@@ -184,7 +187,7 @@ void mainLoop(sf::RenderWindow& window,  Player& player)
     //objects.emplace_back(3, 3, textures[1], scalers[1]);
     //objects.emplace_back(10, 4, textures[0], scalers[0]);
 
-
+    player.setFocus(true);
 
     while (window.isOpen())
     {
@@ -194,9 +197,13 @@ void mainLoop(sf::RenderWindow& window,  Player& player)
         while (window.pollEvent(event))
             if (event.type == sf::Event::Closed)
                 window.close();
-            else if (event.type == sf::Event::MouseButtonPressed)
+            else if (player.window_focused && event.type == sf::Event::MouseButtonPressed)
                 player.shootGun(event.mouseButton.button == sf::Mouse::Left);
-            else if (event.type == sf::Event::MouseMoved)
+            else if (event.type == sf::Event::LostFocus)
+                player.setFocus(false);
+            else if (event.type == sf::Event::GainedFocus)
+                player.setFocus(true);
+            else if (player.window_focused && event.type == sf::Event::MouseMoved)
             {
                 v2i current_pos = sf::Mouse::getPosition(window);
 
@@ -219,6 +226,7 @@ void mainLoop(sf::RenderWindow& window,  Player& player)
         //cout << map.sky_sensitivity << '\n';
 
         player.updateServer();
+
 
         player.handleKeys(dt);
 
@@ -248,6 +256,8 @@ void mainLoop(sf::RenderWindow& window,  Player& player)
 
         frame_count++;
     }
+
+    
 
     delete[] hits;
 }

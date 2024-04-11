@@ -19,14 +19,24 @@ Player::Player(int x, int y, sf::RenderWindow& window) : map(20, window), positi
     // set anchor point
     //sf::Vector2f center(sprite.getLocalBounds().width / 2.0f, sprite.getLocalBounds().height / 2.0f);
     //sprite.setOrigin(center);
-
+    //setFocus(true);
 }
 
 
+void Player::setFocus(bool focus)
+{
+    window.setMouseCursorVisible(!focus);
+    window_focused = focus;
+    if(focus)
+        sf::Mouse::setPosition({WIDTH/2, HEIGHT/2}, window);
+}
 
 #define KEY_PRESSED(key) sf::Keyboard::isKeyPressed(sf::Keyboard::Key::key)
 void Player::handleKeys(float dt)
 {
+    if (!window_focused)
+        return;
+
     // move
     v2f movement(0, 0);
     if (KEY_PRESSED(W))
@@ -272,7 +282,7 @@ void Player::drawObject(Object& object, float dt)
     v2f object_direction = object.position + v2f(cos(object.rotation_x), sin(object.rotation_x));
     //float direction_offset = angleBetweenVectors(object_direction, player2object) * TO_DEGREES;// + 22.5f;
     float direction_offset = 360+ TO_DEGREES * (object.rotation_x + atan2(object.position.x - position.x, object.position.y - position.y));
-    cout <<  direction_offset  << "\n";
+    //cout <<  direction_offset  << "\n";
     //cout << "Direction Index: " << ((int)(direction_offset / 45) % 8  + 8) % 8<< "\n";
 
     object.direction_index = ((int)round(direction_offset / 45) % 8 + 8) % 8;

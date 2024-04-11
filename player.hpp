@@ -12,7 +12,6 @@ private:
 	// game logic
 	sf::RenderWindow& window;
 	
-	
 
 	sf::Texture* wall_texs;
 	sf::Sprite wall_sprite;
@@ -52,6 +51,7 @@ private:
 public:
 	Client client;
 	Map map;
+	bool window_focused;
 
 	struct HitInfo {
 		float distance;
@@ -68,6 +68,7 @@ public:
 
 	Player(int x, int y, sf::RenderWindow& window);
 
+	void setFocus(bool focus);
 	void handleKeys(float dt);
 	void rotateHead(int delta_x, int delta_y, float dt);
 	void move(float angle_offset, float dt);
