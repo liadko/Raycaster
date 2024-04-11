@@ -15,7 +15,9 @@ int main()
 {
     //Window
     sf::RenderWindow window(sf::VideoMode(WIDTH, HEIGHT), "Program", sf::Style::Close, sf::ContextSettings(24, 8, 8));
-  
+    
+    window.setFramerateLimit(60);
+
     
     Player player(40, 21, window);
 

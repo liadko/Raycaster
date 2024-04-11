@@ -12,7 +12,7 @@ using boost::multiprecision::powm;
 bool sendTCP(sf::TcpSocket& socket, const string& message, string& error);
 bool recvTCP(sf::TcpSocket& socket, void*& buffer, int& buffer_size);
 
-bool sendUDP(sf::UdpSocket& socket, void* buffer, int size, string& error);
+bool sendUDP(sf::UdpSocket& socket, const string& message, string& error);
 bool recvUDP(sf::UdpSocket& socket, void*& buffer, int& buffer_size);
 
 void printBytes(const unsigned char* pBytes, const uint32_t nBytes);
@@ -29,14 +29,19 @@ class Client
 private:
     sf::TcpSocket tcp_socket;
     sf::UdpSocket udp_socket;
+    sf::IpAddress udp_address;
     string ip;
     int port;
 
     bigint p, g, secret;
     unsigned char key_bytes[16];
 
+
 public:
+    int player_id;
+
     Client();
+
 
     bool connectToServer(const string& ip, int port, string& error);
 
@@ -44,9 +49,11 @@ public:
     
     bool sendEncryptedTCP(const string& msg, string& error);
     bool recvEncryptedTCP(void*& buffer, int& bufferSize, string& error);
+    static bool recvTCP(sf::TcpSocket& socket, void*& buffer, int& buffer_size);
+    static bool sendTCP(sf::TcpSocket& socket, const string& message, string& error);
 
     bool sendEncryptedUDP(void* buffer, int size, string& error);
     bool recvEncryptedUDP(void*& buffer, int& bufferSize, string& error);
-        
+    bool sendUDP(sf::UdpSocket& socket, const string& message, string& error);
     bool connected = false;
 };

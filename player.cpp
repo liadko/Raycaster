@@ -282,7 +282,7 @@ void Player::drawObject(Object& object, float dt)
     v2f object_direction = object.position + v2f(cos(object.rotation_x), sin(object.rotation_x));
     //float direction_offset = angleBetweenVectors(object_direction, player2object) * TO_DEGREES;// + 22.5f;
     float direction_offset = 360+ TO_DEGREES * (object.rotation_x + atan2(object.position.x - position.x, object.position.y - position.y));
-    //cout <<  direction_offset  << "\n";
+    cout <<  direction_offset  << "\n";
     //cout << "Direction Index: " << ((int)(direction_offset / 45) % 8  + 8) % 8<< "\n";
 
     object.direction_index = ((int)round(direction_offset / 45) % 8 + 8) % 8;
@@ -459,9 +459,9 @@ void Player::drawGun(float dt)
     gun_movement_stopwatch += dt * 8;
 
     if (moving)
-        hand_move_range = lerp(hand_move_range, max_hand_range, 0.007f);
+        hand_move_range = lerp(hand_move_range, max_hand_range, 0.14f);
     else
-        hand_move_range = lerp(hand_move_range, 0, 0.003f);
+        hand_move_range = lerp(hand_move_range, 0, 0.06f);
 
 
     float gun_offset_x = sin(gun_movement_stopwatch) * hand_move_range;
@@ -505,18 +505,26 @@ void Player::shootGun(bool left_click)
 void Player::updateServer()
 {
     string error;
-    string msg = "Jewface";
-    if (!client.sendEncryptedUDP((void*)msg.c_str(), msg.size(), error))
+    PlayerInfo player_info = getPlayerInfo();
+
+    if (!client.sendEncryptedUDP((void*)&player_info, sizeof(player_info), error))
     {
         cout << error << '\n';
         return;
     }
 
 
-
 }
 
-
+Player::PlayerInfo Player::getPlayerInfo()
+{
+    return
+    {
+        client.player_id,
+        position.x, position.y, rotation_x,
+        moving
+    };
+}
 void Player::debug()
 {
     cout << position.x << ": X\n"

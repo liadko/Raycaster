@@ -37,7 +37,7 @@ private:
 	// orientation
 	float rotation_x = -3.169f;
 	float rotation_y = -0.56f;
-	float mouse_sensitivity = 0.8f;
+	float mouse_sensitivity = 0.05f;
 	float fov_y = 0.7f;
 	float fov_x = 1.22173f; // 70 degrees
 
@@ -47,6 +47,7 @@ private:
 	//sound
 	sf::SoundBuffer gunshot_buffer, gunclick_buffer;
 	sf::Sound gun_sound, click_sound;
+
 
 public:
 	Client client;
@@ -63,7 +64,9 @@ public:
 
 	struct PlayerInfo
 	{
-		float x, y, rot_x, rot_y;
+		int player_id;
+		float pos_x, pos_y, rot_x;
+		int moving;
 	};
 
 	Player(int x, int y, sf::RenderWindow& window);
@@ -88,6 +91,7 @@ public:
 
 	//server
 	void updateServer();
+	PlayerInfo getPlayerInfo();
 
 	//
 	void debug();

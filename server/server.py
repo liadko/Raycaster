@@ -1,22 +1,30 @@
 import socket
 import threading
+
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
 import secrets # for randbits, Diffie Hellman
+
 from sql_orm import Users_db
 
-# Define server address and port
-TCP_PORT = 21567  # Separate port for TCP communication
-SERVER_ADDRESS = ("localhost", 21567)
-players = []
+import struct
 
 # Player data structure
 class Player:
     def __init__(self, username):
         self.username = username
-        self.position = (0, 0)
+        self.position_x = 0
+        self.position_y = 0
         self.rotation_x = 0
         self.is_moving = False
+
+
+# Define server address and port
+TCP_PORT = 21567  # Separate port for TCP communication
+SERVER_ADDRESS = ("localhost", 21567)
+players:list[Player] = []
+current_player_id = 0
+key_bytes = None
 
 
 # gets socket and string to send
@@ -51,26 +59,24 @@ def recvfrom(client) -> bytes:
     except socket.error as e:
         raise ConnectionError(f"Socket error while receiving data: {e}") from e
 
-# # Function to send encrypted messages over TCP
-# def send_tcp_message(client_socket, message, data):
-#     # Encrypt message and data (implementation of encryption needed)
-#     encrypted_data = encrypt((message, data))
-#     client_socket.sendall(encrypted_data)
 
-# # Function to handle UDP game updates
-# def handle_game_update(client_socket, address, player):
-#     # Receive data from client
-#     data = client_socket.recvfrom(1024)
+# returns msg bytes
+def recvUDP(udp_server : socket.socket) -> bytes:
 
-#     # Unpack data (replace with your game state representation)
-#     position, direction, shooting = pickle.loads(data[0])
+    try:
+        msg_bytes, address = udp_server.recvfrom(32)
 
-#     # Update player state in game world
-#     player.position = position
-#     # ... perform other game logic based on direction and shooting ...
 
-#     # Broadcast updated game state to all players
-#     broadcast_game_state(players)
+        # Receive the actual message data
+
+        if len(msg_bytes) != 32:
+            raise ConnectionError("Incomplete message received (len: {0})", len(msg_bytes))
+
+        return msg_bytes, address
+
+    except socket.error as e:
+        raise ConnectionError(f"Socket error while receiving data: {e}") from e
+
 
 # # Function to broadcast game state to all players
 # def broadcast_game_state(players):
@@ -94,6 +100,20 @@ def pad_bytes(message_bytes: bytes, block_size):
     padding = bytes([padding_size]) * padding_size
     return message_bytes + padding
 
+def unpad_bytes(padded_bytes: bytes):
+    padding_size = padded_bytes[-1]  # Get the last byte, which represents the padding size
+    if padding_size == 0 or padding_size > len(padded_bytes):
+        raise ValueError("Invalid padding")
+
+    # Verify that the padding bytes are all the same
+    expected_padding = bytes([padding_size]) * padding_size
+    if not padded_bytes.endswith(expected_padding):
+        raise ValueError("Invalid padding")
+
+    # Remove the padding bytes
+    unpadded_bytes = padded_bytes[:-padding_size]
+    return unpadded_bytes
+
 def encrypt_AES(plaintext: bytes, key):
     blocks = pad_bytes(plaintext, 16)
     backend = default_backend()
@@ -107,10 +127,10 @@ def decrypt_AES(cipherbytes: bytes, key):
     cipher = Cipher(algorithms.AES(key), modes.ECB(), backend=backend)
     decryptor = cipher.decryptor()
     plaintext = decryptor.update(cipherbytes) + decryptor.finalize()
-    return plaintext
+    return unpad_bytes(plaintext)
 
 def handle_client(client_socket, address, users_db:Users_db, lock: threading.Lock):
-    global players
+    global players, key_bytes, current_player_id
     
     
 
@@ -161,7 +181,8 @@ def handle_client(client_socket, address, users_db:Users_db, lock: threading.Loc
     response = "ERROR~Message Unrecognized~"
     if(parts[0] == "LOGIN"):
         if(users_db.user_exists(parts[1], parts[2])):
-            response = "SUCCESS~"
+            response = "SUCCESS~" + str(current_player_id) + "~"
+            current_player_id += 1
         else:
             response = "FAIL~Username Or Password Incorrect~"
     elif(parts[0] == "SIGNUP"):
@@ -184,13 +205,58 @@ def handle_client(client_socket, address, users_db:Users_db, lock: threading.Loc
     
     client_socket.close()
 
+def update_player(msg: bytes):
+    global players
+    
+    player_id, pos_x, pos_y, rot_x, moving = struct.unpack("ifffi", msg)
+    player = players[player_id]
+    player.position_x = pos_x
+    player.position_y = pos_y
+    player.rotation_x = rot_x
+    player.is_moving = moving
+    
+    return player_id
+
+def get_others_info(player_id):
+    global players
+    
+    info = b''
+    others_count = 0
+    for i in range(len(players)):
+        if(i == player_id): continue
+        player = players[i]
+        info += struct.pack("ifffi", i, player.position_x, player.position_y, player.rotation_x, player.is_moving)
+        others_count += 1
+        
+    info = int.to_bytes(others_count, 4, 'little') + info 
+    
+    return info
+        
+        
+
 def handle_game():
+    global key_bytes
     # UDP
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_socket.bind(('127.0.0.1', 21568))
 
-    while(True):
+    while(key_bytes == None):
         pass
+    
+    
+    while(True):
+        encrypted, address = recvUDP(udp_socket)
+        #print(f"{encrypted=}")
+        msg = decrypt_AES(encrypted, key_bytes)
+        
+        player_id = update_player(msg)
+        
+        others = get_others_info(player_id)
+        
+        
+        
+        print("boutta send UDP: " + ' '.join([format(byte, '02X') for byte in others]))
+        
 
 # Main server function
 def main():
