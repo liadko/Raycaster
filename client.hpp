@@ -9,13 +9,12 @@ using boost::multiprecision::powm;
 
 //bool tryLogIn(const string& username, const string& password, string& error);
 
-bool sendTCP(sf::TcpSocket& socket, const string& message, string& error);
-bool recvTCP(sf::TcpSocket& socket, void*& buffer, int& buffer_size);
-
 bool sendUDP(sf::UdpSocket& socket, const string& message, string& error);
 bool recvUDP(sf::UdpSocket& socket, void*& buffer, int& buffer_size);
 
 void printBytes(const unsigned char* pBytes, const uint32_t nBytes);
+void printBytes(void* pBytes, const uint32_t nBytes);
+
 
 //Encryption
 string encryptAES(const std::string& plaintext, unsigned char* key, string& error);
@@ -31,7 +30,7 @@ private:
     sf::UdpSocket udp_socket;
     sf::IpAddress udp_address;
     string ip;
-    int port;
+    unsigned short port;
 
     bigint p, g, secret;
     unsigned char key_bytes[16];
@@ -39,6 +38,13 @@ private:
 
 public:
     int player_id;
+
+    struct PlayerInfo
+    {
+        int player_id;
+        float pos_x, pos_y, rot_x;
+        int moving;
+    };
 
     Client();
 
@@ -55,5 +61,6 @@ public:
     bool sendEncryptedUDP(void* buffer, int size, string& error);
     bool recvEncryptedUDP(void*& buffer, int& bufferSize, string& error);
     bool sendUDP(sf::UdpSocket& socket, const string& message, string& error);
+    bool recvUDP(sf::UdpSocket& socket, void*& buffer, int& buffer_size);
     bool connected = false;
 };

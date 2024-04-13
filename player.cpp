@@ -281,8 +281,8 @@ void Player::drawObject(Object& object, float dt)
     v2f player2object = position - object.position;
     v2f object_direction = object.position + v2f(cos(object.rotation_x), sin(object.rotation_x));
     //float direction_offset = angleBetweenVectors(object_direction, player2object) * TO_DEGREES;// + 22.5f;
-    float direction_offset = 360+ TO_DEGREES * (object.rotation_x + atan2(object.position.x - position.x, object.position.y - position.y));
-    cout <<  direction_offset  << "\n";
+    float direction_offset = 360 + 90 + TO_DEGREES * (object.rotation_x + atan2(object.position.x - position.x, object.position.y - position.y));
+    //cout <<  direction_offset  << "\n";
     //cout << "Direction Index: " << ((int)(direction_offset / 45) % 8  + 8) % 8<< "\n";
 
     object.direction_index = ((int)round(direction_offset / 45) % 8 + 8) % 8;
@@ -317,7 +317,7 @@ void Player::shootRays(Player::HitInfo*& hits)
 
 }
 
-void Player::drawWorld(HitInfo*& hits, vector<Object>& objects, float dt)
+void Player::drawWorld(HitInfo*& hits, float dt)
 {
 
     //Sort objects and get the distances
@@ -446,6 +446,9 @@ void Player::loadTextures()
     gun_animation_duration[1] = 0.08f;
     gun_animation_duration[2] = 0.12f;
     gun_animation_duration[3] = gun_animation_duration[4] = 0.2f;
+
+    enemy_tex.loadFromFile("sprites/spritesheet.png");
+
 }
 
 
@@ -504,19 +507,61 @@ void Player::shootGun(bool left_click)
 
 void Player::updateServer()
 {
+
+    cout << "\n";
+
     string error;
-    PlayerInfo player_info = getPlayerInfo();
+    Client::PlayerInfo player_info = getPlayerInfo();
 
     if (!client.sendEncryptedUDP((void*)&player_info, sizeof(player_info), error))
     {
-        cout << error << '\n';
+        cout << "couldn't send udp because: " << error << '\n';
+        return;
+    }
+
+    void* buffer;
+    int buffer_size;
+    if (!client.recvEncryptedUDP(buffer, buffer_size, error))
+    {
+        cout << error << "\n";
         return;
     }
 
 
+    if (buffer_size % sizeof(Client::PlayerInfo) != 1)
+    {
+        cout << "Error when receiving player info. got msg with length: " << buffer_size << "\n";
+        return;
+    }
+
+    cout << "Got This UDP (with size " << buffer_size << "): ";
+    printBytes((unsigned char*)buffer, buffer_size);
+
+    char player_count = *(char*)buffer;
+
+    int other_players_count = player_count - 1;
+
+    while (objects.size() < other_players_count)
+    {
+        objects.emplace_back(-10, -10, enemy_tex, 0.0095f);
+    }
+
+    // draw all others before me
+    for (int i = 0; i < client.player_id; i++)
+    {
+        objects[i].loadPlayerInfo((char*)buffer + 1 + i * sizeof(Client::PlayerInfo));
+    }
+
+    //draw all others after me
+    for (int i = client.player_id + 1; i < player_count; i++)
+    {
+        objects[i-1].loadPlayerInfo((char*)buffer + 1 + i * sizeof(Client::PlayerInfo));
+    }
+
+    free(buffer);
 }
 
-Player::PlayerInfo Player::getPlayerInfo()
+Client::PlayerInfo Player::getPlayerInfo()
 {
     return
     {

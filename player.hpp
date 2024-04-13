@@ -16,6 +16,9 @@ private:
 	sf::Texture* wall_texs;
 	sf::Sprite wall_sprite;
 
+	sf::Texture enemy_tex;
+	vector<Object> objects;
+
 	// gun animation
 	int gun_animation_frame;
 	float gun_animation_timer, gun_movement_stopwatch;
@@ -62,12 +65,7 @@ public:
 		float perceived_distance;
 	};
 
-	struct PlayerInfo
-	{
-		int player_id;
-		float pos_x, pos_y, rot_x;
-		int moving;
-	};
+	
 
 	Player(int x, int y, sf::RenderWindow& window);
 
@@ -77,7 +75,7 @@ public:
 	void move(float angle_offset, float dt);
 
 	void shootRays(HitInfo*& hits);
-	void drawWorld(HitInfo*& hits, vector<Object>& objects, float dt);
+	void drawWorld(HitInfo*& hits, float dt);
 	void drawColumn(int x, const Player::HitInfo& hit_info);
 	Player::HitInfo shootRay(float angle_offset);
 	
@@ -91,7 +89,7 @@ public:
 
 	//server
 	void updateServer();
-	PlayerInfo getPlayerInfo();
+	Client::PlayerInfo getPlayerInfo();
 
 	//
 	void debug();

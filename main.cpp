@@ -178,14 +178,14 @@ void mainLoop(sf::RenderWindow& window,  Player& player)
     Player::HitInfo* hits = new Player::HitInfo[WIDTH];
 
 
-    sf::Texture* textures = new sf::Texture[3];
-    textures[0].loadFromFile("sprites/cop.png");
-    textures[1].loadFromFile("sprites/missing_texture.png");
-    textures[2].loadFromFile("sprites/spritesheet.png");
-    float scalers[3] = { 0.00135f, 0.002f, 0.0095f };
+    //sf::Texture* textures = new sf::Texture[3];
+    //textures[0].loadFromFile("sprites/cop.png");
+    //textures[1].loadFromFile("sprites/missing_texture.png");
+    //textures[2].loadFromFile("sprites/spritesheet.png");
+    //float scalers[3] = { 0.00135f, 0.002f, 0.0095f };
 
-    vector<Object> objects;
-    objects.emplace_back(32.5f, 19.2f, textures[2], scalers[2]);
+    
+    //objects.emplace_back(32.5f, 19.2f, textures[2], scalers[2]);
     //objects.emplace_back(3, 3, textures[1], scalers[1]);
     //objects.emplace_back(10, 4, textures[0], scalers[0]);
 
@@ -245,7 +245,7 @@ void mainLoop(sf::RenderWindow& window,  Player& player)
         player.shootRays(hits); // populate hits[]
 
         // World
-        player.drawWorld(hits, objects, dt); 
+        player.drawWorld(hits, dt); 
 
         //player.debug();
 

@@ -1,6 +1,6 @@
 #include "headers.hpp"
 #include "object.hpp"
-
+#include "client.hpp" // for struct PlayerInfo
 
 
 Object::Object(float x, float y, const sf::Texture& tex, float scaler)
@@ -11,7 +11,6 @@ Object::Object(float x, float y, const sf::Texture& tex, float scaler)
     sprite.setTextureRect(getTextureRect(direction_index, 0));
     shrink_by = 0.75f;
 
-    
 }
 
 float Object::distFrom(const v2f& pos)
@@ -31,6 +30,18 @@ void Object::animate(float dt)
         animation_index = (animation_index + 1) % 4; // there are 4 animation frames
         sprite.setTextureRect(getTextureRect(direction_index, animation_index));
     }
+}
+
+void Object::loadPlayerInfo(char* player_info_buffer)
+{
+    Client::PlayerInfo player_info = *(Client::PlayerInfo*)(player_info_buffer);
+
+    position.x = player_info.pos_x;
+    position.y = player_info.pos_y;
+
+    rotation_x = player_info.rot_x;
+
+
 }
 
 sf::IntRect Object::getTextureRect(float rotation, float frame)

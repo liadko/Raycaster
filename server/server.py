@@ -23,8 +23,11 @@ class Player:
 TCP_PORT = 21567  # Separate port for TCP communication
 SERVER_ADDRESS = ("localhost", 21567)
 players:list[Player] = []
+struct_format = 'ifffi'
+struct_size = struct.calcsize(struct_format)
+player_binaries = b'\x00'
 current_player_id = 0
-key_bytes = None
+key_bytes : dict = {}
 
 
 # gets socket and string to send
@@ -59,6 +62,8 @@ def recvfrom(client) -> bytes:
     except socket.error as e:
         raise ConnectionError(f"Socket error while receiving data: {e}") from e
 
+def send_UDP(socket:socket.socket, address, msg: bytes):
+    socket.sendto(msg, address)
 
 # returns msg bytes
 def recvUDP(udp_server : socket.socket) -> bytes:
@@ -100,15 +105,19 @@ def pad_bytes(message_bytes: bytes, block_size):
     padding = bytes([padding_size]) * padding_size
     return message_bytes + padding
 
+def clean_bytes(dirty: bytes):
+    return ' '.join([format(byte, '02X') for byte in dirty])
+
 def unpad_bytes(padded_bytes: bytes):
+    
     padding_size = padded_bytes[-1]  # Get the last byte, which represents the padding size
     if padding_size == 0 or padding_size > len(padded_bytes):
-        raise ValueError("Invalid padding")
-
+        raise ValueError(f"Invalid padding, looking at final char")
+        
     # Verify that the padding bytes are all the same
     expected_padding = bytes([padding_size]) * padding_size
     if not padded_bytes.endswith(expected_padding):
-        raise ValueError("Invalid padding")
+        raise ValueError(f"Invalid padding, looking at the last {padding_size} bytes")
 
     # Remove the padding bytes
     unpadded_bytes = padded_bytes[:-padding_size]
@@ -122,12 +131,23 @@ def encrypt_AES(plaintext: bytes, key):
     ciphertext = encryptor.update(blocks) + encryptor.finalize()
     return ciphertext
 
+
 def decrypt_AES(cipherbytes: bytes, key):
     backend = default_backend()
     cipher = Cipher(algorithms.AES(key), modes.ECB(), backend=backend)
     decryptor = cipher.decryptor()
     plaintext = decryptor.update(cipherbytes) + decryptor.finalize()
     return unpad_bytes(plaintext)
+
+def add_player(username):
+    global players, player_binaries, current_player_id
+    
+    players.append(Player(username))
+    player_binaries += b'0' * struct_size
+    current_player_id += 1
+    
+    player_binaries = int.to_bytes(len(players), 1) + player_binaries[1:]
+    
 
 def handle_client(client_socket, address, users_db:Users_db, lock: threading.Lock):
     global players, key_bytes, current_player_id
@@ -143,7 +163,6 @@ def handle_client(client_socket, address, users_db:Users_db, lock: threading.Loc
     x2 = pow(g, secret, p)
     send(client_socket, 'X' + str(x2) + 'X')
     
-    
     # X1
     x1 = recvfrom(client_socket).decode()
     if(not (x1[0] == 'X' and x1[-1] == 'X')):
@@ -157,32 +176,34 @@ def handle_client(client_socket, address, users_db:Users_db, lock: threading.Loc
     
     # Key
     key = pow(x1, secret, p)
-    # print("Key: " + str(key))
     
-    key_bytes = key_to_bytes(key)
-    
+    current_key_bytes = key_to_bytes(key)
     
     #print("key_bytes: " + str(key_bytes))
     
     cipherbytes = recvfrom(client_socket)
     # print("cipherbytes: " + ciphertext.hex())
     
-    message = decrypt_AES(cipherbytes, key_bytes)
+    
+    message = decrypt_AES(cipherbytes, current_key_bytes)
     
     print("got this: " + str(message))
     
-    parts = message.decode().split(' ')
+    parts = message.decode().split('~')
     print(parts)
     
     # users_db.insert_new_user(parts[1], parts[2])
     # users_db.remove_user(parts[1])
 
     lock.acquire()
-    response = "ERROR~Message Unrecognized~"
+    
+    response = "ERROR~Message Unrecognized"
     if(parts[0] == "LOGIN"):
         if(users_db.user_exists(parts[1], parts[2])):
             response = "SUCCESS~" + str(current_player_id) + "~"
-            current_player_id += 1
+            add_player(parts[1])
+            
+            key_bytes[int(parts[3])] = current_key_bytes
         else:
             response = "FAIL~Username Or Password Incorrect~"
     elif(parts[0] == "SIGNUP"):
@@ -195,67 +216,87 @@ def handle_client(client_socket, address, users_db:Users_db, lock: threading.Loc
             
         
     
-    
     lock.release()
     # print("sending this: " + ' '.join([format(byte, '02X') for byte in cipherbytes]))
     print(f"{response=}")
-    send_bytes(client_socket, encrypt_AES(response.encode(), key_bytes))
+    send_bytes(client_socket, encrypt_AES(response.encode(), current_key_bytes))
     
-    players.append(Player(parts[1]))
+    
     
     client_socket.close()
 
 def update_player(msg: bytes):
-    global players
+    global players, player_binaries
     
-    player_id, pos_x, pos_y, rot_x, moving = struct.unpack("ifffi", msg)
+    player_id, pos_x, pos_y, rot_x, moving = struct.unpack(struct_format, msg)
     player = players[player_id]
     player.position_x = pos_x
     player.position_y = pos_y
     player.rotation_x = rot_x
     player.is_moving = moving
     
+    
+    player_binaries = player_binaries[:1 + player_id*struct_size] + msg + player_binaries[1 + player_id*struct_size+struct_size:]
+    
+    
     return player_id
 
-def get_others_info(player_id):
-    global players
+# def get_others_info(player_id):
+#     global players
     
-    info = b''
-    others_count = 0
-    for i in range(len(players)):
-        if(i == player_id): continue
-        player = players[i]
-        info += struct.pack("ifffi", i, player.position_x, player.position_y, player.rotation_x, player.is_moving)
-        others_count += 1
+#     info = b''
+#     others_count = 0
+#     for i in range(len(players)):
+#         if(i == player_id): continue
+#         player = players[i]
+#         info += struct.pack("ifffi", i, player.position_x, player.position_y, player.rotation_x, player.is_moving)
+#         others_count += 1
         
-    info = int.to_bytes(others_count, 4, 'little') + info 
+#     info = int.to_bytes(others_count, 4, 'little') + info 
     
-    return info
+#     return info
         
         
 
 def handle_game():
-    global key_bytes
+    global key_bytes, player_binaries
+    
     # UDP
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_socket.bind(('127.0.0.1', 21568))
 
-    while(key_bytes == None):
-        pass
     
     
     while(True):
         encrypted, address = recvUDP(udp_socket)
         #print(f"{encrypted=}")
-        msg = decrypt_AES(encrypted, key_bytes)
         
+        correct_key_bytes = key_bytes[address[1]]
+        
+        print(f"{correct_key_bytes=}")
+        
+        try:
+            msg = decrypt_AES(encrypted, correct_key_bytes)
+        except Exception as e:
+            print(f"invalid message from {address}, error: {e}")
+            print(f"encrypted:", clean_bytes(encrypted))
+            print()
+            continue
+        
+            
         player_id = update_player(msg)
         
-        others = get_others_info(player_id)
+        print(f"Sending Player #{player_id} These Binaries:", player_binaries[0])
+        for i in range(len(players)):
+            print(f"player {i}.", clean_bytes(player_binaries[1+struct_size*i:1+struct_size*i+struct_size]))
+        print()
+        
+        #others = get_others_info(player_id)
+        
+        udp_socket.sendto(encrypt_AES(player_binaries, correct_key_bytes), address)
         
         
-        
-        print("boutta send UDP: " + ' '.join([format(byte, '02X') for byte in others]))
+        #print("boutta send UDP: " + ' '.join([format(byte, '02X') for byte in others]))
         
 
 # Main server function

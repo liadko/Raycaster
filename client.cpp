@@ -23,31 +23,6 @@ Client::Client()
 
 }
 
-void sendUDP()
-{
-    sf::UdpSocket socket;
-
-    // Bind the socket to any available port
-    if (socket.bind(sf::Socket::AnyPort) != sf::Socket::Done)
-    {
-        std::cerr << "Error binding UDP socket" << std::endl;
-        return;
-    }
-
-    sf::IpAddress recipientIpAddress("127.0.0.1");
-
-    std::string data = "Gunshot!";
-
-    // Send the data to the recipient
-    if (socket.send(data.c_str(), data.size(), recipientIpAddress, 4321) != sf::Socket::Done)
-    {
-        std::cerr << "Error sending UDP packet" << std::endl;
-        return;
-    }
-
-    std::cout << "Sent UDP packet to " << "127.0.0.1" << ":" << 4321 << std::endl;
-
-}
 
 bool Client::connectToServer(const string& ip, int port, string& error)
 {
@@ -105,7 +80,7 @@ bool Client::connectToServer(const string& ip, int port, string& error)
 
 
     udp_address = tcp_socket.getRemoteAddress();
-    cout << "UDP ADDRESS: " << udp_address << "\n";
+    cout << "UDP Port: " << udp_socket.getLocalPort() << "\n";
 
     connected = true;
     cout << "Connected To Server At ('" << ip << "', " << port << ")\n";
@@ -141,7 +116,7 @@ bool Client::tryLogIn(const string& username, const string& password, string& er
 
 
 
-    string creds = "LOGIN " + username + " " + password + " ";
+    string creds = "LOGIN~" + username + "~" + password + "~" + std::to_string(udp_socket.getLocalPort());
     sendEncryptedTCP(creds, error);
 
     
@@ -181,6 +156,8 @@ bool Client::tryLogIn(const string& username, const string& password, string& er
 
 bool Client::sendEncryptedUDP(void* buffer, int size, string& error)
 {
+
+
     string encrypted = encryptAES(string((char*)buffer, size), key_bytes, error);
     if (encrypted == "")
     {
@@ -188,15 +165,21 @@ bool Client::sendEncryptedUDP(void* buffer, int size, string& error)
         return false;
     }
 
+    cout << "key bytes: ";
+    printBytes(key_bytes, 16);
+
+    cout << "unencrypted: ";
+    printBytes(buffer, size);
+
     if (!sendUDP(udp_socket, encrypted, error))
         return false;
 }
 
 bool Client::recvEncryptedUDP(void*& buffer, int& buffer_size, string& error)
 {
-    /*if (!recvTCP(tcp_socket, buffer, buffer_size))
+    if (!recvUDP(udp_socket, buffer, buffer_size))
     {
-        error = "Error Trying to receive encrypted tcp";
+        error = "Error Trying to receive encrypted udp";
         return false;
     }
 
@@ -210,9 +193,10 @@ bool Client::recvEncryptedUDP(void*& buffer, int& buffer_size, string& error)
         return false;
     }
 
+    //buffer_size -= ((char*)buffer)[buffer_size - 1];
+    buffer_size = decrypted.size();
 
-    memcpy(buffer, decrypted.c_str(), decrypted.size());*/
-
+    memcpy(buffer, decrypted.c_str(), decrypted.size());
 }
 
 
@@ -235,8 +219,7 @@ bool Client::sendUDP(sf::UdpSocket& socket, const string& message, string& error
     }
 
     // message string
-    memcpy((char*)buffer, message.c_str(), message.size());
-
+    memcpy(buffer, message.c_str(), message.size());
 
 
     if (socket.send(buffer, buffer_size, udp_address, 21568) != sf::Socket::Done)
@@ -245,8 +228,54 @@ bool Client::sendUDP(sf::UdpSocket& socket, const string& message, string& error
         return false;
     }
 
+    cout << "encrypted: ";
+    printBytes(buffer, buffer_size);
 
     free(buffer);
+}
+
+// returns true on success
+bool Client::recvUDP(sf::UdpSocket& socket, void*& buffer, int& buffer_size)
+{
+    socket.setBlocking(false);
+
+    sf::SocketSelector selector;
+    selector.add(socket);
+
+
+    if (!selector.wait(sf::milliseconds(100)))
+    {
+        cout << "Nothing Received\n";
+        socket.setBlocking(true);
+        return false;
+    }
+
+    socket.setBlocking(true);
+
+    //length
+    int msg_length = 128;
+    buffer = malloc(msg_length);
+    if (buffer == 0)
+    {
+        cout << "couldn't allocate space for payload\n";
+        return false;
+    }
+
+
+    // message string
+
+    size_t amount_received;
+    socket.receive(buffer, msg_length, amount_received, udp_address, port);
+
+
+    /*if (amount_received != msg_length)
+    {
+        cout << "Error when receiving message with length: " << msg_length << "\n";
+        return false;
+    }*/
+
+    buffer_size = amount_received;
+    return true;
 }
 
 // TCP
@@ -371,7 +400,7 @@ bool Client::sendTCP(sf::TcpSocket& socket, const string& message, string& error
 
 void printBytes(const unsigned char* pBytes, const uint32_t nBytes) // should more properly be std::size_t
 {
-    for (uint32_t i = 0; i != nBytes; i++)
+    for (uint32_t i = 0; i < nBytes; i++)
     {
         std::cout <<
             std::hex <<           // output in hex
@@ -379,7 +408,13 @@ void printBytes(const unsigned char* pBytes, const uint32_t nBytes) // should mo
             std::setfill('0') <<  // fill with 0 if not enough characters
             (int)pBytes[i] << " ";
     }
-    cout << "\n";
+    cout << std::dec <<"\n";
+    
+}
+
+void printBytes(void* pBytes, const uint32_t nBytes)
+{
+    printBytes((unsigned char*)pBytes, nBytes);
 }
 
 string encryptAES(const void*& buffer, int size, unsigned char* key, string& error) {
