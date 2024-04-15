@@ -11,19 +11,20 @@ import struct
 
 # Player data structure
 class Player:
-    def __init__(self, username):
+    def __init__(self, username, id):
         self.username = username
-        self.position_x = 0
-        self.position_y = 0
-        self.rotation_x = 0
-        self.is_moving = False
+        self.player_id = id
+        self.position_x = -1
+        self.position_y = -1
+        self.rotation_x = -1
+        self.rotation_y = -1
 
 
 # Define server address and port
 TCP_PORT = 21567  # Separate port for TCP communication
 SERVER_ADDRESS = ("localhost", 21567)
 players:list[Player] = []
-struct_format = 'ifffii'
+struct_format = 'iffffi'
 struct_size = struct.calcsize(struct_format)
 player_binaries = b'\x00'
 current_player_id = 0
@@ -142,11 +143,25 @@ def decrypt_AES(cipherbytes: bytes, key):
 def add_player(username):
     global players, player_binaries, current_player_id
     
-    players.append(Player(username))
-    player_binaries += b'0' * struct_size
+    players.append(Player(username, current_player_id))
+    
+    
+    player_binaries += int.to_bytes(current_player_id, 1) * struct_size
     current_player_id += 1
     
     player_binaries = int.to_bytes(len(players), 1) + player_binaries[1:]
+
+def remove_player(player_id):
+    # Iterate through the players list
+    for player in players:
+        # Check if the current player's username matches the target username
+        if player.player_id == player_id:
+            # Remove the player from the list
+            players.remove(player)
+            print(f"Player with id #{player_id} removed successfully.")
+            return
+    # If the player with the specified username is not found
+    print(f"Player with id #{player_id} not found.")
     
 
 def handle_client(client_socket, address, users_db:Users_db, lock: threading.Lock):
@@ -228,16 +243,46 @@ def handle_client(client_socket, address, users_db:Users_db, lock: threading.Loc
 def update_player(msg: bytes):
     global players, player_binaries
     
-    player_id, pos_x, pos_y, rot_x, moving, forward = struct.unpack(struct_format, msg)
-    player = players[player_id]
+    player_id, pos_x, pos_y, rot_x, rot_y, flags = struct.unpack(struct_format, msg)
+    
+    player = None
+    for p in players:
+        if(p.player_id == player_id):
+            player = p
+            break
+        
+    if player == None:
+        print("Got message from nonexistant player, id=", player_id)
+        return
+    
     player.position_x = pos_x
     player.position_y = pos_y
     player.rotation_x = rot_x
-    player.is_moving = moving
+    player.rotation_y = rot_y
+    
+    has_quit = flags & 8
+    
+    if(has_quit):
+        remove_player(player_id)
+        player_binaries = int.to_bytes(len(players), 1) + player_binaries[1:]
+        msg = b''
     
     
+    #print("got update from player, here's the playerbinaries: ", clean_bytes(player_binaries))
     
-    player_binaries = player_binaries[:1 + player_id*struct_size] + msg + player_binaries[1 + player_id*struct_size+struct_size:]
+    buffer_index = 1
+    while(True):
+        if(buffer_index >= len(player_binaries)):
+            raise Exception("Something fucked when updating the player binaries", buffer_index)
+
+        if(player_binaries[buffer_index] == player_id):
+            break
+            
+        buffer_index += struct_size
+                
+    
+    player_binaries = player_binaries[:buffer_index] + msg + player_binaries[buffer_index+struct_size:]
+    
     
     
     return player_id
@@ -286,10 +331,10 @@ def handle_game():
             
         player_id = update_player(msg)
         
-        # print(f"Sending Player #{player_id} These Binaries:", player_binaries[0])
-        # for i in range(len(players)):
-        #     print(f"player {i}.", clean_bytes(player_binaries[1+struct_size*i:1+struct_size*i+struct_size]))
-        # print()
+        print(f"Sending Player #{player_id} These Binaries:", player_binaries[0])
+        for i in range(len(players)):
+            print(f"player {i}.", clean_bytes(player_binaries[1+struct_size*i:1+struct_size*i+struct_size]))
+        print()
         
         #others = get_others_info(player_id)
         

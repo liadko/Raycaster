@@ -39,11 +39,19 @@ private:
 public:
     int player_id;
 
+
     struct PlayerInfo
     {
+        enum Flag
+        {
+            moving = 1,
+            forward = 2,
+            gun_shot = 4,
+            quit = 8,
+        };
         int player_id;
-        float pos_x, pos_y, rot_x;
-        int moving, forward;
+        float pos_x, pos_y, rot_x, rot_y;
+        int flags;
     };
 
     Client();

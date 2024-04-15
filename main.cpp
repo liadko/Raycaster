@@ -198,7 +198,7 @@ void mainLoop(sf::RenderWindow& window,  Player& player)
         sf::Event event;
         while (window.pollEvent(event))
             if (event.type == sf::Event::Closed)
-                window.close();
+                player.quitGame();
             else if (player.window_focused && event.type == sf::Event::MouseButtonPressed)
                 player.shootGun(event.mouseButton.button == sf::Mouse::Left);
             else if (event.type == sf::Event::LostFocus)
@@ -226,6 +226,7 @@ void mainLoop(sf::RenderWindow& window,  Player& player)
 
 
         //cout << map.sky_sensitivity << '\n';
+
 
         player.updateServer();
 

@@ -26,6 +26,7 @@ void Object::animate(float dt)
         sprite.setTextureRect(getTextureRect(direction_index, 4)); // 4 - standing frame
         return;
     }
+
     float interval = 0.2f;
     animation_timer += dt;
     if (started_moving || animation_timer > interval)
@@ -44,23 +45,27 @@ void Object::animate(float dt)
     }
 }
 
-void Object::loadPlayerInfo(char* player_info_buffer)
+void Object::loadPlayerInfo(Client::PlayerInfo player_info)
 {
-    Client::PlayerInfo player_info = *(Client::PlayerInfo*)(player_info_buffer);
-
     position.x = player_info.pos_x;
     position.y = player_info.pos_y;
 
+
     rotation_x = player_info.rot_x;
 
-    if (player_info.moving != moving)
+    bool moving_flag = player_info.flags & Client::PlayerInfo::Flag::moving;
+    bool forward_flag = player_info.flags & Client::PlayerInfo::Flag::forward;
+    bool shot_gun_flag = player_info.flags & Client::PlayerInfo::Flag::gun_shot;
+
+
+    if (moving_flag != moving)
     {
         //player started or stopped moving
         started_moving = true;
     }
 
-    moving = player_info.moving;
-    forward = player_info.forward;
+    moving = moving_flag;
+    forward = forward_flag;
 }
 
 sf::IntRect Object::getTextureRect(float rotation, float frame)

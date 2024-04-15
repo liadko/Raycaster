@@ -137,6 +137,7 @@ bool Client::tryLogIn(const string& username, const string& password, string& er
     if (parts[0] == "SUCCESS")
     {
         player_id = std::stoi(parts[1]);
+        cout << "Player ID: " << player_id << "\n";
         return true;
     }
 
@@ -243,12 +244,13 @@ bool Client::recvUDP(sf::UdpSocket& socket, void*& buffer, int& buffer_size)
     selector.add(socket);
 
 
-    if (!selector.wait(sf::milliseconds(10)))
+    if (!selector.wait(sf::milliseconds(6)))
     {
         cout << "Nothing Received\n";
         socket.setBlocking(true);
         return false;
     }
+
 
     socket.setBlocking(true);
 

@@ -11,7 +11,7 @@ class Player
 private:
 	// game logic
 	sf::RenderWindow& window;
-	
+	bool has_quit;
 
 	sf::Texture* wall_texs;
 	sf::Sprite wall_sprite;
@@ -29,6 +29,9 @@ private:
 	v2f gun_offset;
 	float max_hand_range = 40;
 	float hand_move_range;
+
+	//gun shot
+	bool gun_shot;
 
 	// movement
 	v2f position;
@@ -86,12 +89,15 @@ public:
 
 	void loadTextures();
 	
+	void quitGame();
 
 	//server
 	void updateServer();
 	Client::PlayerInfo getPlayerInfo();
 
+
 	//
+
 	void debug();
 
 };

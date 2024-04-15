@@ -27,8 +27,8 @@ void Player::setFocus(bool focus)
 {
     window.setMouseCursorVisible(!focus);
     window_focused = focus;
-    if(focus)
-        sf::Mouse::setPosition({WIDTH/2, HEIGHT/2}, window);
+    if (focus)
+        sf::Mouse::setPosition({ WIDTH / 2, HEIGHT / 2 }, window);
 }
 
 #define KEY_PRESSED(key) sf::Keyboard::isKeyPressed(sf::Keyboard::Key::key)
@@ -73,13 +73,23 @@ void Player::handleKeys(float dt)
 
 
     if (KEY_PRESSED(Escape))
-        window.close();
+        quitGame();
 }
+
+void Player::quitGame()
+{
+    has_quit = true;
+
+    updateServer();
+
+    window.close();
+}
+
 
 void Player::rotateHead(int delta_x, int delta_y, float dt)
 {
     // ignore enourmous rotation requests
-    float move_size = mag(v2f(delta_x, delta_y))* mouse_sensitivity* dt;
+    float move_size = mag(v2f(delta_x, delta_y)) * mouse_sensitivity * dt;
     if (dt != -1 && move_size > 0.6f)
     {
         cout << "size " << move_size << " movement suppressed" << "\n";
@@ -257,9 +267,8 @@ Player::HitInfo Player::shootRay(float angle_offset)
 
 void Player::drawObject(Object& object, float dt)
 {
-
+    
     float projection_distance = 0.5f / tan(fov_y / 2);
-
 
 
     // object's direction relative to ours.
@@ -279,7 +288,7 @@ void Player::drawObject(Object& object, float dt)
     if (screen_size < 0) // behind us
         return;
 
-    
+
     v2f player2object = position - object.position;
     v2f object_direction = object.position + v2f(cos(object.rotation_x), sin(object.rotation_x));
     //float direction_offset = angleBetweenVectors(object_direction, player2object) * TO_DEGREES;// + 22.5f;
@@ -496,8 +505,7 @@ void Player::shootGun(bool left_click)
         return;
     }
 
-    //sendUDP();
-
+    gun_shot = true;
 
     gun_sound.play();
 
@@ -537,39 +545,53 @@ void Player::updateServer()
     }
 
     //cout << "Got This UDP (with size " << buffer_size << "): ";
-    //printBytes((unsigned char*)buffer, buffer_size);
+    //printBytes(buffer, buffer_size);
 
     char player_count = *(char*)buffer;
 
     int other_players_count = player_count - 1;
 
-    while (objects.size() < other_players_count)
+    if (objects.size() != other_players_count)
     {
-        objects.emplace_back(-10, -10, enemy_tex, 0.0095f);
+        objects.clear();
+        for (int i = 0; i < other_players_count; i++)
+            objects.emplace_back(-10, -10, enemy_tex, 0.0095f);
     }
 
-    // draw all others before me
-    for (int i = 0; i < client.player_id; i++)
+    // 1 byte of player_count and then PlayerInfo structs one after the other
+        
+    // update all others
+    int object_index = 0;
+    Client::PlayerInfo* current_info_buffer = (Client::PlayerInfo*)((char*)buffer + 1);
+    for (int i = 0; i < player_count; i++, current_info_buffer++) //point to next buffer
     {
-        objects[i].loadPlayerInfo((char*)buffer + 1 + i * sizeof(Client::PlayerInfo));
+        int current_player_id = current_info_buffer->player_id;
+        if (current_player_id == client.player_id)
+            continue;
+
+
+        objects[object_index].loadPlayerInfo(*current_info_buffer);
+        object_index++;
+
     }
 
-    //draw all others after me
-    for (int i = client.player_id + 1; i < player_count; i++)
-    {
-        objects[i-1].loadPlayerInfo((char*)buffer + 1 + i * sizeof(Client::PlayerInfo));
-    }
+    //cout << '\n\n';
 
     free(buffer);
 }
 
 Client::PlayerInfo Player::getPlayerInfo()
 {
+    int flags = 0;
+    flags |= moving * Client::PlayerInfo::moving;
+    flags |= moving_forward * Client::PlayerInfo::forward;
+    flags |= gun_shot * Client::PlayerInfo::gun_shot;
+    flags |= has_quit * Client::PlayerInfo::quit;
     return
     {
         client.player_id,
-        position.x, position.y, rotation_x,
-        moving, moving_forward
+        position.x, position.y, rotation_x, rotation_y,
+        flags
     };
 }
 void Player::debug()

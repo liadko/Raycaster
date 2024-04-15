@@ -1,5 +1,6 @@
 #pragma once
 #include "headers.hpp"
+#include "client.hpp"
 
 class Object
 {
@@ -21,7 +22,7 @@ public:
     Object(float x, float y, const sf::Texture& tex, float scaler);
     float distFrom(const v2f& pos);
     void animate(float dt);
-    void loadPlayerInfo(char* player_info_buffer);
+    void loadPlayerInfo(Client::PlayerInfo player_info);
 
 
     static sf::IntRect getTextureRect(float rotation, float frame);
