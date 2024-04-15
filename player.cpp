@@ -54,6 +54,8 @@ void Player::handleKeys(float dt)
         move(atan2(movement.x, movement.y), dt);
 
 
+    moving_forward = movement.y > 0;
+
     // run
     if (KEY_PRESSED(LShift))
         running = true;
@@ -508,7 +510,7 @@ void Player::shootGun(bool left_click)
 void Player::updateServer()
 {
 
-    cout << "\n";
+    //cout << "\n";
 
     string error;
     Client::PlayerInfo player_info = getPlayerInfo();
@@ -534,8 +536,8 @@ void Player::updateServer()
         return;
     }
 
-    cout << "Got This UDP (with size " << buffer_size << "): ";
-    printBytes((unsigned char*)buffer, buffer_size);
+    //cout << "Got This UDP (with size " << buffer_size << "): ";
+    //printBytes((unsigned char*)buffer, buffer_size);
 
     char player_count = *(char*)buffer;
 
@@ -567,7 +569,7 @@ Client::PlayerInfo Player::getPlayerInfo()
     {
         client.player_id,
         position.x, position.y, rotation_x,
-        moving
+        moving, moving_forward
     };
 }
 void Player::debug()

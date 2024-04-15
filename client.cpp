@@ -165,11 +165,11 @@ bool Client::sendEncryptedUDP(void* buffer, int size, string& error)
         return false;
     }
 
-    cout << "key bytes: ";
-    printBytes(key_bytes, 16);
+    //cout << "key bytes: ";
+    //printBytes(key_bytes, 16);
 
-    cout << "unencrypted: ";
-    printBytes(buffer, size);
+    //cout << "unencrypted: ";
+    //printBytes(buffer, size);
 
     if (!sendUDP(udp_socket, encrypted, error))
         return false;
@@ -228,8 +228,8 @@ bool Client::sendUDP(sf::UdpSocket& socket, const string& message, string& error
         return false;
     }
 
-    cout << "encrypted: ";
-    printBytes(buffer, buffer_size);
+    //cout << "encrypted: ";
+    //printBytes(buffer, buffer_size);
 
     free(buffer);
 }
@@ -243,7 +243,7 @@ bool Client::recvUDP(sf::UdpSocket& socket, void*& buffer, int& buffer_size)
     selector.add(socket);
 
 
-    if (!selector.wait(sf::milliseconds(100)))
+    if (!selector.wait(sf::milliseconds(10)))
     {
         cout << "Nothing Received\n";
         socket.setBlocking(true);

@@ -14,7 +14,7 @@ public:
     float rotation_x;
     int direction_index; // 0, 1, 2, 3, 4, 5, 6, 7
 
-
+    bool moving = false, started_moving = false, forward;
     int animation_index = 0;
     float animation_timer = 0;
 

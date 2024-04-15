@@ -23,7 +23,7 @@ class Player:
 TCP_PORT = 21567  # Separate port for TCP communication
 SERVER_ADDRESS = ("localhost", 21567)
 players:list[Player] = []
-struct_format = 'ifffi'
+struct_format = 'ifffii'
 struct_size = struct.calcsize(struct_format)
 player_binaries = b'\x00'
 current_player_id = 0
@@ -228,12 +228,13 @@ def handle_client(client_socket, address, users_db:Users_db, lock: threading.Loc
 def update_player(msg: bytes):
     global players, player_binaries
     
-    player_id, pos_x, pos_y, rot_x, moving = struct.unpack(struct_format, msg)
+    player_id, pos_x, pos_y, rot_x, moving, forward = struct.unpack(struct_format, msg)
     player = players[player_id]
     player.position_x = pos_x
     player.position_y = pos_y
     player.rotation_x = rot_x
     player.is_moving = moving
+    
     
     
     player_binaries = player_binaries[:1 + player_id*struct_size] + msg + player_binaries[1 + player_id*struct_size+struct_size:]
@@ -273,7 +274,6 @@ def handle_game():
         
         correct_key_bytes = key_bytes[address[1]]
         
-        print(f"{correct_key_bytes=}")
         
         try:
             msg = decrypt_AES(encrypted, correct_key_bytes)
@@ -286,10 +286,10 @@ def handle_game():
             
         player_id = update_player(msg)
         
-        print(f"Sending Player #{player_id} These Binaries:", player_binaries[0])
-        for i in range(len(players)):
-            print(f"player {i}.", clean_bytes(player_binaries[1+struct_size*i:1+struct_size*i+struct_size]))
-        print()
+        # print(f"Sending Player #{player_id} These Binaries:", player_binaries[0])
+        # for i in range(len(players)):
+        #     print(f"player {i}.", clean_bytes(player_binaries[1+struct_size*i:1+struct_size*i+struct_size]))
+        # print()
         
         #others = get_others_info(player_id)
         

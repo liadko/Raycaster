@@ -34,7 +34,7 @@ private:
 	v2f position;
 	float speed = 2.0f;
 	bool running = false, crouching = false;
-	bool moving = false;
+	bool moving = false, moving_forward;
 	float run_multiplier = 1.75f, crouch_multiplier = 0.5f;
 
 	// orientation

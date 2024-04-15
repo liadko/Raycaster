@@ -43,7 +43,7 @@ public:
     {
         int player_id;
         float pos_x, pos_y, rot_x;
-        int moving;
+        int moving, forward;
     };
 
     Client();

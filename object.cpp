@@ -21,14 +21,26 @@ float Object::distFrom(const v2f& pos)
 
 void Object::animate(float dt)
 {
+    if (!moving)
+    {
+        sprite.setTextureRect(getTextureRect(direction_index, 4)); // 4 - standing frame
+        return;
+    }
     float interval = 0.2f;
     animation_timer += dt;
-    if (animation_timer > interval)
+    if (started_moving || animation_timer > interval)
     {
         animation_timer -= interval;
 
-        animation_index = (animation_index + 1) % 4; // there are 4 animation frames
+        // there are 4 animation frames
+        if (forward)
+            animation_index = (animation_index + 1) % 4;
+        else
+            animation_index = (animation_index - 1 + 4) % 4;
+
         sprite.setTextureRect(getTextureRect(direction_index, animation_index));
+
+        started_moving = false;
     }
 }
 
@@ -41,7 +53,14 @@ void Object::loadPlayerInfo(char* player_info_buffer)
 
     rotation_x = player_info.rot_x;
 
+    if (player_info.moving != moving)
+    {
+        //player started or stopped moving
+        started_moving = true;
+    }
 
+    moving = player_info.moving;
+    forward = player_info.forward;
 }
 
 sf::IntRect Object::getTextureRect(float rotation, float frame)
