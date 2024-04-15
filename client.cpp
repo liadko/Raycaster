@@ -24,16 +24,19 @@ Client::Client()
 }
 
 
-bool Client::connectToServer(const string& ip, int port, string& error)
+bool Client::connectToServer(const string& ip, int tcp_port, int udp_port, string& error)
 {
     this->ip = ip;
-    this->port = port;
+    this->udp_port = udp_port;
 
-    if (tcp_socket.connect(ip, port) != sf::Socket::Done)
+    sf::Socket::Status connection_status = tcp_socket.connect(ip, tcp_port, sf::milliseconds(1000));
+    if (connection_status != sf::Socket::Done)
     {
         error = "Failed To Connect To Server";
         return false;
     }
+
+    cout << "address: " << tcp_socket.getRemoteAddress() << "\n";
 
     // Diffie Hellman
     // X1
@@ -83,7 +86,7 @@ bool Client::connectToServer(const string& ip, int port, string& error)
     cout << "UDP Port: " << udp_socket.getLocalPort() << "\n";
 
     connected = true;
-    cout << "Connected To Server At ('" << ip << "', " << port << ")\n";
+    cout << "Connected To Server At ('" << ip << "', " << tcp_port << ")\n";
     
 
     return true;
@@ -111,12 +114,13 @@ bool Client::tryLogIn(const string& username, const string& password, string& er
     
 
     // Connect to server
-    if (!connectToServer("127.0.0.1", 21567, error))
+    if (!connectToServer("87.71.155.68", 21567, 21568, error))
         return false;
 
+    
+    cout << "Public IP: " << sf::IpAddress::getPublicAddress() << "\n";
 
-
-    string creds = "LOGIN~" + username + "~" + password + "~" + std::to_string(udp_socket.getLocalPort());
+    string creds = "LOGIN~" + username + "~" + password + "~" + sf::IpAddress::getPublicAddress().toString() + "~";
     sendEncryptedTCP(creds, error);
 
     
@@ -244,7 +248,7 @@ bool Client::recvUDP(sf::UdpSocket& socket, void*& buffer, int& buffer_size)
     selector.add(socket);
 
 
-    if (!selector.wait(sf::milliseconds(6)))
+    if (!selector.wait(sf::milliseconds(12)))
     {
         cout << "Nothing Received\n";
         socket.setBlocking(true);
@@ -267,7 +271,7 @@ bool Client::recvUDP(sf::UdpSocket& socket, void*& buffer, int& buffer_size)
     // message string
 
     size_t amount_received;
-    socket.receive(buffer, msg_length, amount_received, udp_address, port);
+    socket.receive(buffer, msg_length, amount_received, udp_address, udp_port);
 
 
     /*if (amount_received != msg_length)

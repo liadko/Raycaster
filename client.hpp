@@ -30,7 +30,7 @@ private:
     sf::UdpSocket udp_socket;
     sf::IpAddress udp_address;
     string ip;
-    unsigned short port;
+    unsigned short udp_port;
 
     bigint p, g, secret;
     unsigned char key_bytes[16];
@@ -57,7 +57,7 @@ public:
     Client();
 
 
-    bool connectToServer(const string& ip, int port, string& error);
+    bool connectToServer(const string& ip, int tcp_port, int udp_port, string& error);
 
     bool tryLogIn(const string& username, const string& password, string& error);
     

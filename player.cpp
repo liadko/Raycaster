@@ -572,7 +572,6 @@ void Player::updateServer()
 
         objects[object_index].loadPlayerInfo(*current_info_buffer);
         object_index++;
-
     }
 
     //cout << '\n\n';

@@ -22,7 +22,7 @@ class Player:
 
 # Define server address and port
 TCP_PORT = 21567  # Separate port for TCP communication
-SERVER_ADDRESS = ("localhost", 21567)
+SERVER_ADDRESS = ("0.0.0.0", 3000)
 players:list[Player] = []
 struct_format = 'iffffi'
 struct_size = struct.calcsize(struct_format)
@@ -218,7 +218,7 @@ def handle_client(client_socket, address, users_db:Users_db, lock: threading.Loc
             response = "SUCCESS~" + str(current_player_id) + "~"
             add_player(parts[1])
             
-            key_bytes[int(parts[3])] = current_key_bytes
+            key_bytes[parts[3]] = current_key_bytes
         else:
             response = "FAIL~Username Or Password Incorrect~"
     elif(parts[0] == "SIGNUP"):
@@ -309,7 +309,7 @@ def handle_game():
     
     # UDP
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    udp_socket.bind(('127.0.0.1', 21568))
+    udp_socket.bind(('0.0.0.0', 3001))
 
     
     
@@ -317,7 +317,16 @@ def handle_game():
         encrypted, address = recvUDP(udp_socket)
         #print(f"{encrypted=}")
         
-        correct_key_bytes = key_bytes[address[1]]
+        print(f"{type(encrypted)=}")
+        print(f"{(encrypted)=}")
+        print(f"{type(address)=}")
+        print(f"{(address)=}")
+        print(key_bytes)
+        if(key_bytes.get(address[0], None) == None):
+            print("Can't find the key for address:", address[0])
+            continue
+        
+        correct_key_bytes = key_bytes[address[0]]
         
         
         try:
@@ -349,7 +358,7 @@ def main():
     global players
     # TCP
     tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    tcp_socket.bind(('127.0.0.1', 21567))
+    tcp_socket.bind(SERVER_ADDRESS)
     tcp_socket.listen(5)
 
     
