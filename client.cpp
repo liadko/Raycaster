@@ -158,7 +158,7 @@ bool Client::tryLogIn(const string& username, const string& password, string& er
 }
 
 //UDP
-
+//encrypts message, sends the id + the encrypted message.
 bool Client::sendEncryptedUDP(void* buffer, int size, string& error)
 {
 
@@ -176,7 +176,9 @@ bool Client::sendEncryptedUDP(void* buffer, int size, string& error)
     //cout << "unencrypted: ";
     //printBytes(buffer, size);
 
-    if (!sendUDP(udp_socket, encrypted, error))
+    string msg = (char)player_id + encrypted;
+
+    if (!sendUDP(udp_socket, msg, error))
         return false;
 }
 
@@ -209,7 +211,7 @@ bool Client::sendUDP(sf::UdpSocket& socket, const string& message, string& error
 {
     //cout << "Sending: " << message <<  "\n";
 
-    int buffer_size = 32;
+    int buffer_size = 33;
     void* buffer = malloc(buffer_size);
     if (buffer == 0)
     {

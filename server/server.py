@@ -67,15 +67,15 @@ def send_UDP(socket:socket.socket, address, msg: bytes):
     socket.sendto(msg, address)
 
 # returns msg bytes
-def recvUDP(udp_server : socket.socket) -> bytes:
+def recvUDP(udp_server : socket.socket) -> tuple[bytes, any]:
 
     try:
-        msg_bytes, address = udp_server.recvfrom(32)
+        msg_bytes, address = udp_server.recvfrom(33)
 
 
         # Receive the actual message data
 
-        if len(msg_bytes) != 32:
+        if len(msg_bytes) != 33:
             raise ConnectionError("Incomplete message received (len: {0})", len(msg_bytes))
 
         return msg_bytes, address
@@ -216,9 +216,10 @@ def handle_client(client_socket, address, users_db:Users_db, lock: threading.Loc
     if(parts[0] == "LOGIN"):
         if(users_db.user_exists(parts[1], parts[2])):
             response = "SUCCESS~" + str(current_player_id) + "~"
+            key_bytes[current_player_id] = current_key_bytes
+            
             add_player(parts[1])
             
-            key_bytes[parts[3]] = current_key_bytes
         else:
             response = "FAIL~Username Or Password Incorrect~"
     elif(parts[0] == "SIGNUP"):
@@ -240,10 +241,10 @@ def handle_client(client_socket, address, users_db:Users_db, lock: threading.Loc
     
     client_socket.close()
 
-def update_player(msg: bytes):
+def update_player(player_info: bytes):
     global players, player_binaries
     
-    player_id, pos_x, pos_y, rot_x, rot_y, flags = struct.unpack(struct_format, msg)
+    player_id, pos_x, pos_y, rot_x, rot_y, flags = struct.unpack(struct_format, player_info)
     
     player = None
     for p in players:
@@ -265,7 +266,7 @@ def update_player(msg: bytes):
     if(has_quit):
         remove_player(player_id)
         player_binaries = int.to_bytes(len(players), 1) + player_binaries[1:]
-        msg = b''
+        player_info = b''
     
     
     #print("got update from player, here's the playerbinaries: ", clean_bytes(player_binaries))
@@ -281,11 +282,9 @@ def update_player(msg: bytes):
         buffer_index += struct_size
                 
     
-    player_binaries = player_binaries[:buffer_index] + msg + player_binaries[buffer_index+struct_size:]
+    player_binaries = player_binaries[:buffer_index] + player_info + player_binaries[buffer_index+struct_size:]
     
-    
-    
-    return player_id
+
 
 # def get_others_info(player_id):
 #     global players
@@ -314,36 +313,27 @@ def handle_game():
     
     
     while(True):
-        encrypted, address = recvUDP(udp_socket)
-        #print(f"{encrypted=}")
+        msg, address = recvUDP(udp_socket)
         
-        print(f"{type(encrypted)=}")
-        print(f"{(encrypted)=}")
-        print(f"{type(address)=}")
-        print(f"{(address)=}")
-        print(key_bytes)
-        if(key_bytes.get(address[0], None) == None):
-            print("Can't find the key for address:", address[0])
-            continue
+        player_id, encrypted = msg[0], msg[1:]
         
-        correct_key_bytes = key_bytes[address[0]]
+        correct_key_bytes = key_bytes[player_id]
         
         
         try:
-            msg = decrypt_AES(encrypted, correct_key_bytes)
+            player_info = decrypt_AES(encrypted, correct_key_bytes)
         except Exception as e:
             print(f"invalid message from {address}, error: {e}")
             print(f"encrypted:", clean_bytes(encrypted))
             print()
             continue
         
-            
-        player_id = update_player(msg)
+        update_player(player_info)
         
-        print(f"Sending Player #{player_id} These Binaries:", player_binaries[0])
-        for i in range(len(players)):
-            print(f"player {i}.", clean_bytes(player_binaries[1+struct_size*i:1+struct_size*i+struct_size]))
-        print()
+        # print(f"Sending Player #{player_id} These Binaries:", player_binaries[0])
+        # for i in range(len(players)):
+        #     print(f"player {i}.", clean_bytes(player_binaries[1+struct_size*i:1+struct_size*i+struct_size]))
+        # print()
         
         #others = get_others_info(player_id)
         
