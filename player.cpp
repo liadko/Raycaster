@@ -336,18 +336,29 @@ void Player::drawWorld(HitInfo*& hits, float dt)
     for (int x = 0; x < WIDTH; x++)
         column_drawn[x] = false;
 
-    for (int i = 0; i < objects.size(); i++)
-        for (int j = 0; j < objects.size() - 1; j++)
+    // sort from farthest to closest (descending distance)
+    int i;
+    for (i = 0; i < sorted_objects.size(); i++)
+    {
+        bool perfect = true;
+
+        for (int j = 0; j < sorted_objects.size() - 1; j++)
         {
-            if (objects[j].distFrom(position) < objects[j + 1].distFrom(position))
+            if (sorted_objects[j]->distFrom(position) < sorted_objects[j + 1]->distFrom(position))
             {
-                Object temp = objects[j];
-                objects[j] = objects[j + 1];
-                objects[j + 1] = temp;
+                perfect = false;
+
+                Object* temp = sorted_objects[j];
+                sorted_objects[j] = sorted_objects[j + 1];
+                sorted_objects[j + 1] = temp;
             }
         }
 
+        if (perfect)
+            break;
+    }
 
+    
     /*cout << "Objects: ";
     for (int i = 0; i < objects.size(); i++)
     {
@@ -355,9 +366,9 @@ void Player::drawWorld(HitInfo*& hits, float dt)
     }
     cout << "enough of objects\n";*/
 
-    for (Object& object : objects)
+    for (Object* object : sorted_objects)
     {
-        float object_distance = object.distFrom(position);
+        float object_distance = object->distFrom(position);
         for (int x = 0; x < WIDTH; x++)
         {
             if (!column_drawn[x] && hits[x].distance > object_distance)
@@ -368,17 +379,14 @@ void Player::drawWorld(HitInfo*& hits, float dt)
 
         }
 
-        drawObject(object, dt);
+        drawObject(*object, dt);
     }
+
 
     for (int x = 0; x < WIDTH; x++)
-    {
         if (!column_drawn[x])
-        {
             drawColumn(x, hits[x]);
-        }
 
-    }
 }
 
 void Player::drawColumn(int x, const Player::HitInfo& hit_info)
@@ -551,11 +559,17 @@ void Player::updateServer()
 
     int other_players_count = player_count - 1;
 
-    if (objects.size() != other_players_count)
+    if (object_count != other_players_count)
     {
-        objects.clear();
+        object_count = other_players_count;
+        sorted_objects.resize(other_players_count);
+
         for (int i = 0; i < other_players_count; i++)
-            objects.emplace_back(-10, -10, enemy_tex, 0.0095f);
+        {
+            objects[i] = Object(-10, -10, enemy_tex, 0.0095f);
+            sorted_objects[i] = &objects[i];
+        }
+        
     }
 
     // 1 byte of player_count and then PlayerInfo structs one after the other
@@ -575,7 +589,6 @@ void Player::updateServer()
 
     }
 
-    //cout << '\n\n';
 
     free(buffer);
 }
@@ -593,7 +606,11 @@ Client::PlayerInfo Player::getPlayerInfo()
         position.x, position.y, rotation_x, rotation_y,
         flags
     };
+
+    // reset gun shot flag
+    gun_shot = false;
 }
+
 void Player::debug()
 {
     cout << position.x << ": X\n"

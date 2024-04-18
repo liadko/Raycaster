@@ -1,5 +1,6 @@
 import socket
 import threading
+import time
 
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.hazmat.backends import default_backend
@@ -315,6 +316,8 @@ def handle_game():
     while(True):
         msg, address = recvUDP(udp_socket)
         
+        start = time.time_ns()
+        
         player_id, encrypted = msg[0], msg[1:]
         
         correct_key_bytes = key_bytes[player_id]
@@ -328,6 +331,8 @@ def handle_game():
             print()
             continue
         
+        
+        
         update_player(player_info)
         
         # print(f"Sending Player #{player_id} These Binaries:", player_binaries[0])
@@ -339,7 +344,9 @@ def handle_game():
         
         udp_socket.sendto(encrypt_AES(player_binaries, correct_key_bytes), address)
         
+        end = time.time_ns()
         
+        #print(end - start)
         #print("boutta send UDP: " + ' '.join([format(byte, '02X') for byte in others]))
         
 

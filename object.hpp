@@ -19,6 +19,7 @@ public:
     int animation_index = 0;
     float animation_timer = 0;
 
+    Object();
     Object(float x, float y, const sf::Texture& tex, float scaler);
     float distFrom(const v2f& pos);
     void animate(float dt);

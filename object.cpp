@@ -57,7 +57,6 @@ void Object::loadPlayerInfo(Client::PlayerInfo player_info)
     bool forward_flag = player_info.flags & Client::PlayerInfo::Flag::forward;
     bool shot_gun_flag = player_info.flags & Client::PlayerInfo::Flag::gun_shot;
 
-
     if (moving_flag != moving)
     {
         //player started or stopped moving
@@ -71,4 +70,9 @@ void Object::loadPlayerInfo(Client::PlayerInfo player_info)
 sf::IntRect Object::getTextureRect(float rotation, float frame)
 {
     return sf::IntRect(120 * rotation, 120 * frame, 120, 120);
+}
+
+Object::Object()
+{
+
 }

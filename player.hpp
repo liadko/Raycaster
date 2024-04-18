@@ -17,7 +17,9 @@ private:
 	sf::Sprite wall_sprite;
 
 	sf::Texture enemy_tex;
-	vector<Object> objects;
+	Object objects[10];
+	int object_count = 0;
+	vector<Object*> sorted_objects;
 
 	// gun animation
 	int gun_animation_frame;

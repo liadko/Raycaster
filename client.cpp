@@ -77,7 +77,7 @@ bool Client::connectToServer(const string& ip, int tcp_port, int udp_port, strin
 
     if (udp_socket.bind(sf::Socket::AnyPort) != sf::Socket::Done)
     {
-        error =  "Error binding UDP socket";
+        error = "Error binding UDP socket";
         return false;
     }
 
@@ -87,7 +87,7 @@ bool Client::connectToServer(const string& ip, int tcp_port, int udp_port, strin
 
     connected = true;
     cout << "Connected To Server At ('" << ip << "', " << tcp_port << ")\n";
-    
+
 
     return true;
 }
@@ -111,19 +111,19 @@ bool Client::tryLogIn(const string& username, const string& password, string& er
         error = "Username Cannot Have Tilde ~";
         return false;
     }
-    
+
 
     // Connect to server
     if (!connectToServer("87.71.155.68", 21567, 21568, error))
         return false;
 
-    
+
     cout << "Public IP: " << sf::IpAddress::getPublicAddress() << "\n";
 
     string creds = "LOGIN~" + username + "~" + password + "~" + sf::IpAddress::getPublicAddress().toString() + "~";
     sendEncryptedTCP(creds, error);
 
-    
+
 
     void* buffer;
     int buffer_size;
@@ -137,7 +137,7 @@ bool Client::tryLogIn(const string& username, const string& password, string& er
     free(buffer);
 
     vector<string> parts = split(response);
-    
+
     if (parts[0] == "SUCCESS")
     {
         player_id = std::stoi(parts[1]);
@@ -154,7 +154,7 @@ bool Client::tryLogIn(const string& username, const string& password, string& er
     //cout << "Message Received: " << string((char*)buffer, buffer_size) << "\n";
     //printBytes((unsigned char*)buffer, buffer_size);
 
-    
+
 }
 
 //UDP
@@ -244,23 +244,7 @@ bool Client::sendUDP(sf::UdpSocket& socket, const string& message, string& error
 // returns true on success
 bool Client::recvUDP(sf::UdpSocket& socket, void*& buffer, int& buffer_size)
 {
-    socket.setBlocking(false);
-
-    sf::SocketSelector selector;
-    selector.add(socket);
-
-
-    if (!selector.wait(sf::milliseconds(12)))
-    {
-        cout << "Nothing Received\n";
-        socket.setBlocking(true);
-        return false;
-    }
-
-
-    socket.setBlocking(true);
-
-    //length
+    //buffer
     int msg_length = 128;
     buffer = malloc(msg_length);
     if (buffer == 0)
@@ -269,20 +253,19 @@ bool Client::recvUDP(sf::UdpSocket& socket, void*& buffer, int& buffer_size)
         return false;
     }
 
-
-    // message string
-
-    size_t amount_received;
-    socket.receive(buffer, msg_length, amount_received, udp_address, udp_port);
+    sf::SocketSelector selector;
+    selector.add(socket);
 
 
-    /*if (amount_received != msg_length)
-    {
-        cout << "Error when receiving message with length: " << msg_length << "\n";
-        return false;
-    }*/
+    for (int i = 0; i < 2; i++)
+        if (selector.wait(sf::milliseconds(4)))
+        {
+            size_t amount_received;
+            socket.receive(buffer, msg_length, amount_received, udp_address, udp_port);
+            buffer_size = amount_received;
+        }
 
-    buffer_size = amount_received;
+
     return true;
 }
 
@@ -315,13 +298,13 @@ bool Client::recvEncryptedTCP(void*& buffer, int& buffer_size, string& error)
         return false;
     }
 
-    
+
     memcpy(buffer, decrypted.c_str(), decrypted.size());
-    
+
 }
 
 // returns true on success
-bool Client::recvTCP(sf::TcpSocket& socket, void*& buffer, int& buffer_size) 
+bool Client::recvTCP(sf::TcpSocket& socket, void*& buffer, int& buffer_size)
 {
     socket.setBlocking(false);
 
@@ -370,7 +353,7 @@ bool Client::recvTCP(sf::TcpSocket& socket, void*& buffer, int& buffer_size)
     return true;
 }
 
-bool Client::sendTCP(sf::TcpSocket& socket, const string& message, string& error) 
+bool Client::sendTCP(sf::TcpSocket& socket, const string& message, string& error)
 {
     //cout << "Sending: " << message <<  "\n";
 
@@ -416,8 +399,8 @@ void printBytes(const unsigned char* pBytes, const uint32_t nBytes) // should mo
             std::setfill('0') <<  // fill with 0 if not enough characters
             (int)pBytes[i] << " ";
     }
-    cout << std::dec <<"\n";
-    
+    cout << std::dec << "\n";
+
 }
 
 void printBytes(void* pBytes, const uint32_t nBytes)
@@ -529,7 +512,7 @@ void bigintToBytes(bigint key, unsigned char* buffer)
 {
     for (int i = 15; i >= 0; i--)
     {
-        buffer[i] = (unsigned char) (key & 255);
+        buffer[i] = (unsigned char)(key & 255);
         key >>= 8;
     }
 }
