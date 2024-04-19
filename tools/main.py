@@ -41,24 +41,32 @@ def main():
     image = Image.open(image_path)
 
     
-    BOXSIZE = 120
-    spritesheet = Image.new("RGBA", (9*BOXSIZE, 9*BOXSIZE))
+    BOXSIZE = 280
+    spritesheet = Image.new("RGBA", (8*BOXSIZE, 9*BOXSIZE))
 
-
+    guide = Image.new("RGBA", (8*BOXSIZE, 9*BOXSIZE))
+    for x in range(guide.width):
+        for y in range(guide.height):
+            if x % BOXSIZE == 0 or y % BOXSIZE == 0:
+                guide.putpixel((x, y), (255, 0, 0, 255))
+                if(x + 140 < guide.width):
+                    guide.putpixel((x+140, y), (0, 0, 200, 200))
+    
+    guide.save("guide.png")
     # Get the image size
     #width, height = image.size
     #print("Image size:", width, "x", height, '\n')
 
-    
-    directions_x = [30, 125, 200, 287, 360, 442, 543, 640]
-    starts_y = [33, 33, 33, 33, 33, 110, 85, 83]
+    current_sprite = Image.new("RGBA", (8*BOXSIZE, 8*BOXSIZE))
+    start_x = 30
+    y  = [60, 180, 330, 450, 575, 690, 800, 890]
     for i in range(8):
         print("{ ", end='')
         n = 0
-        y = starts_y[i]
-        while y < image.size[1]:
-            if(image.getpixel((directions_x[i], y))[3] == 255):
-                left, top, right, bottom = is_edging(image, directions_x[i], y)
+        x = start_x
+        while x < image.size[0]:
+            if(image.getpixel((x, y[i]))[3] == 255):
+                left, top, right, bottom = is_edging(image, x, y[i])
                 width, height = right - left, bottom - top
                 
                 #print('{', f"{left}, {top}, {width}, {height}", '}, ', end='')
@@ -67,19 +75,22 @@ def main():
                 x_offset = (BOXSIZE - width)//2
                 y_offset = BOXSIZE - height
                 
-                spritesheet.paste(rect, (i * BOXSIZE + x_offset + 7, n * BOXSIZE + y_offset))
+                spritesheet.paste(rect, (n * BOXSIZE + x_offset, i * BOXSIZE + y_offset))
+                current_sprite.paste(rect, (n * BOXSIZE + x_offset, i * BOXSIZE + y_offset))
+                current_sprite.save(f"sprites/sprite_{i}_{n}.png")
+                current_sprite = Image.new("RGBA", (8*BOXSIZE, 8*BOXSIZE))
                 
                 print(width, "x",height, " ")
-                y = bottom + 1
+                x = right + 1
                 n+=1
                 
-                if(n == 6): break
             
-            y+=1
+            x+=1
         print("},")
     
     
     spritesheet.save("spritesheet.png")
+    guide.save("guide.png")
     
     # Save the modified image
     #output_path = "output.jpg"

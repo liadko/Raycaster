@@ -19,11 +19,16 @@ public:
     int animation_index = 0;
     float animation_timer = 0;
 
+    bool shooting_gun = false;
+    float gun_timer = 0;
+
     Object();
     Object(float x, float y, const sf::Texture& tex, float scaler);
     float distFrom(const v2f& pos);
+    void shootGun();
     void animate(float dt);
     void loadPlayerInfo(Client::PlayerInfo player_info);
+
 
 
     static sf::IntRect getTextureRect(float rotation, float frame);

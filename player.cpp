@@ -600,6 +600,11 @@ Client::PlayerInfo Player::getPlayerInfo()
     flags |= moving_forward * Client::PlayerInfo::forward;
     flags |= gun_shot * Client::PlayerInfo::gun_shot;
     flags |= has_quit * Client::PlayerInfo::quit;
+
+
+    // reset gun shot flag
+    gun_shot = false;
+
     return
     {
         client.player_id,
@@ -607,8 +612,6 @@ Client::PlayerInfo Player::getPlayerInfo()
         flags
     };
 
-    // reset gun shot flag
-    gun_shot = false;
 }
 
 void Player::debug()

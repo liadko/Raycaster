@@ -21,6 +21,23 @@ float Object::distFrom(const v2f& pos)
 
 void Object::animate(float dt)
 {
+    if (shooting_gun)
+    {
+        gun_timer += dt;
+
+        if (gun_timer > 0.4f)
+            shooting_gun = false;
+
+        if (gun_timer > 0.3f)
+            sprite.setTextureRect(getTextureRect(direction_index, 5));
+        else if (gun_timer > 0.1f)
+            sprite.setTextureRect(getTextureRect(direction_index, 5));
+        else
+            sprite.setTextureRect(getTextureRect(direction_index, 5));
+
+        return;
+    }
+
     if (!moving)
     {
         sprite.setTextureRect(getTextureRect(direction_index, 4)); // 4 - standing frame
@@ -45,6 +62,12 @@ void Object::animate(float dt)
     }
 }
 
+void Object::shootGun()
+{
+    gun_timer = 0;
+    shooting_gun = true;
+}
+
 void Object::loadPlayerInfo(Client::PlayerInfo player_info)
 {
     position.x = player_info.pos_x;
@@ -63,13 +86,19 @@ void Object::loadPlayerInfo(Client::PlayerInfo player_info)
         started_moving = true;
     }
 
+
     moving = moving_flag;
     forward = forward_flag;
+
+
+    if (shot_gun_flag)
+        shootGun();
+
 }
 
 sf::IntRect Object::getTextureRect(float rotation, float frame)
 {
-    return sf::IntRect(120 * rotation, 120 * frame, 120, 120);
+    return sf::IntRect(280 * rotation, 280 * frame, 280, 280);
 }
 
 Object::Object()

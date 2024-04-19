@@ -9,6 +9,7 @@ import secrets # for randbits, Diffie Hellman
 from sql_orm import Users_db
 
 import struct
+import math
 
 # Player data structure
 class Player:
@@ -242,18 +243,45 @@ def handle_client(client_socket, address, users_db:Users_db, lock: threading.Loc
     
     client_socket.close()
 
+def dot_product(x1, y1, x2, y2):
+    return x1*x2 + y1*y2
+
+
+def get_shot_nigga(nigga: Player):
+    print("nigga number", nigga.player_id, "got shot")
+
+def is_pointing_at(pointer: Player, pointee: Player):
+
+    dir_x, dir_y = math.cos(pointer.rotation_x), math.sin(pointer.rotation_x)
+    a = dot_product(dir_x, dir_y, dir_x, dir_y)
+    
+    qc_x, qc_y =  pointee.position_x - pointer.position_x, pointee.position_y - pointer.position_y
+    b = -2 * dot_product(dir_x, dir_y, qc_x, qc_y)
+    
+    r = 0.4
+    c = dot_product(qc_x, qc_y, qc_x, qc_y) - r*r 
+
+    discy = b*b -4*a*c
+    return discy > 0
+
+
+def handle_gun_shot(player: Player):
+    print("handling gun shot")
+    for i in range(len(players)):
+        if players[i] == player: continue
+
+        if is_pointing_at(player, players[i]):
+            get_shot_nigga(players[i])
+
 def update_player(player_info: bytes):
     global players, player_binaries
     
     player_id, pos_x, pos_y, rot_x, rot_y, flags = struct.unpack(struct_format, player_info)
     
-    player = None
-    for p in players:
-        if(p.player_id == player_id):
-            player = p
+    for player in players:
+        if player.player_id == player_id:
             break
-        
-    if player == None:
+    else:
         print("Got message from nonexistant player, id=", player_id)
         return
     
@@ -263,45 +291,30 @@ def update_player(player_info: bytes):
     player.rotation_y = rot_y
     
     has_quit = flags & 8
-    
     if(has_quit):
         remove_player(player_id)
         player_binaries = int.to_bytes(len(players), 1) + player_binaries[1:]
         player_info = b''
     
+    gun_shot = flags & 4
+    if(gun_shot):
+        handle_gun_shot(player)
     
-    #print("got update from player, here's the playerbinaries: ", clean_bytes(player_binaries))
     
+    # get index of this players buffer
     buffer_index = 1
-    while(True):
-        if(buffer_index >= len(player_binaries)):
+    while True:
+        if buffer_index >= len(player_binaries):
             raise Exception("Something fucked when updating the player binaries", buffer_index)
 
-        if(player_binaries[buffer_index] == player_id):
+        if player_binaries[buffer_index] == player_id:
             break
             
         buffer_index += struct_size
                 
-    
+    # update this players buffer in the binaries
     player_binaries = player_binaries[:buffer_index] + player_info + player_binaries[buffer_index+struct_size:]
     
-
-
-# def get_others_info(player_id):
-#     global players
-    
-#     info = b''
-#     others_count = 0
-#     for i in range(len(players)):
-#         if(i == player_id): continue
-#         player = players[i]
-#         info += struct.pack("ifffi", i, player.position_x, player.position_y, player.rotation_x, player.is_moving)
-#         others_count += 1
-        
-#     info = int.to_bytes(others_count, 4, 'little') + info 
-    
-#     return info
-        
         
 
 def handle_game():
