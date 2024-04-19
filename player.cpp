@@ -387,6 +387,9 @@ void Player::drawWorld(HitInfo*& hits, float dt)
         if (!column_drawn[x])
             drawColumn(x, hits[x]);
 
+
+    //Object temp_obj(32.5f, 19.2f, enemy_tex, 0.0039f);
+    //drawObject(temp_obj, 0.3);
 }
 
 void Player::drawColumn(int x, const Player::HitInfo& hit_info)
@@ -466,7 +469,7 @@ void Player::loadTextures()
     gun_animation_duration[2] = 0.12f;
     gun_animation_duration[3] = gun_animation_duration[4] = 0.2f;
 
-    enemy_tex.loadFromFile("sprites/spritesheet.png");
+    enemy_tex.loadFromFile("sprites/spritesheet2.png");
 
 }
 
@@ -566,7 +569,7 @@ void Player::updateServer()
 
         for (int i = 0; i < other_players_count; i++)
         {
-            objects[i] = Object(-10, -10, enemy_tex, 0.0095f);
+            objects[i] = Object(-10, -10, enemy_tex);
             sorted_objects[i] = &objects[i];
         }
         

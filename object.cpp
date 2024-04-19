@@ -3,13 +3,14 @@
 #include "client.hpp" // for struct PlayerInfo
 
 
-Object::Object(float x, float y, const sf::Texture& tex, float scaler)
-    : position(x, y), direction_index(0), scale_by(scaler)
+Object::Object(float x, float y, const sf::Texture& tex)
+    : position(x, y), direction_index(0)
 {
     tex_size = (v2f)tex.getSize();
     sprite.setTexture(tex, true);
     sprite.setTextureRect(getTextureRect(direction_index, 0));
-    shrink_by = 0.75f;
+    shrink_by = 1.9f;
+    scale_by = 0.0039f;
 
 }
 
@@ -25,13 +26,13 @@ void Object::animate(float dt)
     {
         gun_timer += dt;
 
-        if (gun_timer > 0.4f)
-            shooting_gun = false;
 
-        if (gun_timer > 0.3f)
+        if (gun_timer > 0.2f)
+            shooting_gun = false;
+        else if (gun_timer < 0.03f)
             sprite.setTextureRect(getTextureRect(direction_index, 5));
-        else if (gun_timer > 0.1f)
-            sprite.setTextureRect(getTextureRect(direction_index, 5));
+        else if (gun_timer < 0.12f)
+            sprite.setTextureRect(getTextureRect(direction_index, 6));
         else
             sprite.setTextureRect(getTextureRect(direction_index, 5));
 

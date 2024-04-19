@@ -23,7 +23,7 @@ public:
     float gun_timer = 0;
 
     Object();
-    Object(float x, float y, const sf::Texture& tex, float scaler);
+    Object(float x, float y, const sf::Texture& tex);
     float distFrom(const v2f& pos);
     void shootGun();
     void animate(float dt);
