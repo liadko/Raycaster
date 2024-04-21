@@ -16,6 +16,7 @@ class Player:
     def __init__(self, username, id):
         self.username = username
         self.player_id = id
+        self.dist2wall = -1
         self.position_x = -1
         self.position_y = -1
         self.rotation_x = -1
@@ -28,7 +29,7 @@ class Player:
 TCP_PORT = 21567  # Separate port for TCP communication
 SERVER_ADDRESS = ("0.0.0.0", 3000)
 players:list[Player] = []
-struct_format = 'iffffi'
+struct_format = 'ifffffi'
 struct_size = struct.calcsize(struct_format)
 player_binaries = b'\x00'
 current_player_id = 0
@@ -260,7 +261,8 @@ def get_shot_nigga(nigga: Player):
         player.events += event
         
     
-    
+def player_distance(one:Player, two:Player):
+    return math.sqrt((one.position_x - two.position_x)**2 + (one.position_y - two.position_y)**2)
 
 def is_pointing_at(pointer: Player, pointee: Player):
 
@@ -282,7 +284,9 @@ def handle_gun_shot(player: Player):
     for i in range(len(players)):
         if players[i] == player: continue
 
-        if is_pointing_at(player, players[i]):
+        dist2other = player_distance(player, players[i])
+        
+        if dist2other < player.dist2wall and is_pointing_at(player, players[i]):
             get_shot_nigga(players[i])
 
 
@@ -293,7 +297,7 @@ def update_player(player_info: bytes):
         print("Invalid Player Info Received")
         return None
     
-    player_id, pos_x, pos_y, rot_x, rot_y, flags = struct.unpack(struct_format, player_info)
+    player_id, dist2wall, pos_x, pos_y, rot_x, rot_y, flags = struct.unpack(struct_format, player_info)
     
     for player in players:
         if player.player_id == player_id:
@@ -306,6 +310,8 @@ def update_player(player_info: bytes):
     player.position_y = pos_y
     player.rotation_x = rot_x
     player.rotation_y = rot_y
+    player.dist2wall = dist2wall
+    
     
     has_quit = flags & 8
     if(has_quit):

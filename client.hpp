@@ -53,6 +53,7 @@ public:
             got_shot = 16
         };
         int player_id;
+        float dist2wall;
         float pos_x, pos_y, rot_x, rot_y;
         int flags;
     };

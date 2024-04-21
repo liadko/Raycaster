@@ -101,10 +101,8 @@ void Player::rotateHead(int delta_x, int delta_y, float dt)
 
     // horizontal
     rotation_x += delta_x * mouse_sensitivity * dt;
-    //sprite.setRotation(rotation_x / PI * 180);		// update player map sprite
     map.shiftSky(delta_x * mouse_sensitivity * dt); // shift sky
 
-    // cout << rotation_x << "\n";
 
 
     // vertical
@@ -682,6 +680,7 @@ Client::PlayerInfo Player::getPlayerInfo()
     return
     {
         client.player_id,
+        shootRay(0).distance,
         position.x, position.y, rotation_x, rotation_y,
         flags
     };

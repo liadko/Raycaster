@@ -204,7 +204,7 @@ bool Client::recvEncryptedUDP(void*& buffer, int& buffer_size, string& error)
 bool Client::sendUDP(const string& message, string& error)
 {
 
-    int buffer_size = 33;
+    int buffer_size = 1 + 32;
     void* buffer = malloc(buffer_size);
     if (buffer == 0)
     {
