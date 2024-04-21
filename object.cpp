@@ -117,8 +117,6 @@ void Object::loadPlayerInfo(Client::PlayerInfo player_info)
     if (shot_gun_flag)
         shootGun();
 
-    //if (got_shot_flag)
-    //    gotShot();
 }
 
 sf::IntRect Object::getTextureRect(float rotation, float frame)

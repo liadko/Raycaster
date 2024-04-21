@@ -5,7 +5,7 @@
 #include "object.hpp"
 #include "client.hpp"
 
-#include <SFML/Network.hpp>
+#include <chrono>
 
 void loginPage(sf::RenderWindow& window, Player& player);
 void mainLoop(sf::RenderWindow& window, Player& player);
@@ -248,7 +248,7 @@ void mainLoop(sf::RenderWindow& window, Player& player)
             cout << (1/dt) << "\n";
 
 
-        //cout << "Frame: " << frame_count << '\n';
+        cout << "Frame: " << frame_count << '\n';
 
         player.updateServer();
 
@@ -269,8 +269,15 @@ void mainLoop(sf::RenderWindow& window, Player& player)
         // World
 
         {
+            auto start = std::chrono::high_resolution_clock::now();
             std::lock_guard<std::mutex> lock(player.mtx);
+            auto end = std::chrono::high_resolution_clock::now();
+
             player.drawWorld(hits, dt);
+            
+            std::chrono::duration<double> elapsed = end - start;
+
+            //std::cout << "Elapsed time: " << elapsed.count() * 1000 << " ms" << std::endl;
         }
 
 

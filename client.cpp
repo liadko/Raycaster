@@ -159,7 +159,7 @@ bool Client::tryLogIn(const string& username, const string& password, string& er
 }
 
 //UDP
-//encrypts message, sends the id + the encrypted message.
+//encrypts message, sends the (char)id + the encrypted message.
 bool Client::sendEncryptedUDP(void* buffer, int size, string& error)
 {
 
@@ -170,11 +170,6 @@ bool Client::sendEncryptedUDP(void* buffer, int size, string& error)
         return false;
     }
 
-    //cout << "key bytes: ";
-    //printBytes(key_bytes, 16);
-
-    //cout << "unencrypted: ";
-    //printBytes(buffer, size);
 
     string msg = (char)player_id + encrypted;
 
@@ -200,7 +195,6 @@ bool Client::recvEncryptedUDP(void*& buffer, int& buffer_size, string& error)
         return false;
     }
 
-    //buffer_size -= ((char*)buffer)[buffer_size - 1];
     buffer_size = decrypted.size();
 
     memcpy(buffer, decrypted.c_str(), decrypted.size());
@@ -209,7 +203,6 @@ bool Client::recvEncryptedUDP(void*& buffer, int& buffer_size, string& error)
 
 bool Client::sendUDP(const string& message, string& error)
 {
-    //cout << "Sending: " << message <<  "\n";
 
     int buffer_size = 33;
     void* buffer = malloc(buffer_size);
@@ -228,15 +221,12 @@ bool Client::sendUDP(const string& message, string& error)
     // message string
     memcpy(buffer, message.c_str(), message.size());
 
-    //cout << "boutta send udp to " << udp_sender_address << ":" << udp_sender_port << "\n";
     if (udp_socket.send(buffer, buffer_size, udp_sender_address, udp_sender_port) != sf::Socket::Done)
     {
         error = "Failure When Sending The Message: " + message;
         return false;
     }
 
-    //cout << "encrypted: ";
-    //printBytes(buffer, buffer_size);
 
     free(buffer);
 }
@@ -259,7 +249,6 @@ bool Client::recvUDP(void*& buffer, int& buffer_size)
     if (status == sf::Socket::Done)
     {
         buffer_size = amount_received;
-        //cout << "Received\n";
         return true;
     }
     
@@ -279,7 +268,6 @@ bool Client::sendEncryptedTCP(const string& msg, string& error)
 
     sendTCP(tcp_socket, encrypted, error);
 }
-
 
 bool Client::recvEncryptedTCP(void*& buffer, int& buffer_size, string& error)
 {

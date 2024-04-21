@@ -535,7 +535,12 @@ void Player::updateServer()
     string error;
     Client::PlayerInfo player_info = getPlayerInfo();
     
+    auto start = std::chrono::high_resolution_clock::now();
     std::lock_guard<std::mutex> lock(mtx);
+    auto end = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = end - start;
+    //std::cout << "Elapsed time: " << elapsed.count() * 1000 << " ms" << std::endl;
+
 
     if (!client.sendEncryptedUDP((void*)&player_info, sizeof(player_info), error))
     {
@@ -553,8 +558,6 @@ void Player::listenToServer()
     
     while (true)
     {
-        sf::sleep(sf::milliseconds(10));
-        std::lock_guard<std::mutex> lock(mtx);
 
         string error;
         void* buffer;
@@ -564,10 +567,10 @@ void Player::listenToServer()
             //cout << error << "\n";
             continue;
         }
-
-
         //cout << "Got This UDP (with size " << buffer_size << "): ";
         //printBytes(buffer, buffer_size);
+
+        std::lock_guard<std::mutex> lock(mtx);
 
         char player_count = *(char*)buffer;
 
