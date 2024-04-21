@@ -20,6 +20,8 @@ class Player:
         self.position_y = -1
         self.rotation_x = -1
         self.rotation_y = -1
+        
+        self.events = b''
 
 
 # Define server address and port
@@ -77,8 +79,8 @@ def recvUDP(udp_server : socket.socket) -> tuple[bytes, any]:
 
         # Receive the actual message data
 
-        if len(msg_bytes) != 33:
-            raise ConnectionError("Incomplete message received (len: {0})", len(msg_bytes))
+        #if len(msg_bytes) != 33:
+        #    raise ConnectionError("Incomplete message received (len: {0})", len(msg_bytes))
 
         return msg_bytes, address
 
@@ -249,6 +251,16 @@ def dot_product(x1, y1, x2, y2):
 
 def get_shot_nigga(nigga: Player):
     print("nigga number", nigga.player_id, "got shot")
+    
+    # decrease health of nigga
+    
+    # event details what happened. first byte tells the id of the nigga, second byte tells that he got shot
+    event = int.to_bytes(nigga.player_id | 256, 2, "little")
+    for player in players:
+        player.events += event
+        
+    
+    
 
 def is_pointing_at(pointer: Player, pointee: Player):
 
@@ -273,8 +285,13 @@ def handle_gun_shot(player: Player):
         if is_pointing_at(player, players[i]):
             get_shot_nigga(players[i])
 
+
 def update_player(player_info: bytes):
     global players, player_binaries
+    
+    if(len(player_info) != struct_size):
+        print("Invalid Player Info Received")
+        return None
     
     player_id, pos_x, pos_y, rot_x, rot_y, flags = struct.unpack(struct_format, player_info)
     
@@ -283,7 +300,7 @@ def update_player(player_info: bytes):
             break
     else:
         print("Got message from nonexistant player, id=", player_id)
-        return
+        return None
     
     player.position_x = pos_x
     player.position_y = pos_y
@@ -305,8 +322,9 @@ def update_player(player_info: bytes):
     buffer_index = 1
     while True:
         if buffer_index >= len(player_binaries):
-            raise Exception("Something fucked when updating the player binaries", buffer_index)
-
+            print("Something fucked when looking for this player in the binaries", buffer_index)
+            return None
+            
         if player_binaries[buffer_index] == player_id:
             break
             
@@ -315,7 +333,7 @@ def update_player(player_info: bytes):
     # update this players buffer in the binaries
     player_binaries = player_binaries[:buffer_index] + player_info + player_binaries[buffer_index+struct_size:]
     
-        
+    return player
 
 def handle_game():
     global key_bytes, player_binaries
@@ -329,6 +347,8 @@ def handle_game():
     while(True):
         msg, address = recvUDP(udp_socket)
         
+        
+    
         start = time.time_ns()
         
         player_id, encrypted = msg[0], msg[1:]
@@ -346,7 +366,7 @@ def handle_game():
         
         
         
-        update_player(player_info)
+        player = update_player(player_info)
         
         # print(f"Sending Player #{player_id} These Binaries:", player_binaries[0])
         # for i in range(len(players)):
@@ -355,7 +375,14 @@ def handle_game():
         
         #others = get_others_info(player_id)
         
-        udp_socket.sendto(encrypt_AES(player_binaries, correct_key_bytes), address)
+        if(player == None):
+            continue
+        
+        response = player_binaries + player.events
+        player.events = b'' # reset events.
+        
+        
+        udp_socket.sendto(encrypt_AES(response , correct_key_bytes), address)
         
         end = time.time_ns()
         

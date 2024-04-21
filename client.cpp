@@ -20,16 +20,16 @@ Client::Client()
         secret |= secret_buffer[i];
     }
 
-
 }
 
 
-bool Client::connectToServer(const string& ip, int tcp_port, int udp_port, string& error)
+bool Client::connectToServer(const string& ip, int server_tcp_port, int server_udp_port, string& error)
 {
     this->ip = ip;
-    this->udp_port = udp_port;
+    this->udp_sender_port = server_udp_port;
+    this->udp_listener_port = server_udp_port;
 
-    sf::Socket::Status connection_status = tcp_socket.connect(ip, tcp_port, sf::milliseconds(1000));
+    sf::Socket::Status connection_status = tcp_socket.connect(ip, server_tcp_port, sf::milliseconds(1000));
     if (connection_status != sf::Socket::Done)
     {
         error = "Failed To Connect To Server";
@@ -81,12 +81,13 @@ bool Client::connectToServer(const string& ip, int tcp_port, int udp_port, strin
         return false;
     }
 
+    udp_sender_address = udp_listener_address = tcp_socket.getRemoteAddress();
+    cout << "UDP Socket Local Port: " << udp_socket.getLocalPort() << "\n";
 
-    udp_address = tcp_socket.getRemoteAddress();
-    cout << "UDP Port: " << udp_socket.getLocalPort() << "\n";
+    udp_socket.setBlocking(false);
 
     connected = true;
-    cout << "Connected To Server At ('" << ip << "', " << tcp_port << ")\n";
+    cout << "Connected To Server At ('" << ip << "', " << server_tcp_port << ")\n";
 
 
     return true;
@@ -162,7 +163,6 @@ bool Client::tryLogIn(const string& username, const string& password, string& er
 bool Client::sendEncryptedUDP(void* buffer, int size, string& error)
 {
 
-
     string encrypted = encryptAES(string((char*)buffer, size), key_bytes, error);
     if (encrypted == "")
     {
@@ -178,13 +178,13 @@ bool Client::sendEncryptedUDP(void* buffer, int size, string& error)
 
     string msg = (char)player_id + encrypted;
 
-    if (!sendUDP(udp_socket, msg, error))
+    if (!sendUDP(msg, error))
         return false;
 }
 
 bool Client::recvEncryptedUDP(void*& buffer, int& buffer_size, string& error)
 {
-    if (!recvUDP(udp_socket, buffer, buffer_size))
+    if (!recvUDP(buffer, buffer_size))
     {
         error = "Error Trying to receive encrypted udp";
         return false;
@@ -207,7 +207,7 @@ bool Client::recvEncryptedUDP(void*& buffer, int& buffer_size, string& error)
 }
 
 
-bool Client::sendUDP(sf::UdpSocket& socket, const string& message, string& error)
+bool Client::sendUDP(const string& message, string& error)
 {
     //cout << "Sending: " << message <<  "\n";
 
@@ -228,8 +228,8 @@ bool Client::sendUDP(sf::UdpSocket& socket, const string& message, string& error
     // message string
     memcpy(buffer, message.c_str(), message.size());
 
-
-    if (socket.send(buffer, buffer_size, udp_address, 21568) != sf::Socket::Done)
+    //cout << "boutta send udp to " << udp_sender_address << ":" << udp_sender_port << "\n";
+    if (udp_socket.send(buffer, buffer_size, udp_sender_address, udp_sender_port) != sf::Socket::Done)
     {
         error = "Failure When Sending The Message: " + message;
         return false;
@@ -242,7 +242,7 @@ bool Client::sendUDP(sf::UdpSocket& socket, const string& message, string& error
 }
 
 // returns true on success
-bool Client::recvUDP(sf::UdpSocket& socket, void*& buffer, int& buffer_size)
+bool Client::recvUDP(void*& buffer, int& buffer_size)
 {
     //buffer
     int msg_length = 128;
@@ -253,20 +253,21 @@ bool Client::recvUDP(sf::UdpSocket& socket, void*& buffer, int& buffer_size)
         return false;
     }
 
-    sf::SocketSelector selector;
-    selector.add(socket);
+    size_t amount_received;
+    sf::Socket::Status status = udp_socket.receive(buffer, msg_length, amount_received, udp_listener_address, udp_listener_port);
+    
+    if (status == sf::Socket::Done)
+    {
+        buffer_size = amount_received;
+        //cout << "Received\n";
+        return true;
+    }
+    
+    if (status == sf::Socket::Error)
+        cout << "Error Receiving UDP\n";
 
-
-    for (int i = 0; i < 2; i++)
-        if (selector.wait(sf::milliseconds(4)))
-        {
-            size_t amount_received;
-            socket.receive(buffer, msg_length, amount_received, udp_address, udp_port);
-            buffer_size = amount_received;
-        }
-
-
-    return true;
+    
+    return false;
 }
 
 // TCP

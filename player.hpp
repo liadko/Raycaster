@@ -6,6 +6,7 @@
 #include "client.hpp"
 #include <SFML/Audio.hpp>
 
+
 class Player
 {
 private:
@@ -56,9 +57,9 @@ private:
 	sf::SoundBuffer gunshot_buffer, gunclick_buffer;
 	sf::Sound gun_sound, click_sound;
 
-
 public:
 	Client client;
+	std::mutex mtx;
 	Map map;
 	bool window_focused;
 
@@ -89,14 +90,18 @@ public:
 	void drawCrosshair();
 	void shootGun(bool left_click);
 
+
+
 	void loadTextures();
 	
 	void quitGame();
 
 	//server
 	void updateServer();
+	void listenToServer();
+	void handleEvents(char* events, int event_count);
 	Client::PlayerInfo getPlayerInfo();
-
+	Object* getObject(int id);
 
 	//
 

@@ -5,6 +5,7 @@
 #include "object.hpp"
 #include "client.hpp"
 
+#include <SFML/Network.hpp>
 
 void loginPage(sf::RenderWindow& window, Player& player);
 void mainLoop(sf::RenderWindow& window, Player& player);
@@ -13,18 +14,47 @@ void mainLoop(sf::RenderWindow& window, Player& player);
 
 int main()
 {
+
+    //cout << "Start.\n";
+
+    //sf::UdpSocket udp1, udp2;
+    //if (udp1.bind(sf::Socket::AnyPort) != sf::Socket::Done)
+    //    cout << "Problem Binding 1\n";
+
+    //if (udp2.bind(sf::Socket::AnyPort) != sf::Socket::Done)
+    //    cout << "Problem Binding 2\n";
+
+
+    //cout << udp2.getLocalPort() << "\n";
+
+    //string message = "Penis";
+
+    //udp1.send(message.c_str(), message.size(), "87.71.155.68", 21568);
+
+    //void* buffer = malloc(128);
+    //size_t buffer_size = 128;
+    //size_t received;
+    //sf::IpAddress address("87.71.155.68");
+    //unsigned short port = 21568;
+    //udp2.receive(buffer, buffer_size, received, address, port);
+   
+    //cout << "End.\n";
+    //std::cin.get();
+
+    //return 0;
+
     //Window
     sf::RenderWindow window(sf::VideoMode(WIDTH, HEIGHT), "Program", sf::Style::Close, sf::ContextSettings(24, 8, 8));
-    
+
     window.setFramerateLimit(60);
 
-    
+
     Player player(40, 21, window);
 
-    
+
     loginPage(window, player);
 
-    
+
     // Game loop
     mainLoop(window, player);
 
@@ -50,7 +80,7 @@ void loginPage(sf::RenderWindow& window, Player& player)
         return;
     }
 
-    
+
     // text box and text
 
     TextBox username(v2f(194, 271), v2f(461, 70), "liadkoren123", input_font);
@@ -107,7 +137,7 @@ void loginPage(sf::RenderWindow& window, Player& player)
                 if (event.text.unicode == '\r')
                 {
                     string error;
-                    if(player.client.tryLogIn(username.getString(), password.getString(), error))
+                    if (player.client.tryLogIn(username.getString(), password.getString(), error))
                         return;
                     cout << error << '\n';
                 }
@@ -167,7 +197,7 @@ void loginPage(sf::RenderWindow& window, Player& player)
     }
 }
 
-void mainLoop(sf::RenderWindow& window,  Player& player)
+void mainLoop(sf::RenderWindow& window, Player& player)
 {
     v2i screen_center(WIDTH / 2, HEIGHT / 2);
 
@@ -175,19 +205,12 @@ void mainLoop(sf::RenderWindow& window,  Player& player)
     int frame_count = 0;
     sf::Clock clock;
 
+
+
     Player::HitInfo* hits = new Player::HitInfo[WIDTH];
 
+    std::thread udpThread(&Player::listenToServer, &player);
 
-    //sf::Texture* textures = new sf::Texture[3];
-    //textures[0].loadFromFile("sprites/cop.png");
-    //textures[1].loadFromFile("sprites/missing_texture.png");
-    //textures[2].loadFromFile("sprites/spritesheet.png");
-    //float scalers[3] = { 0.00135f, 0.002f, 0.0095f };
-
-    
-    //objects.emplace_back(32.5f, 19.2f, textures[2], scalers[2]);
-    //objects.emplace_back(3, 3, textures[1], scalers[1]);
-    //objects.emplace_back(10, 4, textures[0], scalers[0]);
 
     player.setFocus(true);
 
@@ -221,19 +244,17 @@ void mainLoop(sf::RenderWindow& window,  Player& player)
             }
 
 
-        //if(frame_count % 1000 == 0)
-        //    cout << dt*1000 << "\n";
+        if(frame_count % 100 == 0)
+            cout << (1/dt) << "\n";
 
 
-        //cout << map.sky_sensitivity << '\n';
-
+        //cout << "Frame: " << frame_count << '\n';
 
         player.updateServer();
 
 
         player.handleKeys(dt);
 
-        //objects[0].position.y -= 0.001f;
 
         // Graphics
         window.clear(sf::Color::Red);
@@ -242,11 +263,17 @@ void mainLoop(sf::RenderWindow& window,  Player& player)
 
         player.map.drawGround();
 
-        
+
         player.shootRays(hits); // populate hits[]
 
         // World
-        player.drawWorld(hits, dt); 
+
+        {
+            std::lock_guard<std::mutex> lock(player.mtx);
+            player.drawWorld(hits, dt);
+        }
+
+
 
         //player.debug();
 
@@ -260,7 +287,7 @@ void mainLoop(sf::RenderWindow& window,  Player& player)
         frame_count++;
     }
 
-    
+
 
     delete[] hits;
 }

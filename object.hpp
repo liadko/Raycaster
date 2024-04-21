@@ -22,14 +22,20 @@ public:
     bool shooting_gun = false;
     float gun_timer = 0;
 
+    bool getting_shot;
+    float getting_shot_timer = 0;
+
+    int player_id = -1;
+
     Object();
     Object(float x, float y, const sf::Texture& tex);
     float distFrom(const v2f& pos);
-    void shootGun();
-    void animate(float dt);
+
     void loadPlayerInfo(Client::PlayerInfo player_info);
 
-
+    void animate(float dt);
+    void shootGun();
+    void gotShot();
 
     static sf::IntRect getTextureRect(float rotation, float frame);
 };

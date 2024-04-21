@@ -2,6 +2,8 @@
 
 #include <SFML/Network.hpp>
 #include <boost/multiprecision/cpp_int.hpp>
+#include <thread>
+#include <mutex>
 
 typedef boost::multiprecision::cpp_int bigint;
 
@@ -28,9 +30,9 @@ class Client
 private:
     sf::TcpSocket tcp_socket;
     sf::UdpSocket udp_socket;
-    sf::IpAddress udp_address;
+    sf::IpAddress udp_sender_address, udp_listener_address;
     string ip;
-    unsigned short udp_port;
+    unsigned short udp_sender_port, udp_listener_port;
 
     bigint p, g, secret;
     unsigned char key_bytes[16];
@@ -48,6 +50,7 @@ public:
             forward = 2,
             gun_shot = 4,
             quit = 8,
+            got_shot = 16
         };
         int player_id;
         float pos_x, pos_y, rot_x, rot_y;
@@ -68,7 +71,7 @@ public:
 
     bool sendEncryptedUDP(void* buffer, int size, string& error);
     bool recvEncryptedUDP(void*& buffer, int& bufferSize, string& error);
-    bool sendUDP(sf::UdpSocket& socket, const string& message, string& error);
-    bool recvUDP(sf::UdpSocket& socket, void*& buffer, int& buffer_size);
+    bool sendUDP(const string& message, string& error);
+    bool recvUDP(void*& buffer, int& buffer_size);
     bool connected = false;
 };

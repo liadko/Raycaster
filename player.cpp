@@ -3,6 +3,7 @@
 #include "tools.hpp"
 #include "client.hpp"
 
+
 Player::Player(int x, int y, sf::RenderWindow& window) : map(20, window), position(x, y), window(window)
 {
 
@@ -267,7 +268,7 @@ Player::HitInfo Player::shootRay(float angle_offset)
 
 void Player::drawObject(Object& object, float dt)
 {
-    
+
     float projection_distance = 0.5f / tan(fov_y / 2);
 
 
@@ -358,7 +359,7 @@ void Player::drawWorld(HitInfo*& hits, float dt)
             break;
     }
 
-    
+
     /*cout << "Objects: ";
     for (int i = 0; i < objects.size(); i++)
     {
@@ -533,6 +534,8 @@ void Player::updateServer()
 
     string error;
     Client::PlayerInfo player_info = getPlayerInfo();
+    
+    std::lock_guard<std::mutex> lock(mtx);
 
     if (!client.sendEncryptedUDP((void*)&player_info, sizeof(player_info), error))
     {
@@ -540,60 +543,125 @@ void Player::updateServer()
         return;
     }
 
-    void* buffer;
-    int buffer_size;
-    if (!client.recvEncryptedUDP(buffer, buffer_size, error))
+
+
+}
+
+
+void Player::listenToServer()
+{
+    
+    while (true)
     {
-        cout << error << "\n";
-        return;
-    }
+        sf::sleep(sf::milliseconds(10));
+        std::lock_guard<std::mutex> lock(mtx);
 
-
-    if (buffer_size % sizeof(Client::PlayerInfo) != 1)
-    {
-        cout << "Error when receiving player info. got msg with length: " << buffer_size << "\n";
-        return;
-    }
-
-    //cout << "Got This UDP (with size " << buffer_size << "): ";
-    //printBytes(buffer, buffer_size);
-
-    char player_count = *(char*)buffer;
-
-    int other_players_count = player_count - 1;
-
-    if (object_count != other_players_count)
-    {
-        object_count = other_players_count;
-        sorted_objects.resize(other_players_count);
-
-        for (int i = 0; i < other_players_count; i++)
+        string error;
+        void* buffer;
+        int buffer_size;
+        if (!client.recvEncryptedUDP(buffer, buffer_size, error))
         {
-            objects[i] = Object(-10, -10, enemy_tex);
-            sorted_objects[i] = &objects[i];
-        }
-        
-    }
-
-    // 1 byte of player_count and then PlayerInfo structs one after the other
-        
-    // update all others
-    int object_index = 0;
-    Client::PlayerInfo* current_info_buffer = (Client::PlayerInfo*)((char*)buffer + 1);
-    for (int i = 0; i < player_count; i++, current_info_buffer++) //point to next buffer
-    {
-        int current_player_id = current_info_buffer->player_id;
-        if (current_player_id == client.player_id)
+            //cout << error << "\n";
             continue;
+        }
 
 
-        objects[object_index].loadPlayerInfo(*current_info_buffer);
-        object_index++;
+        //cout << "Got This UDP (with size " << buffer_size << "): ";
+        //printBytes(buffer, buffer_size);
 
+        char player_count = *(char*)buffer;
+
+        int other_players_count = player_count - 1;
+
+        if (object_count != other_players_count)
+        {
+            object_count = other_players_count;
+            sorted_objects.resize(other_players_count);
+
+            for (int i = 0; i < other_players_count; i++)
+            {
+                objects[i] = Object(-10, -10, enemy_tex);
+                sorted_objects[i] = &objects[i];
+            }
+
+        }
+
+        // 1 byte of player_count and then PlayerInfo structs one after the other
+
+        // update all others
+        int object_index = 0;
+        Client::PlayerInfo* current_info_buffer = (Client::PlayerInfo*)((char*)buffer + 1);
+        for (int i = 0; i < player_count; i++, current_info_buffer++) //point to next buffer
+        {
+            int current_player_id = current_info_buffer->player_id;
+            if (current_player_id == client.player_id)
+                continue;
+
+
+            objects[object_index].loadPlayerInfo(*current_info_buffer);
+            object_index++;
+
+        }
+
+        int events_byte_count = buffer_size - 1 - player_count * sizeof(Client::PlayerInfo);
+
+        //cout << events_byte_count << '\n';
+        //printBytes((char*)buffer + 1 + player_count * sizeof(Client::PlayerInfo), events_byte_count);
+        if (events_byte_count > 0 && events_byte_count % 2 == 0)
+            handleEvents((char*)buffer + 1 + player_count * sizeof(Client::PlayerInfo), events_byte_count / 2);
+
+
+
+        free(buffer);
     }
 
 
-    free(buffer);
+}
+void Player::handleEvents(char* events, int event_count)
+{
+    //cout << "Events: ";
+    printBytes(events, event_count * 2);
+    for (int i = 0; i < event_count; i++)
+    {
+        int victim_id = *(events + i * 2);
+        int event_type = *(events + i * 2 + 1);
+
+
+        if (event_type == 1) // got shot
+        {
+            if (victim_id == client.player_id)
+            {
+
+            }
+            Object* victim = getObject(victim_id);
+            if (victim == nullptr)
+            {
+                cout << "victim not found\n";
+                return;
+            }
+
+            victim->gotShot();
+        }
+        else if (event_type == 2) // died
+        {
+
+        }
+        else
+        {
+
+        }
+    }
+
+}
+
+Object* Player::getObject(int id)
+{
+    for (int i = 0; i < object_count; i++)
+    {
+        if (objects[i].player_id == id)
+            return &objects[i];
+    }
+    return nullptr;
 }
 
 Client::PlayerInfo Player::getPlayerInfo()
