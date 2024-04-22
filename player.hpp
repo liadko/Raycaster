@@ -22,6 +22,8 @@ private:
 	int object_count = 0;
 	vector<Object*> sorted_objects;
 
+	
+
 	// gun animation
 	int gun_animation_frame;
 	float gun_animation_timer, gun_movement_stopwatch;
@@ -32,6 +34,14 @@ private:
 	v2f gun_offset;
 	float max_hand_range = 40;
 	float hand_move_range;
+
+	// hit direction and reticle indicator
+	sf::Texture indicator_texture, reticle_texture; 
+	sf::Sprite hit_indicator_sprite, reticle_sprite;
+	vector<float> hit_direction_timers;
+	vector<float> hit_direction_angles;
+	float reticle_timer = -1;
+
 
 	//gun shot
 	bool gun_shot;
@@ -63,6 +73,8 @@ public:
 	Map map;
 	bool window_focused;
 
+	bool debug_mode = false;
+
 	struct HitInfo {
 		float distance;
 		bool on_x_axis;
@@ -87,11 +99,11 @@ public:
 	
 	void drawObject(Object& object, float dt);
 	void drawGun(float dt);
-	void drawCrosshair();
+	void drawCrosshair(float dt);
 	void shootGun(bool left_click);
+	void getShot(int shooter_id);
 
-
-
+	void loadSFX();
 	void loadTextures();
 	
 	void quitGame();
@@ -102,6 +114,8 @@ public:
 	void handleEvents(char* events, int event_count);
 	Client::PlayerInfo getPlayerInfo();
 	Object* getObject(int id);
+	void handle_shooting_victim(int victim_id, int shooter_id);
+
 
 	//
 

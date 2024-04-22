@@ -250,13 +250,17 @@ def dot_product(x1, y1, x2, y2):
     return x1*x2 + y1*y2
 
 
-def get_shot_nigga(nigga: Player):
-    print("nigga number", nigga.player_id, "got shot")
+def someone_got_shot(shooter, shootee):
+    print(f"player {shooter.player_id} shot player {shootee.player_id}")
     
     # decrease health of nigga
     
-    # event details what happened. first byte tells the id of the nigga, second byte tells that he got shot
-    event = int.to_bytes(nigga.player_id | 256, 2, "little")
+    # event details what happened.
+    # first byte - this is a shooting
+    # second byte - shooter, third byte - victim
+    event = int.to_bytes(1, 1)
+    event += int.to_bytes(shooter.player_id, 1)
+    event += int.to_bytes(shootee.player_id, 1)
     for player in players:
         player.events += event
         
@@ -287,7 +291,7 @@ def handle_gun_shot(player: Player):
         dist2other = player_distance(player, players[i])
         
         if dist2other < player.dist2wall and is_pointing_at(player, players[i]):
-            get_shot_nigga(players[i])
+            someone_got_shot(player, players[i])
 
 
 def update_player(player_info: bytes):

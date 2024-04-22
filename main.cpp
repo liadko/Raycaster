@@ -248,7 +248,7 @@ void mainLoop(sf::RenderWindow& window, Player& player)
             cout << (1/dt) << "\n";
 
 
-        cout << "Frame: " << frame_count << '\n';
+        //cout << "Frame: " << frame_count << '\n';
 
         player.updateServer();
 
@@ -281,12 +281,15 @@ void mainLoop(sf::RenderWindow& window, Player& player)
         }
 
 
-
+        if(player.debug_mode)
+        { 
+            player.rotateHead(1, 0, 0.3);
+        }
         //player.debug();
 
         player.drawGun(dt); // Gun
 
-        player.drawCrosshair(); // Crosshair
+        player.drawCrosshair(dt); // Crosshair
 
 
         window.display(); // Render to screen

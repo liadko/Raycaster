@@ -9,13 +9,8 @@ Player::Player(int x, int y, sf::RenderWindow& window) : map(20, window), positi
 
     loadTextures();
 
-    gunshot_buffer.loadFromFile("sfx/9mm-pistol.wav");
-    gun_sound.setBuffer(gunshot_buffer);
-    gun_sound.setVolume(10);
+    loadSFX();
 
-    gunclick_buffer.loadFromFile("sfx/handgun-release.wav");
-    click_sound.setBuffer(gunclick_buffer);
-    click_sound.setVolume(25);
 
     // set anchor point
     //sf::Vector2f center(sprite.getLocalBounds().width / 2.0f, sprite.getLocalBounds().height / 2.0f);
@@ -387,7 +382,7 @@ void Player::drawWorld(HitInfo*& hits, float dt)
             drawColumn(x, hits[x]);
 
 
-    //Object temp_obj(32.5f, 19.2f, enemy_tex, 0.0039f);
+    //Object temp_obj(40, 21, enemy_tex);
     //drawObject(temp_obj, 0.3);
 }
 
@@ -410,7 +405,7 @@ void Player::drawColumn(int x, const Player::HitInfo& hit_info)
     window.draw(wall_sprite);
 }
 
-void Player::drawCrosshair()
+void Player::drawCrosshair(float dt)
 {
     sf::RectangleShape rect(v2f(4, 12));
     rect.setFillColor(sf::Color::Cyan);
@@ -428,6 +423,38 @@ void Player::drawCrosshair()
 
     rect.setPosition(v2f(WIDTH / 2 + 4, HEIGHT / 2 - 2));
     window.draw(rect);
+
+
+    // damage direction indicator
+
+    for (int i = 0; i < hit_direction_timers.size(); i++)
+    {
+        hit_direction_timers[i] += dt;
+        if (hit_direction_timers[i] > 0.4f) // timer done
+        {
+            hit_direction_timers.erase(hit_direction_timers.begin() + i);
+            hit_direction_angles.erase(hit_direction_angles.begin() + i);
+
+            i--;
+        }
+        else
+        {
+            hit_indicator_sprite.setRotation(180 + (+ hit_direction_angles[i] - rotation_x) * TO_DEGREES);
+            window.draw(hit_indicator_sprite);
+        }
+    }
+
+
+    // reticle
+    if (reticle_timer >= 0)
+    {
+        reticle_timer += dt;
+
+        if (reticle_timer > 0.2f)
+            reticle_timer = -1;
+        else
+            window.draw(reticle_sprite);
+    }
 
 }
 
@@ -470,8 +497,42 @@ void Player::loadTextures()
 
     enemy_tex.loadFromFile("sprites/spritesheet2.png");
 
+    indicator_texture.loadFromFile("sprites/indicator.png");
+    hit_indicator_sprite = sf::Sprite(indicator_texture);
+
+    hit_indicator_sprite.setScale(0.7f, 0.7f);
+
+    hit_indicator_sprite.setPosition(
+        WIDTH / 2,
+        HEIGHT / 2);
+
+    hit_indicator_sprite.setOrigin(
+        hit_indicator_sprite.getLocalBounds().width / 2,
+        hit_indicator_sprite.getLocalBounds().height / 2);
+
+    reticle_texture.loadFromFile("sprites/hit_marker2.png");
+    reticle_sprite = sf::Sprite(reticle_texture);
+    reticle_sprite.setPosition(
+        WIDTH / 2,
+        HEIGHT / 2);
+
+    reticle_sprite.setOrigin(
+        reticle_sprite.getLocalBounds().width / 2,
+        reticle_sprite.getLocalBounds().height / 2);
+
+    reticle_sprite.setScale(0.55f, 0.55f);
 }
 
+void Player::loadSFX()
+{
+    gunshot_buffer.loadFromFile("sfx/9mm-pistol.wav");
+    gun_sound.setBuffer(gunshot_buffer);
+    gun_sound.setVolume(10);
+
+    gunclick_buffer.loadFromFile("sfx/handgun-release.wav");
+    click_sound.setBuffer(gunclick_buffer);
+    click_sound.setVolume(25);
+}
 
 
 
@@ -522,6 +583,10 @@ void Player::shootGun(bool left_click)
     gun_animation_frame = 1;
     gun_sprite.setTexture(gun_texs[gun_animation_frame]);
     gun_animation_timer = 0;
+
+
+    
+
 }
 
 
@@ -532,7 +597,7 @@ void Player::updateServer()
 
     string error;
     Client::PlayerInfo player_info = getPlayerInfo();
-    
+
     auto start = std::chrono::high_resolution_clock::now();
     std::lock_guard<std::mutex> lock(mtx);
     auto end = std::chrono::high_resolution_clock::now();
@@ -553,7 +618,7 @@ void Player::updateServer()
 
 void Player::listenToServer()
 {
-    
+
     while (true)
     {
 
@@ -608,8 +673,8 @@ void Player::listenToServer()
 
         //cout << events_byte_count << '\n';
         //printBytes((char*)buffer + 1 + player_count * sizeof(Client::PlayerInfo), events_byte_count);
-        if (events_byte_count > 0 && events_byte_count % 2 == 0)
-            handleEvents((char*)buffer + 1 + player_count * sizeof(Client::PlayerInfo), events_byte_count / 2);
+        if (events_byte_count > 0 && events_byte_count % 3 == 0)
+            handleEvents((char*)buffer + 1 + player_count * sizeof(Client::PlayerInfo), events_byte_count / 3);
 
 
 
@@ -621,38 +686,65 @@ void Player::listenToServer()
 void Player::handleEvents(char* events, int event_count)
 {
     //cout << "Events: ";
-    printBytes(events, event_count * 2);
+    printBytes(events, event_count * 3);
     for (int i = 0; i < event_count; i++)
     {
-        int victim_id = *(events + i * 2);
-        int event_type = *(events + i * 2 + 1);
+        int event_type = *(events + i * 3);
+        int shooter_id = *(events + i * 3 + 1);
+        int victim_id = *(events + i * 3 + 2);
 
 
-        if (event_type == 1) // got shot
+        if (event_type == 1) // shooting happened
         {
-            if (victim_id == client.player_id)
+            handle_shooting_victim(victim_id, shooter_id);
+            
+            if (shooter_id == client.player_id) // i shot
             {
-
-            }
-            Object* victim = getObject(victim_id);
-            if (victim == nullptr)
-            {
-                cout << "victim not found\n";
-                return;
+                reticle_timer = 0; // start reticle
             }
 
-            victim->gotShot();
         }
         else if (event_type == 2) // died
         {
 
         }
-        else
-        {
-
-        }
     }
 
+}
+
+void Player::handle_shooting_victim(int victim_id, int shooter_id)
+{
+    // you got shot
+    if (victim_id == client.player_id)
+    {
+        getShot(shooter_id);
+        return;
+    }
+
+    //someone else got shot
+    Object* victim = getObject(victim_id);
+    if (victim == nullptr)
+    {
+        cout << "victim not found\n";
+        return;
+    }
+
+    victim->gotShot();
+}
+
+void Player::getShot(int shooter_id)
+{
+    Object* shooter = getObject(shooter_id);
+    if (shooter == nullptr)
+    {
+        cout << "shooter not found\n";
+        return;
+    }
+
+    // turn on hit direction
+    float relative_angle = atan2(position.y - shooter->position.y, position.x - shooter->position.x);
+    hit_direction_timers.push_back(0);
+    hit_direction_angles.push_back(relative_angle);
 }
 
 Object* Player::getObject(int id)
@@ -692,4 +784,6 @@ void Player::debug()
     cout << position.x << ": X\n"
         << position.y << ": Y\n"
         << map.floor_level << ": map floor level\n\n";
+
+    debug_mode ^= 1;
 }
