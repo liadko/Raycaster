@@ -13,6 +13,7 @@ private:
 	// game logic
 	sf::RenderWindow& window;
 	bool has_quit;
+	bool dead = false;
 
 	sf::Texture* wall_texs;
 	sf::Sprite wall_sprite;
@@ -115,7 +116,7 @@ public:
 	Client::PlayerInfo getPlayerInfo();
 	Object* getObject(int id);
 	void handle_shooting_victim(int victim_id, int shooter_id);
-
+	void handle_killing(int victim_id);
 
 	//
 

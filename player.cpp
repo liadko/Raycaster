@@ -33,6 +33,11 @@ void Player::handleKeys(float dt)
     if (!window_focused)
         return;
 
+    if (KEY_PRESSED(Escape))
+        quitGame();
+
+    
+
     // move
     v2f movement(0, 0);
     if (KEY_PRESSED(W))
@@ -43,6 +48,9 @@ void Player::handleKeys(float dt)
         movement.y += -1;
     if (KEY_PRESSED(D))
         movement.x += -1;
+
+    if (dead)
+        movement = v2f(0, 0);
 
     moving = (movement.x != 0 || movement.y != 0);
 
@@ -68,8 +76,7 @@ void Player::handleKeys(float dt)
     //	map.sky_offset += 1833*map.sky_scale;
 
 
-    if (KEY_PRESSED(Escape))
-        quitGame();
+    
 }
 
 void Player::quitGame()
@@ -551,6 +558,11 @@ void Player::drawGun(float dt)
 
     float gun_offset_x = sin(gun_movement_stopwatch) * hand_move_range;
     float gun_offset_y = 0.2f * cos(gun_movement_stopwatch) * cos(gun_movement_stopwatch) * hand_move_range;
+
+    if (dead)
+    {
+        gun_offset_y = lerp(gun_offset_y, 3000, 0.01f);
+    }
     gun_offset = { gun_offset_x , gun_offset_y };
 
     gun_sprite.setPosition(gun_position + gun_offset);
@@ -570,7 +582,11 @@ void Player::drawGun(float dt)
 
 void Player::shootGun(bool left_click)
 {
-    if (!left_click)
+    if (dead)
+        return;
+    
+    //if right click or gun is animating, don't shoot
+    if (!left_click || gun_animation_frame)
     {
         click_sound.play();
         return;
@@ -706,25 +722,34 @@ void Player::handleEvents(char* events, int event_count)
         }
         else if (event_type == 2) // died
         {
-            if (victim_id == client.player_id)
-            {
-                // you died
-                return;
-            }
-
-            //someone else died
-            Object* victim = getObject(victim_id);
-            if (victim == nullptr)
-            {
-                cout << "victim not found\n";
-                return;
-            }
-
-            victim->gotKilled();
+            handle_killing(victim_id);
             
+            if (shooter_id == client.player_id)
+            {
+                // you killed
+            }
         }
     }
 
+}
+
+void Player::handle_killing(int victim_id)
+{
+    if (victim_id == client.player_id)
+    {
+        dead = true;
+        return;
+    }
+
+    //someone else died
+    Object* victim = getObject(victim_id);
+    if (victim == nullptr)
+    {
+        cout << "victim not found\n";
+        return;
+    }
+
+    victim->gotKilled();
 }
 
 void Player::handle_shooting_victim(int victim_id, int shooter_id)
