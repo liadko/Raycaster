@@ -22,13 +22,32 @@ float Object::distFrom(const v2f& pos)
 
 void Object::animate(float dt)
 {
-    if (shooting_gun)
+    if (dead)
+        return;
+
+    if (dying_timer >= 0)
+    {
+        dying_timer += dt;
+        if (dying_timer > 0.5f)
+        {
+            dead = true;
+            dying_timer = -1;
+        }
+        else
+        {
+            int animation_index = dying_timer * 10;
+            sprite.setTextureRect(getTextureRect(animation_index, 8));
+        }
+        return;
+    }
+
+    if (gun_timer >= 0)
     {
         gun_timer += dt;
 
 
         if (gun_timer > 0.2f)
-            shooting_gun = false;
+            gun_timer = -1;
         else if (gun_timer < 0.03f)
             sprite.setTextureRect(getTextureRect(direction_index, 5));
         else if (gun_timer < 0.12f)
@@ -39,11 +58,11 @@ void Object::animate(float dt)
         return;
     }
 
-    if (getting_shot)
+    if (getting_shot_timer >= 0)
     {
         getting_shot_timer += dt;
         if (getting_shot_timer > 0.22f)
-            getting_shot = false;
+            getting_shot_timer = -1;
         
         sprite.setTextureRect(getTextureRect(direction_index, 7));
         return;
@@ -79,13 +98,16 @@ void Object::animate(float dt)
 void Object::shootGun()
 {
     gun_timer = 0;
-    shooting_gun = true;
 }
 
 void Object::gotShot()
 {
-    getting_shot = true;
     getting_shot_timer = 0;
+}
+
+void Object::gotKilled()
+{
+    dying_timer = 0;
 }
 
 void Object::loadPlayerInfo(Client::PlayerInfo player_info)

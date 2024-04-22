@@ -19,11 +19,12 @@ public:
     int animation_index = 0;
     float animation_timer = 0;
 
-    bool shooting_gun = false;
-    float gun_timer = 0;
+    float gun_timer = -1;
 
-    bool getting_shot;
-    float getting_shot_timer = 0;
+    float getting_shot_timer = -1;
+
+    bool dead = false;
+    float dying_timer = -1;
 
     int player_id = -1;
 
@@ -36,6 +37,7 @@ public:
     void animate(float dt);
     void shootGun();
     void gotShot();
+    void gotKilled();
 
     static sf::IntRect getTextureRect(float rotation, float frame);
 };

@@ -11,6 +11,7 @@ from sql_orm import Users_db
 import struct
 import math
 
+
 # Player data structure
 class Player:
     def __init__(self, username, id):
@@ -22,8 +23,12 @@ class Player:
         self.rotation_x = -1
         self.rotation_y = -1
         
+        self.health = 100
+        self.dead = False
+        
         self.events = b''
 
+    
 
 # Define server address and port
 TCP_PORT = 21567  # Separate port for TCP communication
@@ -250,10 +255,24 @@ def dot_product(x1, y1, x2, y2):
     return x1*x2 + y1*y2
 
 
-def someone_got_shot(shooter, shootee):
+def someone_died(killer: Player, victim: Player):
+    # event details what happened.
+    # first byte - this is a shooting
+    # second byte - victim
+    event = int.to_bytes(2, 1)
+    event += int.to_bytes(killer.player_id, 1)
+    event += int.to_bytes(victim.player_id, 1)
+    for player in players:
+        player.events += event
+
+def someone_got_shot(shooter: Player, shootee : Player):
+    if shootee.dead:
+        return # can't shoot a dead person
+    
     print(f"player {shooter.player_id} shot player {shootee.player_id}")
     
     # decrease health of nigga
+    
     
     # event details what happened.
     # first byte - this is a shooting
@@ -263,6 +282,10 @@ def someone_got_shot(shooter, shootee):
     event += int.to_bytes(shootee.player_id, 1)
     for player in players:
         player.events += event
+        
+    shootee.health -= 40
+    if shootee.health <= 0:
+        someone_died(shooter, shootee)
         
     
 def player_distance(one:Player, two:Player):
@@ -284,7 +307,6 @@ def is_pointing_at(pointer: Player, pointee: Player):
 
 
 def handle_gun_shot(player: Player):
-    print("handling gun shot")
     for i in range(len(players)):
         if players[i] == player: continue
 

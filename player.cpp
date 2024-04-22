@@ -450,7 +450,7 @@ void Player::drawCrosshair(float dt)
     {
         reticle_timer += dt;
 
-        if (reticle_timer > 0.2f)
+        if (reticle_timer > 0.09f)
             reticle_timer = -1;
         else
             window.draw(reticle_sprite);
@@ -520,7 +520,7 @@ void Player::loadTextures()
         reticle_sprite.getLocalBounds().width / 2,
         reticle_sprite.getLocalBounds().height / 2);
 
-    reticle_sprite.setScale(0.55f, 0.55f);
+    reticle_sprite.setScale(0.6f, 0.6f);
 }
 
 void Player::loadSFX()
@@ -706,7 +706,22 @@ void Player::handleEvents(char* events, int event_count)
         }
         else if (event_type == 2) // died
         {
+            if (victim_id == client.player_id)
+            {
+                // you died
+                return;
+            }
 
+            //someone else died
+            Object* victim = getObject(victim_id);
+            if (victim == nullptr)
+            {
+                cout << "victim not found\n";
+                return;
+            }
+
+            victim->gotKilled();
+            
         }
     }
 
