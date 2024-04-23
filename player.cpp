@@ -651,6 +651,7 @@ void Player::updateServer()
     if (!client.sendEncryptedUDP(buffer, buffer_size, error))
     {
         cout << "couldn't send udp because: " << error << '\n';
+        free(buffer);
         return;
     }
 

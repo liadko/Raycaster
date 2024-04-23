@@ -214,6 +214,7 @@ bool Client::sendUDP(const string& message, string& error)
     if (message.size() > buffer_size)
     {
         error = "message size bigger than 128 bytes, " + std::to_string(message.size()) + " bytes without null";
+        free(buffer);
         return false;
     }
 
@@ -223,6 +224,7 @@ bool Client::sendUDP(const string& message, string& error)
     if (udp_socket.send(buffer, message.size(), udp_sender_address, udp_sender_port) != sf::Socket::Done)
     {
         error = "Failure When Sending The Message: " + message;
+        free(buffer);
         return false;
     }
 
@@ -254,7 +256,8 @@ bool Client::recvUDP(void*& buffer, int& buffer_size)
     if (status == sf::Socket::Error)
         cout << "Error Receiving UDP\n";
 
-    
+    free(buffer);
+
     return false;
 }
 
@@ -365,8 +368,11 @@ bool Client::sendTCP(sf::TcpSocket& socket, const string& message, string& error
     if (socket.send(buffer, buffer_size, amount_sent) != sf::Socket::Done)
     {
         error = "Failure When Sending The Message: " + message;
+        free(buffer);
         return false;
     }
+
+    free(buffer);
 
     if (amount_sent != buffer_size)
     {
@@ -374,7 +380,6 @@ bool Client::sendTCP(sf::TcpSocket& socket, const string& message, string& error
         return false;
     }
 
-    free(buffer);
 }
 
 void printBytes(const unsigned char* pBytes, const uint32_t nBytes) // should more properly be std::size_t

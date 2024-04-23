@@ -383,6 +383,7 @@ def update_player(player_info: bytes):
     if(gun_shot):
         handle_gun_shot(player)
     
+    player.dead = flags & 32
     
     # get index of this players buffer
     buffer_index = 1
