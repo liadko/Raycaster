@@ -579,12 +579,13 @@ void Player::drawGun(float dt)
 
     if (dead)
     {
-        gun_offset_y = lerp(gun_offset_y, 3000, 0.01f);
+        gun_position.y = lerp(gun_position.y, 900, 0.2f);
     }
 
     gun_offset = { gun_offset_x , gun_offset_y };
 
     gun_sprite.setPosition(gun_position + gun_offset);
+
 
     //cout << "\n";
     window.draw(gun_sprite);

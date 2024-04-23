@@ -234,7 +234,7 @@ bool Client::sendUDP(const string& message, string& error)
 bool Client::recvUDP(void*& buffer, int& buffer_size)
 {
     //buffer
-    int msg_length = 128;
+    int msg_length = 256;
     buffer = malloc(msg_length);
     if (buffer == 0)
     {
@@ -428,7 +428,6 @@ string encryptAES(const void*& buffer, int size, unsigned char* key, string& err
     ciphertext.resize(outLen + finalLen);
     return ciphertext;
 }
-
 
 string encryptAES(const string& plaintext, unsigned char* key, string& error) {
     EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();

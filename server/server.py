@@ -37,7 +37,6 @@ class Player:
             index += event_size
     
     def add_event(self, event: bytes):
-        print("added event", clean_bytes(event))
         self.events.append(event)
 
 # Define server address and port
@@ -437,17 +436,17 @@ def handle_game():
         
         player = update_player(player_info)
         
-        #delete the events that the player already received
-        player.update_events(received_events)
+        if(player == None):
+            continue
+        
         # print(f"Sending Player #{player_id} These Binaries:", player_binaries[0])
         # for i in range(len(players)):
         #     print(f"player {i}.", clean_bytes(player_binaries[1+struct_size*i:1+struct_size*i+struct_size]))
         # print()
         
-        #others = get_others_info(player_id)
         
-        if(player == None):
-            continue
+        #delete the events that the player already received
+        player.update_events(received_events)
         
         response = player_binaries + b''.join(player.events)
         #player.events = b'' # reset events.

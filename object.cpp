@@ -136,6 +136,9 @@ void Object::loadPlayerInfo(Client::PlayerInfo player_info)
 
     dead = dead_flag;
 
+    if (dead)
+        sprite.setTextureRect(getTextureRect(4, 8));
+
     moving = moving_flag;
     forward = forward_flag;
 
