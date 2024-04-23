@@ -50,7 +50,8 @@ public:
             forward = 2,
             gun_shot = 4,
             quit = 8,
-            got_shot = 16
+            got_shot = 16,
+            dead = 32
         };
         int player_id;
         float dist2wall;

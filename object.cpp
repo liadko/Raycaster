@@ -22,15 +22,14 @@ float Object::distFrom(const v2f& pos)
 
 void Object::animate(float dt)
 {
-    if (dead)
-        return;
-
+    
     if (dying_timer >= 0)
     {
         dying_timer += dt;
         if (dying_timer > 0.5f)
         {
             dead = true;
+            sprite.setTextureRect(getTextureRect(4, 8));
             dying_timer = -1;
         }
         else
@@ -40,6 +39,9 @@ void Object::animate(float dt)
         }
         return;
     }
+
+    if (dead)
+        return;
 
     if (gun_timer >= 0)
     {
@@ -124,6 +126,7 @@ void Object::loadPlayerInfo(Client::PlayerInfo player_info)
     bool forward_flag = player_info.flags & Client::PlayerInfo::Flag::forward;
     bool shot_gun_flag = player_info.flags & Client::PlayerInfo::Flag::gun_shot;
     bool got_shot_flag = player_info.flags & Client::PlayerInfo::Flag::got_shot;
+    bool dead_flag = player_info.flags & Client::PlayerInfo::Flag::dead;
 
     if (moving_flag != moving)
     {
@@ -131,6 +134,7 @@ void Object::loadPlayerInfo(Client::PlayerInfo player_info)
         started_moving = true;
     }
 
+    dead = dead_flag;
 
     moving = moving_flag;
     forward = forward_flag;

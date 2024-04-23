@@ -26,9 +26,19 @@ class Player:
         self.health = 100
         self.dead = False
         
-        self.events = b''
+        self.events = []
 
+    def update_events(self, received_events: bytes):
+        index = 0
+        while index < len(received_events):
+            event_size = received_events[index]
+            event = received_events[index:index + event_size]
+            self.events.remove(event)
+            index += event_size
     
+    def add_event(self, event: bytes):
+        print("added event", clean_bytes(event))
+        self.events.append(event)
 
 # Define server address and port
 TCP_PORT = 21567  # Separate port for TCP communication
@@ -80,7 +90,7 @@ def send_UDP(socket:socket.socket, address, msg: bytes):
 def recvUDP(udp_server : socket.socket) -> tuple[bytes, any]:
 
     try:
-        msg_bytes, address = udp_server.recvfrom(33)
+        msg_bytes, address = udp_server.recvfrom(256)
 
 
         # Receive the actual message data
@@ -264,7 +274,7 @@ def dot_product(x1, y1, x2, y2):
 def send_event(event: bytes):
     event = int.to_bytes(len(event)+1 , 1) + event # size 
     for player in players:
-        player.events += event
+        player.add_event(event)
 
 # give the new player the usernames of the rest
 def give_usernames(new_player : Player):
@@ -278,7 +288,7 @@ def give_usernames(new_player : Player):
         event += player.username.encode() + b'\0' # username
         event = int.to_bytes(len(event)+1 , 1) + event # size 
         
-        new_player.events += event
+        new_player.add_event(event)
         
 # events: size byte, type byte, data bytes 
 def someone_joined(player: Player):
@@ -412,9 +422,11 @@ def handle_game():
         
         correct_key_bytes = key_bytes[player_id]
         
-        
         try:
-            player_info = decrypt_AES(encrypted, correct_key_bytes)
+            decrypted = decrypt_AES(encrypted, correct_key_bytes)
+            player_info = decrypted[:struct_size]
+            received_events = decrypted[struct_size:]
+            
         except Exception as e:
             print(f"invalid message from {address}, error: {e}")
             print(f"encrypted:", clean_bytes(encrypted))
@@ -425,6 +437,8 @@ def handle_game():
         
         player = update_player(player_info)
         
+        #delete the events that the player already received
+        player.update_events(received_events)
         # print(f"Sending Player #{player_id} These Binaries:", player_binaries[0])
         # for i in range(len(players)):
         #     print(f"player {i}.", clean_bytes(player_binaries[1+struct_size*i:1+struct_size*i+struct_size]))
@@ -435,8 +449,8 @@ def handle_game():
         if(player == None):
             continue
         
-        response = player_binaries + player.events
-        player.events = b'' # reset events.
+        response = player_binaries + b''.join(player.events)
+        #player.events = b'' # reset events.
         
         
         udp_socket.sendto(encrypt_AES(response , correct_key_bytes), address)

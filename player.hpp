@@ -74,6 +74,9 @@ private:
 	//debug
 	float debug_float = 0;
 	
+	int received_events_size = 0;
+	char received_events[128];
+
 public:
 	Client client;
 	std::mutex mtx;

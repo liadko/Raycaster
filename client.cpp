@@ -170,7 +170,6 @@ bool Client::sendEncryptedUDP(void* buffer, int size, string& error)
         return false;
     }
 
-
     string msg = (char)player_id + encrypted;
 
     if (!sendUDP(msg, error))
@@ -204,7 +203,7 @@ bool Client::recvEncryptedUDP(void*& buffer, int& buffer_size, string& error)
 bool Client::sendUDP(const string& message, string& error)
 {
 
-    int buffer_size = 1 + 32;
+    int buffer_size = 128;
     void* buffer = malloc(buffer_size);
     if (buffer == 0)
     {
@@ -214,14 +213,14 @@ bool Client::sendUDP(const string& message, string& error)
 
     if (message.size() > buffer_size)
     {
-        error = "message size bigger than 32 bytes, " + std::to_string(message.size()) + " bytes without null";
+        error = "message size bigger than 128 bytes, " + std::to_string(message.size()) + " bytes without null";
         return false;
     }
 
     // message string
     memcpy(buffer, message.c_str(), message.size());
 
-    if (udp_socket.send(buffer, buffer_size, udp_sender_address, udp_sender_port) != sf::Socket::Done)
+    if (udp_socket.send(buffer, message.size(), udp_sender_address, udp_sender_port) != sf::Socket::Done)
     {
         error = "Failure When Sending The Message: " + message;
         return false;

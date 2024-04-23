@@ -308,6 +308,8 @@ void Player::drawObject(Object& object, float dt)
 
     window.draw(object.sprite);
 
+    if (object.dead) // no nametag on dead guys
+        return;
 
     // nametag
     sf::Text nametag(object.username, nametag_font, 16);
@@ -399,7 +401,7 @@ void Player::drawWorld(HitInfo*& hits, float dt)
 
 
     Object temp_obj(38, 21, enemy_tex);
-    drawObject(temp_obj, 0.3);
+    //drawObject(temp_obj, 0.3);
 }
 
 void Player::drawColumn(int x, const Player::HitInfo& hit_info)
@@ -466,7 +468,7 @@ void Player::drawCrosshair(float dt)
     {
         reticle_timer += dt;
 
-        if (reticle_timer > 0.09f)
+        if (reticle_timer > 0.06f)
             reticle_timer = -1;
         else
             window.draw(reticle_sprite);
@@ -626,25 +628,33 @@ void Player::shootGun(bool left_click)
 void Player::updateServer()
 {
 
-    //cout << "\n";
+    std::lock_guard<std::mutex> lock(mtx);
 
-    string error;
     Client::PlayerInfo player_info = getPlayerInfo();
 
-    auto start = std::chrono::high_resolution_clock::now();
-    std::lock_guard<std::mutex> lock(mtx);
-    auto end = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed = end - start;
+
     //std::cout << "Elapsed time: " << elapsed.count() * 1000 << " ms" << std::endl;
+    
+    void* buffer = malloc(sizeof(player_info) + received_events_size);
+    int buffer_size = sizeof(player_info) + received_events_size;
+    memcpy(buffer, &player_info, sizeof(player_info));
 
+    if (received_events_size)
+    {
+        memcpy((char*)buffer + sizeof(player_info), received_events, received_events_size);
 
-    if (!client.sendEncryptedUDP((void*)&player_info, sizeof(player_info), error))
+        received_events_size = 0;
+    }
+
+    string error;
+    if (!client.sendEncryptedUDP(buffer, buffer_size, error))
     {
         cout << "couldn't send udp because: " << error << '\n';
         return;
     }
 
 
+    free(buffer);
 
 }
 
@@ -718,6 +728,8 @@ void Player::listenToServer()
 }
 void Player::handleEvents(char* events, int events_size)
 {
+    bool all_events_intelligible = true;
+
     int event_size = 0;
     for (int index = 0; index < events_size; index += event_size)
     {
@@ -781,7 +793,20 @@ void Player::handleEvents(char* events, int events_size)
 
             object->username = username;
         }
+        else
+        {
+            cout << "Unrecognized Event: ";
+            printBytes(events + index, event_size);
+            all_events_intelligible = false;
+        }
+        
 
+    }
+
+    if (all_events_intelligible)
+    {
+        received_events_size = events_size;
+        memcpy(received_events, events, events_size);
     }
 
 }
@@ -863,6 +888,7 @@ Client::PlayerInfo Player::getPlayerInfo()
     flags |= moving_forward * Client::PlayerInfo::forward;
     flags |= gun_shot * Client::PlayerInfo::gun_shot;
     flags |= has_quit * Client::PlayerInfo::quit;
+    flags |= dead * Client::PlayerInfo::dead;
 
 
     // reset gun shot flag
