@@ -46,6 +46,9 @@ private:
 
 	//gun shot
 	bool gun_shot;
+	sf::Texture damage_overlay_tex;
+	sf::Sprite damage_overlay_sprite;
+	float damage_opacity;
 
 	// movement
 	v2f position;

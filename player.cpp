@@ -474,6 +474,15 @@ void Player::drawCrosshair(float dt)
             window.draw(reticle_sprite);
     }
 
+    if (damage_opacity > 0)
+    {
+        cout << "opacity: " << (int)damage_opacity << "\n";
+        damage_overlay_sprite.setColor(sf::Color(255, 255, 255, (int)damage_opacity));
+        window.draw(damage_overlay_sprite, sf::BlendAlpha);
+
+        damage_opacity -= dt * 100;
+    }
+
 }
 
 
@@ -540,6 +549,11 @@ void Player::loadTextures()
 
     reticle_sprite.setScale(0.6f, 0.6f);
 
+    damage_overlay_tex.loadFromFile("sprites/getting-hit-overlay.png");
+    damage_overlay_sprite.setTexture(damage_overlay_tex);
+    damage_overlay_sprite.setScale(1.3, 1.3);
+    damage_overlay_sprite.setOrigin(WIDTH / 2, HEIGHT / 2);
+    damage_overlay_sprite.setPosition(WIDTH / 2, HEIGHT / 2);
 
     //font
     if (!nametag_font.loadFromFile("Fonts/Roboto-Regular.ttf"))
@@ -579,7 +593,7 @@ void Player::drawGun(float dt)
 
     if (dead)
     {
-        gun_position.y = lerp(gun_position.y, 900, 0.2f);
+        gun_position.y = lerp(gun_position.y, 900, 0.1f);
     }
 
     gun_offset = { gun_offset_x , gun_offset_y };
@@ -597,6 +611,8 @@ void Player::drawGun(float dt)
         gun_animation_timer = 0;
         gun_sprite.setTexture(gun_texs[gun_animation_frame]);
     }
+
+
 }
 
 
@@ -620,8 +636,6 @@ void Player::shootGun(bool left_click)
     gun_sprite.setTexture(gun_texs[gun_animation_frame]);
     gun_animation_timer = 0;
 
-
-    
 
 }
 
@@ -871,6 +885,9 @@ void Player::getShot(int shooter_id)
     float relative_angle = atan2(position.y - shooter->position.y, position.x - shooter->position.x);
     hit_direction_timers.push_back(0);
     hit_direction_angles.push_back(relative_angle);
+
+    // turn on damage overlay
+    damage_opacity = 180;
 }
 
 Object* Player::getObject(int id)
