@@ -307,6 +307,15 @@ void Player::drawObject(Object& object, float dt)
 
 
     window.draw(object.sprite);
+
+
+    // nametag
+    sf::Text nametag(object.username, nametag_font, 16);
+    nametag.setFillColor(sf::Color::White);
+    nametag.setPosition(screen_x - 0.25f * nametag.getLocalBounds().width * object.sprite.getScale().x,
+        map.floor_level - 0.17f * object.sprite.getTextureRect().height * object.sprite.getScale().y);
+    nametag.setScale(screen_size, screen_size);
+    window.draw(nametag);
 }
 
 
@@ -389,8 +398,8 @@ void Player::drawWorld(HitInfo*& hits, float dt)
             drawColumn(x, hits[x]);
 
 
-    //Object temp_obj(40, 21, enemy_tex);
-    //drawObject(temp_obj, 0.3);
+    Object temp_obj(38, 21, enemy_tex);
+    drawObject(temp_obj, 0.3);
 }
 
 void Player::drawColumn(int x, const Player::HitInfo& hit_info)
@@ -528,6 +537,13 @@ void Player::loadTextures()
         reticle_sprite.getLocalBounds().height / 2);
 
     reticle_sprite.setScale(0.6f, 0.6f);
+
+
+    //font
+    if (!nametag_font.loadFromFile("Fonts/Roboto-Regular.ttf"))
+    {
+        cout << "Couldn't Find Nametag Font\n";
+    }
 }
 
 void Player::loadSFX()
@@ -563,6 +579,7 @@ void Player::drawGun(float dt)
     {
         gun_offset_y = lerp(gun_offset_y, 3000, 0.01f);
     }
+
     gun_offset = { gun_offset_x , gun_offset_y };
 
     gun_sprite.setPosition(gun_position + gun_offset);
@@ -689,8 +706,8 @@ void Player::listenToServer()
 
         //cout << events_byte_count << '\n';
         //printBytes((char*)buffer + 1 + player_count * sizeof(Client::PlayerInfo), events_byte_count);
-        if (events_byte_count > 0 && events_byte_count % 3 == 0)
-            handleEvents((char*)buffer + 1 + player_count * sizeof(Client::PlayerInfo), events_byte_count / 3);
+        if (events_byte_count > 0)
+            handleEvents((char*)buffer + 1 + player_count * sizeof(Client::PlayerInfo), events_byte_count);
 
 
 
@@ -699,19 +716,22 @@ void Player::listenToServer()
 
 
 }
-void Player::handleEvents(char* events, int event_count)
+void Player::handleEvents(char* events, int events_size)
 {
-    //cout << "Events: ";
-    printBytes(events, event_count * 3);
-    for (int i = 0; i < event_count; i++)
+    int event_size = 0;
+    for (int index = 0; index < events_size; index += event_size)
     {
-        int event_type = *(events + i * 3);
-        int shooter_id = *(events + i * 3 + 1);
-        int victim_id = *(events + i * 3 + 2);
+        event_size = *(events + index);
 
+        //cout << "Event: ";
+        //printBytes(events + index, event_size);
+
+        int event_type = *(events + index + 1);
 
         if (event_type == 1) // shooting happened
         {
+            int shooter_id = *(events + index + 2);
+            int victim_id = *(events + index + 3);
             handle_shooting_victim(victim_id, shooter_id);
             
             if (shooter_id == client.player_id) // i shot
@@ -720,24 +740,63 @@ void Player::handleEvents(char* events, int event_count)
             }
 
         }
-        else if (event_type == 2) // died
+        else if (event_type == 2) // death happened
         {
+            int victim_id = *(events + index + 2);
             handle_killing(victim_id);
             
-            if (shooter_id == client.player_id)
-            {
-                // you killed
-            }
         }
+        else if (event_type == 3) // new person joined
+        {
+            int new_guy_id = *(events + index + 2);
+            char* username = events + index + 3;
+            
+            if (new_guy_id == client.player_id) continue;
+
+            cout << "Player " << new_guy_id << " named " << username << " joined\n";
+
+            Object* object = getObject(new_guy_id);
+            if (object == nullptr)
+            {
+                cout << "new player not found\n";
+                return;
+            }
+
+            object->username = username;
+
+        }
+        else if (event_type == 4) // username of someone
+        {
+            int player_id = *(events + index + 2);
+            char* username = events + index + 3;
+
+            if (player_id == client.player_id) continue;
+
+            Object* object = getObject(player_id);
+            if (object == nullptr)
+            {
+                cout << "existing player not found\n";
+                return;
+            }
+
+            object->username = username;
+        }
+
     }
 
+}
+
+void Player::getKilled() 
+{
+    cout << "You got Killed\n";
+    dead = true;
 }
 
 void Player::handle_killing(int victim_id)
 {
     if (victim_id == client.player_id)
     {
-        dead = true;
+        getKilled();
         return;
     }
 

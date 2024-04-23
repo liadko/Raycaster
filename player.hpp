@@ -68,6 +68,12 @@ private:
 	sf::SoundBuffer gunshot_buffer, gunclick_buffer;
 	sf::Sound gun_sound, click_sound;
 
+	//font
+	sf::Font nametag_font;
+	
+	//debug
+	float debug_float = 0;
+	
 public:
 	Client client;
 	std::mutex mtx;
@@ -117,6 +123,7 @@ public:
 	Object* getObject(int id);
 	void handle_shooting_victim(int victim_id, int shooter_id);
 	void handle_killing(int victim_id);
+	void getKilled();
 
 	//
 

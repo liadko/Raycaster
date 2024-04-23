@@ -153,13 +153,20 @@ def decrypt_AES(cipherbytes: bytes, key):
 def add_player(username):
     global players, player_binaries, current_player_id
     
-    players.append(Player(username, current_player_id))
+
+    new_guy = Player(username, current_player_id)
+    players.append(new_guy)
     
     
     player_binaries += int.to_bytes(current_player_id, 1) * struct_size
     current_player_id += 1
     
     player_binaries = int.to_bytes(len(players), 1) + player_binaries[1:]
+    
+    someone_joined(new_guy) # notify all players that this guy joined
+    
+    give_usernames(new_guy)
+    
 
 def remove_player(player_id):
     # Iterate through the players list
@@ -254,16 +261,38 @@ def handle_client(client_socket, address, users_db:Users_db, lock: threading.Loc
 def dot_product(x1, y1, x2, y2):
     return x1*x2 + y1*y2
 
-
-def someone_died(killer: Player, victim: Player):
-    # event details what happened.
-    # first byte - this is a shooting
-    # second byte - victim
-    event = int.to_bytes(2, 1)
-    event += int.to_bytes(killer.player_id, 1)
-    event += int.to_bytes(victim.player_id, 1)
+def send_event(event: bytes):
+    event = int.to_bytes(len(event)+1 , 1) + event # size 
     for player in players:
         player.events += event
+
+# give the new player the usernames of the rest
+def give_usernames(new_player : Player):
+    for player in players:
+        if player == new_player: continue
+        
+        print(f"telling {new_player.player_id} about {player.player_id}'s username")
+        
+        event = int.to_bytes(4, 1) # username giving
+        event += int.to_bytes(player.player_id, 1) # user id
+        event += player.username.encode() + b'\0' # username
+        event = int.to_bytes(len(event)+1 , 1) + event # size 
+        
+        new_player.events += event
+        
+# events: size byte, type byte, data bytes 
+def someone_joined(player: Player):
+    event = int.to_bytes(3, 1) # new user event
+    event += int.to_bytes(player.player_id, 1) # user id
+    event += player.username.encode() + b'\0' # username
+    
+    send_event(event)
+    
+
+def someone_died(victim: Player):
+    event = int.to_bytes(2, 1) # killing
+    event += int.to_bytes(victim.player_id, 1) # killee
+    send_event(event)
 
 def someone_got_shot(shooter: Player, shootee : Player):
     if shootee.dead:
@@ -271,21 +300,17 @@ def someone_got_shot(shooter: Player, shootee : Player):
     
     print(f"player {shooter.player_id} shot player {shootee.player_id}")
     
-    # decrease health of nigga
-    
     
     # event details what happened.
-    # first byte - this is a shooting
-    # second byte - shooter, third byte - victim
-    event = int.to_bytes(1, 1)
-    event += int.to_bytes(shooter.player_id, 1)
-    event += int.to_bytes(shootee.player_id, 1)
-    for player in players:
-        player.events += event
-        
+    event = int.to_bytes(1, 1) # shooting
+    event += int.to_bytes(shooter.player_id, 1) # shooter
+    event += int.to_bytes(shootee.player_id, 1) # shootee
+    send_event(event)
+    
+    # decrease health
     shootee.health -= 40
     if shootee.health <= 0:
-        someone_died(shooter, shootee)
+        someone_died(shootee)
         
     
 def player_distance(one:Player, two:Player):

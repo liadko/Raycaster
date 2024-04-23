@@ -27,6 +27,8 @@ public:
     float dying_timer = -1;
 
     int player_id = -1;
+    string username = "MISSING USERNAME";
+
 
     Object();
     Object(float x, float y, const sf::Texture& tex);
