@@ -26,6 +26,8 @@ class Player:
         self.health = 100
         self.dead = False
         
+        self.last_message_time = None
+        
         self.events = []
 
     def update_events(self, received_events: bytes):
@@ -178,16 +180,40 @@ def add_player(username):
     
 
 def remove_player(player_id):
+    global player_binaries, players
+    
     # Iterate through the players list
     for player in players:
         # Check if the current player's username matches the target username
         if player.player_id == player_id:
             # Remove the player from the list
             players.remove(player)
-            print(f"Player with id #{player_id} removed successfully.")
-            return
-    # If the player with the specified username is not found
-    print(f"Player with id #{player_id} not found.")
+            break
+    else:
+        # If the player with the specified username is not found
+        print(f"Player with id #{player_id} not found.")
+        return
+        
+    # get index of this players buffer
+    buffer_index = 1
+    while True:
+        if buffer_index >= len(player_binaries):
+            print("Something fucked when looking for this player in the binaries", buffer_index)
+            return None
+            
+        if player_binaries[buffer_index] == player_id:
+            break
+            
+        buffer_index += struct_size
+                
+    # remove this players buffer from the binaries
+    player_binaries = player_binaries[:buffer_index] + player_binaries[buffer_index+struct_size:]
+
+    player_binaries = int.to_bytes(len(players), 1) + player_binaries[1:]
+    
+
+    
+    print(f"Player with id #{player_id} removed successfully.")
     
 
 def handle_client(client_socket, address, users_db:Users_db, lock: threading.Lock):
@@ -377,8 +403,7 @@ def update_player(player_info: bytes):
     has_quit = flags & 8
     if(has_quit):
         remove_player(player_id)
-        player_binaries = int.to_bytes(len(players), 1) + player_binaries[1:]
-        player_info = b''
+        return None
     
     gun_shot = flags & 4
     if(gun_shot):
@@ -401,6 +426,8 @@ def update_player(player_info: bytes):
     # update this players buffer in the binaries
     player_binaries = player_binaries[:buffer_index] + player_info + player_binaries[buffer_index+struct_size:]
     
+    player.last_message_time = time.time()
+    
     return player
 
 def handle_game():
@@ -415,9 +442,6 @@ def handle_game():
     while(True):
         msg, address = recvUDP(udp_socket)
         
-        
-    
-        start = time.time_ns()
         
         player_id, encrypted = msg[0], msg[1:]
         
@@ -456,7 +480,11 @@ def handle_game():
         
         udp_socket.sendto(encrypt_AES(response , correct_key_bytes), address)
         
-        end = time.time_ns()
+        now = time.time()
+        
+        for player in players:
+            if(now - player.last_message_time > 5):
+                remove_player(player.player_id)
         
         #print(end - start)
         #print("boutta send UDP: " + ' '.join([format(byte, '02X') for byte in others]))
