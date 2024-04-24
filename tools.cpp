@@ -110,11 +110,7 @@ void TextBox::draw(sf::RenderWindow& window, bool is_focused)
     }
 
 
-
-
     window.draw(text);
-
-
 
 
     if (!is_focused)
@@ -153,9 +149,9 @@ void TextBox::addText(const string& added_text)
     turnOnCursor();
 
     text_string = text_string + added_text;
-    if (text_string.size() > 16)
+    if (text_string.size() > 15)
     {
-        text_string = text_string.substr(0, 16);
+        text_string = text_string.substr(0, 15);
     }
 
 }

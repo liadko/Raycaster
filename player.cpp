@@ -480,13 +480,13 @@ void Player::drawCrosshair(float dt)
             window.draw(reticle_sprite);
     }
 
-    if (damage_opacity > 0)
+    if (current_damage_opacity > 0)
     {
-        cout << "opacity: " << (int)damage_opacity << "\n";
-        damage_overlay_sprite.setColor(sf::Color(255, 255, 255, (int)damage_opacity));
+        damage_overlay_sprite.setColor(sf::Color(255, 255, 255, (int)current_damage_opacity));
         window.draw(damage_overlay_sprite, sf::BlendAlpha);
 
-        damage_opacity -= dt * 100;
+        if(!dead)
+            current_damage_opacity -= dt * 100;
     }
 
 }
@@ -566,6 +566,14 @@ void Player::loadTextures()
     {
         cout << "Couldn't Find Nametag Font\n";
     }
+    if (!deathscreen_font.loadFromFile("Fonts/Roboto-Light.ttf"))
+    {
+        cout << "Couldn't Find deathscreen Font\n";
+    }
+    if (!bold_font.loadFromFile("Fonts/Roboto-Medium.ttf"))
+    {
+        cout << "Couldn't Find bold Font\n";
+    }
 }
 
 void Player::loadSFX()
@@ -623,6 +631,26 @@ void Player::drawGun(float dt)
 
 }
 
+void Player::drawDeathScreen(float dt)
+{
+    if (!dead) return;
+
+    string main_string = killer_name + "liadkoren123 killed you";
+    sf::Text main(main_string, bold_font, 80);
+    main.setOrigin(main.getLocalBounds().width / 2, main.getLocalBounds().height / 2);
+    main.setPosition(WIDTH / 2, HEIGHT / 2 - 30);
+    main.setOutlineColor(sf::Color::Black);
+    main.setOutlineThickness(2);
+    main.setFillColor(sf::Color(220, 30, 20));
+    window.draw(main);
+    
+    string sub_string = "press space to respawn";
+    sf::Text sub(sub_string, deathscreen_font, 30);
+    sub.setOrigin(sub.getLocalBounds().width / 2, sub.getLocalBounds().height / 2);
+    sub.setPosition(WIDTH / 2, HEIGHT / 2 + 60 );
+    window.draw(sub);
+
+}
 
 void Player::shootGun(bool left_click)
 {
@@ -840,6 +868,7 @@ void Player::getKilled()
 {
     cout << "You got Killed\n";
     dead = true;
+    current_damage_opacity = max_damage_opacity;
 }
 
 void Player::handle_killing(int killer_id, int victim_id)
@@ -899,7 +928,7 @@ void Player::getShot(int shooter_id)
     hit_direction_angles.push_back(relative_angle);
 
     // turn on damage overlay
-    damage_opacity = 130;
+    current_damage_opacity = max_damage_opacity;
 }
 
 Object* Player::getObject(int id)

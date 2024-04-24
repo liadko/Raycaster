@@ -483,7 +483,7 @@ def handle_game():
         now = time.time()
         
         for player in players:
-            if(now - player.last_message_time > 5):
+            if(player.last_message_time and now - player.last_message_time > 5):
                 remove_player(player.player_id)
         
         #print(end - start)

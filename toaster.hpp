@@ -19,9 +19,9 @@ private:
     sf::Font font;
     sf::Text text;
 
-    v2f text_position = { 34, 40 };
+    v2f text_position = { 36, 40 };
 
-    float lifetime = 3; // in seconds
+    float lifetime = 6; // in seconds
 
 public:
     Toaster();

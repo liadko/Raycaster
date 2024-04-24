@@ -96,12 +96,12 @@ bool Client::connectToServer(const string& ip, int server_tcp_port, int server_u
 bool Client::tryLogIn(const string& username, const string& password, string& error)
 {
 
-    if (username.size() <= 5)
+    if (username.size() <= 4)
     {
         error = "Username Is Too Short";
         return false;
     }
-    if (password.size() <= 5)
+    if (password.size() <= 4)
     {
         error = "Password Is Too Short";
         return false;

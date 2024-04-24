@@ -216,7 +216,7 @@ void mainLoop(sf::RenderWindow& window, Player& player, Toaster& toaster)
 
     std::thread udpThread(&Player::listenToServer, &player);
 
-
+    player.getKilled();
     player.setFocus(true);
 
     while (window.isOpen())
@@ -295,6 +295,9 @@ void mainLoop(sf::RenderWindow& window, Player& player, Toaster& toaster)
         player.drawGun(dt); // Gun
 
         player.drawCrosshair(dt); // Crosshair
+
+        player.drawDeathScreen(dt);
+
 
         toaster.drawToasts(window, dt);
 
