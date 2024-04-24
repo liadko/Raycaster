@@ -4,7 +4,8 @@
 #include "client.hpp"
 
 
-Player::Player(int x, int y, sf::RenderWindow& window) : map(20, window), position(x, y), window(window)
+Player::Player(int x, int y, sf::RenderWindow& window, Toaster& toaster)
+    : toaster(toaster),  map(20, window), position(x, y), window(window)
 {
 
     loadTextures();
@@ -82,6 +83,8 @@ void Player::handleKeys(float dt)
 void Player::quitGame()
 {
     has_quit = true;
+
+
 
     updateServer();
 
@@ -678,7 +681,7 @@ void Player::updateServer()
 void Player::listenToServer()
 {
 
-    while (true)
+    while (!has_quit)
     {
 
         string error;
@@ -770,8 +773,9 @@ void Player::handleEvents(char* events, int events_size)
         }
         else if (event_type == 2) // death happened
         {
-            int victim_id = *(events + index + 2);
-            handle_killing(victim_id);
+            int killer_id = *(events + index + 2);
+            int victim_id = *(events + index + 3);
+            handle_killing(killer_id, victim_id);
             
         }
         else if (event_type == 3) // new person joined
@@ -833,8 +837,11 @@ void Player::getKilled()
     dead = true;
 }
 
-void Player::handle_killing(int victim_id)
+void Player::handle_killing(int killer_id, int victim_id)
 {
+    int verb_index = rand() % 9;
+    toaster.toast(getUsername(killer_id) + " " + verbs[verb_index] + " " + getUsername(victim_id));
+
     if (victim_id == client.player_id)
     {
         getKilled();
@@ -887,7 +894,7 @@ void Player::getShot(int shooter_id)
     hit_direction_angles.push_back(relative_angle);
 
     // turn on damage overlay
-    damage_opacity = 180;
+    damage_opacity = 130;
 }
 
 Object* Player::getObject(int id)
@@ -920,6 +927,38 @@ Client::PlayerInfo Player::getPlayerInfo()
         position.x, position.y, rotation_x, rotation_y,
         flags
     };
+
+}
+
+void Player::respawn()
+{
+    if (!dead)
+        return;
+        
+    dead = false;
+    while (true)
+    {
+        float x = (float)rand() / RAND_MAX * map.width;
+        float y = (float)rand() / RAND_MAX * map.height;
+        if()
+    }
+}
+
+string Player::getUsername(int id)
+{
+    if (id == client.player_id)
+    {
+        return client.username;
+    }
+
+    Object* victim = getObject(id);
+    if (victim == nullptr)
+    {
+        cout << "Username not found\n";
+        return "MISSING USERNAME";
+    }
+
+    return victim->username;
 
 }
 

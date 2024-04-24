@@ -298,8 +298,9 @@ def someone_joined(player: Player):
     send_event(event)
     
 
-def someone_died(victim: Player):
+def someone_died(killer: Player, victim: Player):
     event = int.to_bytes(2, 1) # killing
+    event += int.to_bytes(killer.player_id, 1) # killer
     event += int.to_bytes(victim.player_id, 1) # killee
     send_event(event)
 
@@ -319,7 +320,7 @@ def someone_got_shot(shooter: Player, shootee : Player):
     # decrease health
     shootee.health -= 40
     if shootee.health <= 0:
-        someone_died(shootee)
+        someone_died(shooter, shootee)
         
     
 def player_distance(one:Player, two:Player):

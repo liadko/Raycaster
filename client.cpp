@@ -29,7 +29,7 @@ bool Client::connectToServer(const string& ip, int server_tcp_port, int server_u
     this->udp_sender_port = server_udp_port;
     this->udp_listener_port = server_udp_port;
 
-    sf::Socket::Status connection_status = tcp_socket.connect(ip, server_tcp_port, sf::milliseconds(1000));
+    sf::Socket::Status connection_status = tcp_socket.connect(ip, server_tcp_port, sf::milliseconds(50));
     if (connection_status != sf::Socket::Done)
     {
         error = "Failed To Connect To Server";
@@ -98,12 +98,12 @@ bool Client::tryLogIn(const string& username, const string& password, string& er
 
     if (username.size() <= 5)
     {
-        error = "Username Must Be Longer Than 5 Characters";
+        error = "Username Is Too Short";
         return false;
     }
     if (password.size() <= 5)
     {
-        error = "Password Must Be Longer Than 5 Characters";
+        error = "Password Is Too Short";
         return false;
     }
 
@@ -141,6 +141,7 @@ bool Client::tryLogIn(const string& username, const string& password, string& er
 
     if (parts[0] == "SUCCESS")
     {
+        this->username = username;
         player_id = std::stoi(parts[1]);
         cout << "Player ID: " << player_id << "\n";
         return true;
@@ -148,7 +149,7 @@ bool Client::tryLogIn(const string& username, const string& password, string& er
 
 
 
-    cout << parts[1] << "\n";
+    error = parts[1];
 
     return false;
 

@@ -40,7 +40,7 @@ private:
 
 public:
     int player_id;
-
+    string username;
 
     struct PlayerInfo
     {

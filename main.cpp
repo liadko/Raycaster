@@ -4,11 +4,12 @@
 #include "map.hpp"
 #include "object.hpp"
 #include "client.hpp"
+#include "toaster.hpp"
 
 #include <chrono>
 
-void loginPage(sf::RenderWindow& window, Player& player);
-void mainLoop(sf::RenderWindow& window, Player& player);
+void loginPage(sf::RenderWindow& window, Player& player, Toaster& toaster);
+void mainLoop(sf::RenderWindow& window, Player& player, Toaster& toaster);
 
 
 
@@ -49,20 +50,21 @@ int main()
     window.setFramerateLimit(60);
 
 
-    Player player(40, 21, window);
+    Toaster toaster;
 
+    Player player(40, 21, window, toaster);
 
-    loginPage(window, player);
+    loginPage(window, player, toaster);
 
 
     // Game loop
-    mainLoop(window, player);
+    mainLoop(window, player, toaster);
 
     return 0;
 }
 
 
-void loginPage(sf::RenderWindow& window, Player& player)
+void loginPage(sf::RenderWindow& window, Player& player, Toaster& toaster)
 {
     // background image
     sf::Texture bg_tex;
@@ -93,12 +95,13 @@ void loginPage(sf::RenderWindow& window, Player& player)
 
     int box_focused = 1;
 
-
+    sf::Clock clock;
 
     v2f button_position(194, 492), button_size(460, 60);
 
     while (window.isOpen())
     {
+        float dt = clock.restart().asSeconds();
 
         string typed_text = "";
         int backspace_counter = 0;
@@ -139,7 +142,7 @@ void loginPage(sf::RenderWindow& window, Player& player)
                     string error;
                     if (player.client.tryLogIn(username.getString(), password.getString(), error))
                         return;
-                    cout << error << '\n';
+                    toaster.toast(error);
                 }
 
             }
@@ -164,7 +167,7 @@ void loginPage(sf::RenderWindow& window, Player& player)
                     string error;
                     if (player.client.tryLogIn(username.getString(), password.getString(), error))
                         return;
-                    cout << error << '\n';
+                    toaster.toast(error);
                 }
 
             }
@@ -191,13 +194,15 @@ void loginPage(sf::RenderWindow& window, Player& player)
             if (backspace_counter)
                 text_boxes[box_focused]->backspace(backspace_counter);
         }
+        
+        toaster.drawToasts(window, dt);
 
         window.display();
 
     }
 }
 
-void mainLoop(sf::RenderWindow& window, Player& player)
+void mainLoop(sf::RenderWindow& window, Player& player, Toaster& toaster)
 {
     v2i screen_center(WIDTH / 2, HEIGHT / 2);
 
@@ -291,6 +296,7 @@ void mainLoop(sf::RenderWindow& window, Player& player)
 
         player.drawCrosshair(dt); // Crosshair
 
+        toaster.drawToasts(window, dt);
 
         window.display(); // Render to screen
 

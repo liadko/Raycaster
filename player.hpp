@@ -4,6 +4,7 @@
 #include "map.hpp"
 #include "object.hpp"
 #include "client.hpp"
+#include "toaster.hpp"
 #include <SFML/Audio.hpp>
 
 
@@ -12,6 +13,7 @@ class Player
 private:
 	// game logic
 	sf::RenderWindow& window;
+	Toaster& toaster;
 	bool has_quit;
 	bool dead = false;
 
@@ -35,6 +37,10 @@ private:
 	v2f gun_offset;
 	float max_hand_range = 40;
 	float hand_move_range;
+
+	string verbs[9] = { "zoinked", "capped", "zonked",
+		"slaughtered", "demolished", "nuked",
+		"eradicated", "decimated", "pulverized"};
 
 	// hit direction and reticle indicator
 	sf::Texture indicator_texture, reticle_texture; 
@@ -98,7 +104,7 @@ public:
 
 	
 
-	Player(int x, int y, sf::RenderWindow& window);
+	Player(int x, int y, sf::RenderWindow& window, Toaster& toaster);
 
 	void setFocus(bool focus);
 	void handleKeys(float dt);
@@ -128,11 +134,14 @@ public:
 	Client::PlayerInfo getPlayerInfo();
 	Object* getObject(int id);
 	void handle_shooting_victim(int victim_id, int shooter_id);
-	void handle_killing(int victim_id);
+	void handle_killing(int killer_id, int victim_id);
 	void getKilled();
+	void respawn();
+
+
+	string getUsername(int id);
 
 	//
-
 	void debug();
 
 };

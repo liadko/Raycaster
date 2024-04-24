@@ -147,6 +147,7 @@
   <ItemGroup>
     <ClCompile Include="client.cpp" />
     <ClCompile Include="object.cpp" />
+    <ClCompile Include="toaster.cpp" />
     <ClCompile Include="tools.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="map.cpp" />
@@ -155,6 +156,7 @@
   <ItemGroup>
     <ClInclude Include="client.hpp" />
     <ClInclude Include="object.hpp" />
+    <ClInclude Include="toaster.hpp" />
     <ClInclude Include="tools.hpp" />
     <ClInclude Include="headers.hpp" />
     <ClInclude Include="map.hpp" />
