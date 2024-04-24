@@ -19,7 +19,7 @@ private:
     sf::Font font;
     sf::Text text;
 
-    v2f text_position = { 20, 29 };
+    v2f text_position = { 34, 40 };
 
     float lifetime = 3; // in seconds
 

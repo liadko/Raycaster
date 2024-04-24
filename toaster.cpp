@@ -2,7 +2,7 @@
 #include "tools.hpp"
 
 
-Toaster::Toaster() : first_toast_position(950, 0), goal_y(0)
+Toaster::Toaster() : first_toast_position(870, -10), goal_y(-10)
 { 
     toast_tex.loadFromFile("sprites/toast.png");
     toast_sprite.setTexture(toast_tex);

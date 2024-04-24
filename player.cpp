@@ -428,22 +428,25 @@ void Player::drawColumn(int x, const Player::HitInfo& hit_info)
 
 void Player::drawCrosshair(float dt)
 {
-    sf::RectangleShape rect(v2f(4, 12));
-    rect.setFillColor(sf::Color::Cyan);
+    if (!dead)
+    {
+        sf::RectangleShape rect(v2f(4, 12));
+        rect.setFillColor(sf::Color::Cyan);
 
-    rect.setPosition(v2f(WIDTH / 2 - 2, HEIGHT / 2 - 16));
-    window.draw(rect);
+        rect.setPosition(v2f(WIDTH / 2 - 2, HEIGHT / 2 - 16));
+        window.draw(rect);
 
-    rect.setPosition(v2f(WIDTH / 2 - 2, HEIGHT / 2 + 4));
-    window.draw(rect);
+        rect.setPosition(v2f(WIDTH / 2 - 2, HEIGHT / 2 + 4));
+        window.draw(rect);
 
 
-    rect.setSize(v2f(12, 4));
-    rect.setPosition(v2f(WIDTH / 2 - 16, HEIGHT / 2 - 2));
-    window.draw(rect);
+        rect.setSize(v2f(12, 4));
+        rect.setPosition(v2f(WIDTH / 2 - 16, HEIGHT / 2 - 2));
+        window.draw(rect);
 
-    rect.setPosition(v2f(WIDTH / 2 + 4, HEIGHT / 2 - 2));
-    window.draw(rect);
+        rect.setPosition(v2f(WIDTH / 2 + 4, HEIGHT / 2 - 2));
+        window.draw(rect);
+    }
 
 
     // damage direction indicator
@@ -591,15 +594,17 @@ void Player::drawGun(float dt)
         hand_move_range = lerp(hand_move_range, 0, 0.06f);
 
 
-    float gun_offset_x = sin(gun_movement_stopwatch) * hand_move_range;
-    float gun_offset_y = 0.2f * cos(gun_movement_stopwatch) * cos(gun_movement_stopwatch) * hand_move_range;
+    float hand_x = sin(gun_movement_stopwatch) * hand_move_range;
+    float hand_y = 0.2f * cos(gun_movement_stopwatch) * cos(gun_movement_stopwatch) * hand_move_range;
 
     if (dead)
     {
-        gun_position.y = lerp(gun_position.y, 900, 0.1f);
+        gun_offset_y = lerp(gun_offset_y, 300, 0.2f);
     }
+    else
+        gun_offset_y = lerp(gun_offset_y, hand_y, 0.1f);
 
-    gun_offset = { gun_offset_x , gun_offset_y };
+    gun_offset = { hand_x , gun_offset_y };
 
     gun_sprite.setPosition(gun_position + gun_offset);
 
@@ -936,12 +941,19 @@ void Player::respawn()
         return;
         
     dead = false;
+
+    float x, y;
     while (true)
     {
-        float x = (float)rand() / RAND_MAX * map.width;
-        float y = (float)rand() / RAND_MAX * map.height;
-        if()
+        x = (float)rand() / RAND_MAX * map.width;
+        y = (float)rand() / RAND_MAX * map.height;
+        if (map.getCell(x, y) == 0)
+            break;
     }
+    rotation_x = (float)rand() / RAND_MAX * 2 * PI;
+
+    position = { x, y };
+
 }
 
 string Player::getUsername(int id)

@@ -34,6 +34,7 @@ private:
 	sf::Sprite gun_sprite;
 	sf::Texture* gun_texs;
 	v2f gun_position;
+	float gun_offset_y = 0;
 	v2f gun_offset;
 	float max_hand_range = 40;
 	float hand_move_range;

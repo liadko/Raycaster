@@ -245,7 +245,7 @@ void mainLoop(sf::RenderWindow& window, Player& player, Toaster& toaster)
             else if (event.type == sf::Event::KeyReleased)
             {
                 if (event.key.code == sf::Keyboard::Space)
-                    player.debug();
+                    player.respawn();
             }
 
 
