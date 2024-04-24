@@ -140,7 +140,7 @@ public:
     Object* getObject(int id);
     void handle_shooting_victim(int victim_id, int shooter_id);
     void handle_killing(int killer_id, int victim_id);
-    void getKilled();
+    void getKilled(const string& killer_name);
     void respawn();
 
 

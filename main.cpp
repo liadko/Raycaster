@@ -216,7 +216,6 @@ void mainLoop(sf::RenderWindow& window, Player& player, Toaster& toaster)
 
     std::thread udpThread(&Player::listenToServer, &player);
 
-    player.getKilled();
     player.setFocus(true);
 
     while (window.isOpen())

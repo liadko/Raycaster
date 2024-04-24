@@ -409,7 +409,11 @@ def update_player(player_info: bytes):
     if(gun_shot):
         handle_gun_shot(player)
     
-    player.dead = flags & 32
+    dead_flag = flags & 32
+    if(not dead_flag and player.dead): # player came back to life
+        player.health = 100
+        
+    player.dead = dead_flag
     
     # get index of this players buffer
     buffer_index = 1

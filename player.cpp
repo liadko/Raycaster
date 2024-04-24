@@ -635,13 +635,13 @@ void Player::drawDeathScreen(float dt)
 {
     if (!dead) return;
 
-    string main_string = killer_name + "liadkoren123 killed you";
+    string main_string = killer_name + " killed you";
     sf::Text main(main_string, bold_font, 80);
     main.setOrigin(main.getLocalBounds().width / 2, main.getLocalBounds().height / 2);
     main.setPosition(WIDTH / 2, HEIGHT / 2 - 30);
     main.setOutlineColor(sf::Color::Black);
-    main.setOutlineThickness(2);
-    main.setFillColor(sf::Color(220, 30, 20));
+    //main.setOutlineThickness(2);
+    main.setFillColor(sf::Color(200, 30, 20));
     window.draw(main);
     
     string sub_string = "press space to respawn";
@@ -864,21 +864,23 @@ void Player::handleEvents(char* events, int events_size)
 
 }
 
-void Player::getKilled() 
+void Player::getKilled(const string& killer_name) 
 {
     cout << "You got Killed\n";
     dead = true;
+    this->killer_name = killer_name;
     current_damage_opacity = max_damage_opacity;
 }
 
 void Player::handle_killing(int killer_id, int victim_id)
 {
     int verb_index = rand() % 9;
-    toaster.toast(getUsername(killer_id) + " " + verbs[verb_index] + " " + getUsername(victim_id));
+    string killer_name = getUsername(killer_id);
+    toaster.toast(killer_name + " " + verbs[verb_index] + " " + getUsername(victim_id));
 
     if (victim_id == client.player_id)
     {
-        getKilled();
+        getKilled(killer_name);
         return;
     }
 
