@@ -640,7 +640,7 @@ void Player::drawDeathScreen(float dt)
     main.setOrigin(main.getLocalBounds().width / 2, main.getLocalBounds().height / 2);
     main.setPosition(WIDTH / 2, HEIGHT / 2 - 30);
     main.setOutlineColor(sf::Color::Black);
-    //main.setOutlineThickness(2);
+    main.setOutlineThickness(2);
     main.setFillColor(sf::Color(200, 30, 20));
     window.draw(main);
     
@@ -818,7 +818,7 @@ void Player::handleEvents(char* events, int events_size)
             
             if (new_guy_id == client.player_id) continue;
 
-            cout << "Player " << new_guy_id << " named " << username << " joined\n";
+
 
             Object* object = getObject(new_guy_id);
             if (object == nullptr)
@@ -828,6 +828,9 @@ void Player::handleEvents(char* events, int events_size)
             }
 
             object->username = username;
+
+
+            toaster.toast(object->username + " has joined the lobby");
 
         }
         else if (event_type == 4) // username of someone

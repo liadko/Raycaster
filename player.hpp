@@ -39,8 +39,8 @@ private:
     float max_hand_range = 40;
     float hand_move_range;
 
-    string verbs[9] = { "zoinked", "capped", "zonked",
-        "slaughtered", "demolished", "nuked",
+    string verbs[9] = { "zoinked", "zooked", "styled on",
+        "slaughtered", "kassifed on", "nuked",
         "eradicated", "decimated", "pulverized" };
 
     // hit direction and reticle indicator

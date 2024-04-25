@@ -42,9 +42,10 @@ struct TextBox
 
 
     void addText(const string& added_text);
-    void backspace(const int& backspace_counter);
+    void backspace(int backspace_counter);
     void draw(sf::RenderWindow& window, bool is_focused);
-    
+    void clearText();
+
     string getString();
     bool inBox(const v2i& pos);
 

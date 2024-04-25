@@ -156,7 +156,7 @@ void TextBox::addText(const string& added_text)
 
 }
 
-void TextBox::backspace(const int& backspace_counter)
+void TextBox::backspace(int backspace_counter)
 {
     turnOnCursor();
 
@@ -168,6 +168,11 @@ void TextBox::backspace(const int& backspace_counter)
 
 
     text_string = (text_string.substr(0, text_string.size() - backspace_counter));
+}
+
+void TextBox::clearText()
+{
+    text_string = "";
 }
 
 bool TextBox::inBox(const v2i& pos)

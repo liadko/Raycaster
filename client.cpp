@@ -4,7 +4,7 @@
 #include <iomanip>
 #include <openssl/evp.h>
 #include <openssl/rand.h>
-
+#include <fstream>
 
 Client::Client()
 {
@@ -23,8 +23,39 @@ Client::Client()
 }
 
 
-bool Client::connectToServer(const string& ip, int server_tcp_port, int server_udp_port, string& error)
+bool Client::connectToServer(string& error)
 {
+    // parse server address file
+
+    int server_tcp_port = -1, server_udp_port = -1;
+    try
+    {
+        std::ifstream file("server/server_address.txt");
+        // comment lines
+        
+        string line;
+        while (std::getline(file, line))
+        {
+            if (line[0] != '#')
+                break;
+        }
+        // ip address
+        ip = line;
+    
+        // tcp & udp ports
+        std::getline(file, line);
+        server_tcp_port = std::stoi(line);
+        std::getline(file, line);
+        server_udp_port = std::stoi(line);
+
+        cout << "ports: " << server_tcp_port << ":" << server_udp_port << "\n";
+    }
+    catch (const std::exception&)
+    {
+        error = "Invalid File at server/server_address.txt";
+        return false;
+    }
+
     this->ip = ip;
     this->udp_sender_port = server_udp_port;
     this->udp_listener_port = server_udp_port;
@@ -93,6 +124,7 @@ bool Client::connectToServer(const string& ip, int server_tcp_port, int server_u
     return true;
 }
 
+
 bool Client::tryLogIn(const string& username, const string& password, string& error)
 {
 
@@ -114,14 +146,84 @@ bool Client::tryLogIn(const string& username, const string& password, string& er
     }
 
 
+
+    
     // Connect to server
-    if (!connectToServer("87.71.155.68", 21567, 21568, error))
+    if (!connectToServer(error))
         return false;
 
 
     cout << "Public IP: " << sf::IpAddress::getPublicAddress() << "\n";
 
     string creds = "LOGIN~" + username + "~" + password + "~" + sf::IpAddress::getPublicAddress().toString() + "~";
+    //else
+    //    creds = "SIGNUP~" + username + "~" + password + "~";
+    
+    sendEncryptedTCP(creds, error);
+
+
+
+    void* buffer;
+    int buffer_size;
+    if (!recvEncryptedTCP(buffer, buffer_size, error))
+    {
+        error = "Failed To Receive Message From Server";
+        return false;
+    }
+
+    string response((char*)buffer, buffer_size);
+    free(buffer);                               
+
+    vector<string> parts = split(response);     
+
+    if (parts[0] == "SUCCESS")
+    {
+        this->username = username;
+        player_id = std::stoi(parts[1]);
+        cout << "Player ID: " << player_id << "\n";
+        return true;
+    }
+    
+    
+    
+    error = parts[1];
+    
+    return false;
+
+    //cout << "Message Received: " << string((char*)buffer, buffer_size) << "\n";
+    //printBytes((unsigned char*)buffer, buffer_size);
+
+
+}
+bool Client::trySignUp(const string& username, const string& password, string& error)
+{
+
+    if (username.size() <= 4)
+    {
+        error = "Username Is Too Short";
+        return false;
+    }
+    if (password.size() <= 4)
+    {
+        error = "Password Is Too Short";
+        return false;
+    }
+
+    if (username.find('~') != username.npos)
+    {
+        error = "Username Cannot Have Tilde ~";
+        return false;
+    }
+
+
+    // Connect to server
+    if (!connectToServer(error))
+        return false;
+
+
+
+    string creds = "SIGNUP~" + username + "~" + password + "~";
+
     sendEncryptedTCP(creds, error);
 
 
@@ -141,9 +243,7 @@ bool Client::tryLogIn(const string& username, const string& password, string& er
 
     if (parts[0] == "SUCCESS")
     {
-        this->username = username;
-        player_id = std::stoi(parts[1]);
-        cout << "Player ID: " << player_id << "\n";
+        
         return true;
     }
 
@@ -153,12 +253,9 @@ bool Client::tryLogIn(const string& username, const string& password, string& er
 
     return false;
 
-    //cout << "Message Received: " << string((char*)buffer, buffer_size) << "\n";
-    //printBytes((unsigned char*)buffer, buffer_size);
 
 
 }
-
 //UDP
 //encrypts message, sends the (char)id + the encrypted message.
 bool Client::sendEncryptedUDP(void* buffer, int size, string& error)

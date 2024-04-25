@@ -62,9 +62,10 @@ public:
     Client();
 
 
-    bool connectToServer(const string& ip, int tcp_port, int udp_port, string& error);
+    bool connectToServer(string& error);
 
     bool tryLogIn(const string& username, const string& password, string& error);
+    bool trySignUp(const string& username, const string& password, string& error);
     
     bool sendEncryptedTCP(const string& msg, string& error);
     bool recvEncryptedTCP(void*& buffer, int& bufferSize, string& error);

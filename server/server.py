@@ -35,7 +35,8 @@ class Player:
         while index < len(received_events):
             event_size = received_events[index]
             event = received_events[index:index + event_size]
-            self.events.remove(event)
+            if(event in self.events):
+                self.events.remove(event)
             index += event_size
     
     def add_event(self, event: bytes):

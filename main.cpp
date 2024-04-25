@@ -38,7 +38,7 @@ int main()
     //sf::IpAddress address("87.71.155.68");
     //unsigned short port = 21568;
     //udp2.receive(buffer, buffer_size, received, address, port);
-   
+
     //cout << "End.\n";
     //std::cin.get();
 
@@ -67,12 +67,11 @@ int main()
 void loginPage(sf::RenderWindow& window, Player& player, Toaster& toaster)
 {
     // background image
-    sf::Texture bg_tex;
-    bg_tex.loadFromFile("sprites/BG.jpg");
-    sf::Sprite bg_sprite(bg_tex);
-    //bg_sprite.setTexture(bg_tex.copyToImage());
-    //bg_tex.copyToImage();
-    //bg_tex.~Texture();
+    sf::Texture login_tex, signup_tex;
+    login_tex.loadFromFile("sprites/loginpage.jpg");
+    signup_tex.loadFromFile("sprites/signuppage.jpg");
+
+    sf::Sprite bg_sprite(login_tex);
 
     // font
     sf::Font input_font;
@@ -82,11 +81,13 @@ void loginPage(sf::RenderWindow& window, Player& player, Toaster& toaster)
         return;
     }
 
+    bool logging_in = true;
+    bool enter_pressed = false;
 
     // text box and text
 
-    TextBox username(v2f(194, 271), v2f(461, 70), "liadkoren123", input_font);
-    TextBox password(v2f(194, 377), v2f(461, 70), "password432", input_font);
+    TextBox username(v2f(194, 249), v2f(461, 70), "liadkoren123", input_font);
+    TextBox password(v2f(194, 355), v2f(461, 70), "password432", input_font);
 
     password.hidden = true;
 
@@ -97,7 +98,8 @@ void loginPage(sf::RenderWindow& window, Player& player, Toaster& toaster)
 
     sf::Clock clock;
 
-    v2f button_position(194, 492), button_size(460, 60);
+    v2f enter_position(193, 469), enter_size(462, 61);
+    v2f switch_position(530, 185), switch_size(130, 30);
 
     while (window.isOpen())
     {
@@ -138,12 +140,7 @@ void loginPage(sf::RenderWindow& window, Player& player, Toaster& toaster)
 
                 //enter
                 if (event.text.unicode == '\r')
-                {
-                    string error;
-                    if (player.client.tryLogIn(username.getString(), password.getString(), error))
-                        return;
-                    toaster.toast(error);
-                }
+                    enter_pressed = true;
 
             }
             else if (event.type == sf::Event::MouseButtonPressed) {
@@ -162,28 +159,56 @@ void loginPage(sf::RenderWindow& window, Player& player, Toaster& toaster)
                 }
 
 
-                if (inBounds(button_position, button_size, mousePos))
-                {
-                    string error;
-                    if (player.client.tryLogIn(username.getString(), password.getString(), error))
-                        return;
-                    toaster.toast(error);
-                }
+                if (inBounds(enter_position, enter_size, mousePos))
+                    enter_pressed = true;
 
+                if (inBounds(switch_position, switch_size, mousePos))
+                {
+                    logging_in ^= true;
+                    if (logging_in) bg_sprite.setTexture(login_tex);
+                    else bg_sprite.setTexture(signup_tex);
+                    text_boxes[1]->clearText();
+                    text_boxes[2]->clearText();
+                    box_focused = 1;
+                }
             }
 
 
+        if (enter_pressed)
+        {
+            string error;
+            if (logging_in)
+            {
+                if (player.client.tryLogIn(username.getString(), password.getString(), error))
+                {
+                    toaster.toast("Connection Successful!");
+                    return;
+                }
+                toaster.toast(error);
 
+            }
+
+            else // signing up
+            {
+                if (player.client.trySignUp(username.getString(), password.getString(), error))
+                {
+                    toaster.toast("Signup Successful!");
+                    logging_in = true;
+                    bg_sprite.setTexture(login_tex);
+                    text_boxes[1]->clearText();
+                    text_boxes[2]->clearText();
+                }
+                else
+                    toaster.toast(error);
+            }
+        }
+
+        enter_pressed = false;
 
 
         window.clear(sf::Color::Red);
 
         window.draw(bg_sprite);
-
-
-
-        for (int i = 1; i < 3; i++)
-            text_boxes[i]->draw(window, i == box_focused);
 
 
         //box highlight
@@ -194,7 +219,10 @@ void loginPage(sf::RenderWindow& window, Player& player, Toaster& toaster)
             if (backspace_counter)
                 text_boxes[box_focused]->backspace(backspace_counter);
         }
-        
+
+        for (int i = 1; i < 3; i++)
+            text_boxes[i]->draw(window, i == box_focused);
+
         toaster.drawToasts(window, dt);
 
         window.display();
@@ -248,8 +276,8 @@ void mainLoop(sf::RenderWindow& window, Player& player, Toaster& toaster)
             }
 
 
-        if(frame_count % 100 == 0)
-            cout << (1/dt) << "\n";
+        if (frame_count % 100 == 0)
+            cout << (1 / dt) << "\n";
 
 
         //cout << "Frame: " << frame_count << '\n';
@@ -278,15 +306,15 @@ void mainLoop(sf::RenderWindow& window, Player& player, Toaster& toaster)
             auto end = std::chrono::high_resolution_clock::now();
 
             player.drawWorld(hits, dt);
-            
+
             std::chrono::duration<double> elapsed = end - start;
 
             //std::cout << "Elapsed time: " << elapsed.count() * 1000 << " ms" << std::endl;
         }
 
 
-        if(player.debug_mode)
-        { 
+        if (player.debug_mode)
+        {
             player.rotateHead(1, 0, 0.3);
         }
         //player.debug();
