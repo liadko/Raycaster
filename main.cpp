@@ -15,35 +15,6 @@ void mainLoop(sf::RenderWindow& window, Player& player, Toaster& toaster);
 
 int main()
 {
-
-    //cout << "Start.\n";
-
-    //sf::UdpSocket udp1, udp2;
-    //if (udp1.bind(sf::Socket::AnyPort) != sf::Socket::Done)
-    //    cout << "Problem Binding 1\n";
-
-    //if (udp2.bind(sf::Socket::AnyPort) != sf::Socket::Done)
-    //    cout << "Problem Binding 2\n";
-
-
-    //cout << udp2.getLocalPort() << "\n";
-
-    //string message = "Penis";
-
-    //udp1.send(message.c_str(), message.size(), "87.71.155.68", 21568);
-
-    //void* buffer = malloc(128);
-    //size_t buffer_size = 128;
-    //size_t received;
-    //sf::IpAddress address("87.71.155.68");
-    //unsigned short port = 21568;
-    //udp2.receive(buffer, buffer_size, received, address, port);
-
-    //cout << "End.\n";
-    //std::cin.get();
-
-    //return 0;
-
     //Window
     sf::RenderWindow window(sf::VideoMode(WIDTH, HEIGHT), "Program", sf::Style::Close, sf::ContextSettings(24, 8, 8));
 
@@ -82,12 +53,12 @@ void loginPage(sf::RenderWindow& window, Player& player, Toaster& toaster)
     }
 
     bool logging_in = true;
-    bool enter_pressed = false; // SHOULD BE FALSEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+    bool enter_pressed = false;
 
     // text box and text
 
-    TextBox username(v2f(194, 249), v2f(461, 70), "liadkoren123", input_font);
-    TextBox password(v2f(194, 355), v2f(461, 70), "password432", input_font);
+    TextBox username(v2f(194, 249), v2f(461, 70), "", input_font);
+    TextBox password(v2f(194, 355), v2f(461, 70), "", input_font);
 
     password.hidden = true;
 
@@ -116,7 +87,6 @@ void loginPage(sf::RenderWindow& window, Player& player, Toaster& toaster)
             else if (sf::Keyboard::isKeyPressed(sf::Keyboard::Escape))
                 window.close();
             else if (event.type == sf::Event::TextEntered) {
-                //cout << event.text.unicode << "\n";
                 // actual typing
                 if (event.text.unicode > 32 && event.text.unicode < 127) {
                     typed_text += event.text.unicode;
@@ -282,7 +252,6 @@ void mainLoop(sf::RenderWindow& window, Player& player, Toaster& toaster)
         //    cout << (1 / dt) << "\n";
 
 
-        //cout << "Frame: " << frame_count << '\n';
 
         player.updateServer();
 
@@ -303,13 +272,10 @@ void mainLoop(sf::RenderWindow& window, Player& player, Toaster& toaster)
         // World
 
         {
-            auto start = std::chrono::high_resolution_clock::now();
             std::lock_guard<std::mutex> lock(player.mtx);
-            auto end = std::chrono::high_resolution_clock::now();
 
             player.drawWorld(hits, dt);
 
-            std::chrono::duration<double> elapsed = end - start;
 
             //std::cout << "Elapsed time: " << elapsed.count() * 1000 << " ms" << std::endl;
         }
@@ -319,7 +285,6 @@ void mainLoop(sf::RenderWindow& window, Player& player, Toaster& toaster)
         {
             player.rotateHead(1, 0, 0.3);
         }
-        //player.debug();
 
         player.drawGun(dt); // Gun
 
@@ -329,6 +294,7 @@ void mainLoop(sf::RenderWindow& window, Player& player, Toaster& toaster)
 
 
         toaster.drawToasts(window, dt);
+
         toaster.drawLeaderboard(window, player.leaderboard, dt);
 
         window.display(); // Render to screen

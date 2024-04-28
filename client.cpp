@@ -188,8 +188,6 @@ bool Client::tryLogIn(const string& username, const string& password, string& er
     
     return false;
 
-    //cout << "Message Received: " << string((char*)buffer, buffer_size) << "\n";
-    //printBytes((unsigned char*)buffer, buffer_size);
 
 
 }
@@ -428,7 +426,6 @@ bool Client::recvTCP(sf::TcpSocket& socket, void*& buffer, int& buffer_size)
     // message string
     socket.receive(buffer, msg_len, amount_received);
 
-    //PrintBytes((char*)payload, payload_size);
 
     if (amount_received != msg_len)
     {
@@ -605,29 +602,3 @@ void bigintToBytes(bigint key, unsigned char* buffer)
     }
 }
 
-
-//string bigintToHexString(const bigint& number) {
-//    std::stringstream ss;
-//    ss << std::hex << number;
-//    std::string hexString = ss.str();
-//
-//    // Pad with leading zeros if necessary
-//    while (hexString.length() < 32) {
-//        hexString = "0" + hexString;
-//    }
-//
-//    return hexString;
-//}
-
-void c()
-{
-
-    /*previous_column = SHRT_MIN;
-
-    steven_sprite.setColor(sf::Color(255, 255, 255, static_cast<unsigned char>(round(255 * std::min<float>(1, 2 * (1 - steven_distance / RENDER_DISTANCE))))));
-    steven_sprite.setPosition(round(steven_screen_x - 0.5f * steven_size), round(floor_level - 0.5f * steven_size));
-    steven_sprite.setScale(steven_size / static_cast<float>(CELL_SIZE), steven_size / static_cast<float>(CELL_SIZE));
-    steven_sprite.setTextureRect(sf::IntRect(static_cast<unsigned short>(CELL_SIZE * floor(shifted_direction / frame_angle)), 0, CELL_SIZE, CELL_SIZE));
-
-    i_window.draw(steven_sprite);*/
-}

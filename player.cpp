@@ -14,10 +14,6 @@ Player::Player(int x, int y, sf::RenderWindow& window, Toaster& toaster)
 
     srand(time(NULL));
 
-    // set anchor point
-    //sf::Vector2f center(sprite.getLocalBounds().width / 2.0f, sprite.getLocalBounds().height / 2.0f);
-    //sprite.setOrigin(center);
-    //setFocus(true);
 }
 
 
@@ -72,10 +68,6 @@ void Player::handleKeys(float dt)
         crouching = true;
     else
         crouching = false;
-
-
-    //if (sf::Keyboard::isKeyPressed(sf::Keyboard::Key::Up))
-    //	map.sky_offset += 1833*map.sky_scale;
 
 
     
@@ -272,15 +264,11 @@ Player::HitInfo Player::shootRay(float angle_offset)
 
 void Player::drawObject(Object& object, float dt)
 {
-    //cout << "a\n";
     float projection_distance = 0.5f / tan(fov_y / 2);
 
 
     // object's direction relative to ours.
     float angle_to_object = atan2(position.y - object.position.y, object.position.x - position.x) + rotation_x;
-
-    //cout << "b\n";
-    //cout << angle_to_object << "\n";
 
     float projection_position = 0.5f * tan(angle_to_object) / tan(fov_x / 2);
 
@@ -288,45 +276,33 @@ void Player::drawObject(Object& object, float dt)
 
     float object_distance = sqrt(pow(position.x - object.position.x, 2) + pow(position.y - object.position.y, 2));
     float screen_size = HEIGHT * projection_distance / (object_distance * cos(angle_to_object));
-    //cout << "c\n";
+    
     screen_size *= object.scale_by;
 
     if (screen_size < 0) // behind us
         return;
 
-    //cout << "d\n";
     v2f player2object = position - object.position;
     v2f object_direction = object.position + v2f(cos(object.rotation_x), sin(object.rotation_x));
     //float direction_offset = angleBetweenVectors(object_direction, player2object) * TO_DEGREES;// + 22.5f;
     float direction_offset = 360 + 90 + TO_DEGREES * (object.rotation_x + atan2(object.position.x - position.x, object.position.y - position.y));
-    //cout <<  direction_offset  << "\n";
-    //cout << "Direction Index: " << ((int)(direction_offset / 45) % 8  + 8) % 8<< "\n";
 
     object.direction_index = ((int)round(direction_offset / 45) % 8 + 8) % 8;
     object.animate(dt);
 
-    //cout << "e\n";
     object.sprite.setScale(screen_size * object.shrink_by, screen_size * object.shrink_by);
-    //cout << "e2\n";
     object.sprite.setPosition(
         screen_x - 0.5f * object.sprite.getTextureRect().height * object.sprite.getScale().x,
         map.floor_level - 0.5f * object.sprite.getTextureRect().height * (object.sprite.getScale().y - screen_size * (1 - object.shrink_by)));
 
-    //cout << "e3\n";
-    //cout << object.sprite.getPosition().x << " " << object.sprite.getPosition().x << " " << object.sprite.getLocalBounds().width << " " << object.sprite.getLocalBounds().height << '\n';
-
-    //cout << "e4\n";
 
     window.draw(object.sprite);
 
-    //cout << "f\n";
 
     if (object.dead) // no nametag on dead guys
         return;
 
-    //cout << "before nametag\n";
 
-    //cout << "g\n";
     // nametag
     sf::Text nametag(object.username, nametag_font, 16);
     nametag.setFillColor(sf::Color::White);
@@ -335,7 +311,6 @@ void Player::drawObject(Object& object, float dt)
     nametag.setScale(screen_size, screen_size);
     window.draw(nametag);
 
-    //cout << "after nametag\n";
 }
 
 
@@ -398,33 +373,24 @@ void Player::drawWorld(HitInfo*& hits, float dt)
 
     for (Object* object : sorted_objects)
     {
-        //cout << "a\n";
         float object_distance = object->distFrom(position);
         for (int x = 0; x < WIDTH; x++)
         {
-            //cout << "b\n";
             if (!column_drawn[x] && hits[x].distance > object_distance)
             {
                 drawColumn(x, hits[x]);
                 column_drawn[x] = true;
             }
-            //cout << "c\n";
         }
 
-        //cout << "d\n";
         drawObject(*object, dt);
-        //cout << "e\n";
     }
 
-    //cout << "done drawing\n";
 
     for (int x = 0; x < WIDTH; x++)
         if (!column_drawn[x])
             drawColumn(x, hits[x]);
 
-
-    //Object temp_obj(-1, 38, 21, enemy_tex);
-    //drawObject(temp_obj, 0.3);
 }
 
 void Player::drawColumn(int x, const Player::HitInfo& hit_info)
@@ -515,7 +481,7 @@ void Player::drawCrosshair(float dt)
 void Player::loadTextures()
 {
     // walls
-    wall_texs = new sf::Texture[2]; // (sf::Texture*)malloc(sizeof(sf::Texture) * 2);
+    wall_texs = new sf::Texture[2];
 
     sf::Texture wall;
     wall.loadFromFile("sprites/1L.png");
@@ -703,8 +669,6 @@ void Player::updateServer()
 
     Client::PlayerInfo player_info = getPlayerInfo();
 
-
-    //std::cout << "Elapsed time: " << elapsed.count() * 1000 << " ms" << std::endl;
     
     void* buffer = malloc(sizeof(player_info) + received_events_size);
     int buffer_size = sizeof(player_info) + received_events_size;
@@ -742,9 +706,9 @@ void Player::listenToServer()
         int buffer_size;
         if (!client.recvEncryptedUDP(buffer, buffer_size, error))
         {
-            //cout << error << "\n";
             continue;
         }
+
         //cout << "Got This UDP (with size " << buffer_size << "): ";
         //printBytes(buffer, buffer_size);
 
@@ -771,10 +735,6 @@ void Player::listenToServer()
         // 1 byte of player_count and then PlayerInfo structs one after the other
 
         int events_byte_count = buffer_size - 1 - player_count * sizeof(Client::PlayerInfo);
-
-        //cout << events_byte_count << '\n';
-        //printBytes((char*)buffer + 1 + player_count * sizeof(Client::PlayerInfo), events_byte_count);
-        
         
 
 
@@ -815,8 +775,8 @@ void Player::handleEvents(char* events, int events_size)
     {
         event_size = *(events + index);
 
-        cout << "Event: ";
-        printBytes(events + index, event_size);
+        //cout << "Event: ";
+        //printBytes(events + index, event_size);
 
         int event_type = *(events + index + 1);
 
@@ -974,9 +934,6 @@ void Player::handle_killing(int killer_id, int victim_id)
     }
 
     victim->gotKilled();
-
-
-    // update leaderboard
 
     
 

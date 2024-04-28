@@ -67,32 +67,6 @@ void Toaster::drawLeaderboard(sf::RenderWindow& window, vector<LeaderboardEntry>
         leaderboard_text.setPosition(board_sprite.getPosition() + leaderboard_score_offset);
         window.draw(leaderboard_text);
     }
-    //first_toast_position.y = lerp(first_toast_position.y, goal_y, 0.05);
-
-    //int amount = 0;
-
-    //v2f toast_position = first_toast_position;
-    //for (int i = 0; i < toasts.size(); i++)
-    //{
-    //    toast_slides[i] = lerp(toast_slides[i], 0, 0.3);
-    //    v2f slide_offset(toast_slides[i], 0);
-
-
-    //    toast_sprite.setPosition(toast_position + slide_offset);
-
-    //    text.setString(toasts[i]);
-    //    text.setPosition(toast_position + text_position + slide_offset);
-
-    //    if (toast_position.y + toast_sprite.getLocalBounds().height - 24 > 0)
-    //    {
-    //        window.draw(toast_sprite);
-    //        window.draw(text);
-
-    //        amount++;
-    //    }
-
-    //    toast_position.y += 67;
-    //}
 
 }
 
