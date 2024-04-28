@@ -82,7 +82,7 @@ void loginPage(sf::RenderWindow& window, Player& player, Toaster& toaster)
     }
 
     bool logging_in = true;
-    bool enter_pressed = false;
+    bool enter_pressed = true; // SHOULD BE FALSEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 
     // text box and text
 
@@ -197,6 +197,7 @@ void loginPage(sf::RenderWindow& window, Player& player, Toaster& toaster)
                     bg_sprite.setTexture(login_tex);
                     text_boxes[1]->clearText();
                     text_boxes[2]->clearText();
+                    box_focused = 1;
                 }
                 else
                     toaster.toast(error);
@@ -224,6 +225,7 @@ void loginPage(sf::RenderWindow& window, Player& player, Toaster& toaster)
             text_boxes[i]->draw(window, i == box_focused);
 
         toaster.drawToasts(window, dt);
+
 
         window.display();
 
@@ -327,6 +329,7 @@ void mainLoop(sf::RenderWindow& window, Player& player, Toaster& toaster)
 
 
         toaster.drawToasts(window, dt);
+        toaster.drawLeaderboard(window, player.leaderboard, dt);
 
         window.display(); // Render to screen
 

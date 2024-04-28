@@ -814,11 +814,12 @@ void Player::handleEvents(char* events, int events_size)
         else if (event_type == 3) // new person joined
         {
             int new_guy_id = *(events + index + 2);
-            char* username = events + index + 3;
+            char* new_guy_username = events + index + 3;
             
+            leaderboard.emplace_back(new_guy_id, new_guy_username);
+
+
             if (new_guy_id == client.player_id) continue;
-
-
 
             Object* object = getObject(new_guy_id);
             if (object == nullptr)
@@ -827,16 +828,19 @@ void Player::handleEvents(char* events, int events_size)
                 return;
             }
 
-            object->username = username;
+            object->username = new_guy_username;
 
 
             toaster.toast(object->username + " has joined the lobby");
+            
 
         }
         else if (event_type == 4) // username of someone
         {
             int player_id = *(events + index + 2);
             char* username = events + index + 3;
+
+            leaderboard.emplace_back(player_id, username);
 
             if (player_id == client.player_id) continue;
 
@@ -848,6 +852,31 @@ void Player::handleEvents(char* events, int events_size)
             }
 
             object->username = username;
+        }
+        else if (event_type == 5) // someone left
+        {
+            int player_id = *(events + index + 2);
+            cout << "event 5\n";
+            //remove from leaderboard
+            for(int i = 0; i < leaderboard.size(); i++)
+                if (leaderboard[i].player_id == player_id)
+                {
+                    cout << "erasing\n";
+                    leaderboard.erase(leaderboard.begin() + i);
+                    break;
+                }
+
+
+            if (player_id == client.player_id) continue;
+
+            Object* object = getObject(player_id);
+            if (object == nullptr)
+            {
+                cout << "existing player not found\n";
+                return;
+            }
+
+            //toaster.toast(object->username + " has left the lobby");
         }
         else
         {
@@ -896,6 +925,30 @@ void Player::handle_killing(int killer_id, int victim_id)
     }
 
     victim->gotKilled();
+
+
+    // update leaderboard
+
+    for (int i = 0; i < leaderboard.size(); i++)
+    {
+        if (leaderboard[i].player_id == killer_id)
+        {
+            leaderboard[i].score++;
+            break;
+        }
+    }
+    
+    for (int i = leaderboard.size() - 1 - 1; i >= 0 ; i--)
+    {
+        if (leaderboard[i].score < leaderboard[i+1].score)
+        {
+            Toaster::LeaderboardEntry temp = leaderboard[i];
+            leaderboard[i] = leaderboard[i + 1];
+            leaderboard[i + 1] = temp;
+        }
+    }
+
+
 }
 
 void Player::handle_shooting_victim(int victim_id, int shooter_id)

@@ -56,6 +56,7 @@ bool Client::connectToServer(string& error)
         return false;
     }
 
+
     this->ip = ip;
     this->udp_sender_port = server_udp_port;
     this->udp_listener_port = server_udp_port;
@@ -98,7 +99,6 @@ bool Client::connectToServer(string& error)
 
     bigint x2(x2_str.substr(1, x2_str.size() - 2));
 
-    // cout << "X2: " << x2 << '\n';
 
     // Key
 
@@ -155,9 +155,7 @@ bool Client::tryLogIn(const string& username, const string& password, string& er
 
     cout << "Public IP: " << sf::IpAddress::getPublicAddress() << "\n";
 
-    string creds = "LOGIN~" + username + "~" + password + "~" + sf::IpAddress::getPublicAddress().toString() + "~";
-    //else
-    //    creds = "SIGNUP~" + username + "~" + password + "~";
+    string creds = "LOGIN~" + username + "~" + password + "~";
     
     sendEncryptedTCP(creds, error);
 

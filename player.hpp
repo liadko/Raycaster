@@ -89,11 +89,16 @@ private:
     int received_events_size = 0;
     char received_events[128];
 
+
+
 public:
     Client client;
     std::mutex mtx;
     Map map;
     bool window_focused;
+
+    // leaderboard
+    vector<Toaster::LeaderboardEntry> leaderboard;
 
     bool debug_mode = false;
 

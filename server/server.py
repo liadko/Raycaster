@@ -255,7 +255,7 @@ def handle_client(client_socket, address, users_db:Users_db, lock: threading.Loc
     
     message = decrypt_AES(cipherbytes, current_key_bytes)
     
-    print("got this: " + str(message))
+    #print("got this: " + str(message))
     
     parts = message.decode().split('~')
     print(parts)
