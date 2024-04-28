@@ -57,6 +57,8 @@ public:
         float dist2wall;
         float pos_x, pos_y, rot_x, rot_y;
         int flags;
+        int score;
+        char username[16];
     };
 
 

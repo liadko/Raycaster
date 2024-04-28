@@ -25,6 +25,7 @@ class Player:
         
         self.health = 100
         self.dead = False
+        self.score = 0
         
         self.last_message_time = None
         
@@ -46,7 +47,7 @@ class Player:
 TCP_PORT = 21567  # Separate port for TCP communication
 SERVER_ADDRESS = ("0.0.0.0", 3000)
 players:list[Player] = []
-struct_format = 'ifffffi'
+struct_format = 'ifffffii16s'
 struct_size = struct.calcsize(struct_format)
 player_binaries = b'\x00'
 current_player_id = 0
@@ -177,7 +178,9 @@ def add_player(username):
     
     someone_joined(new_guy) # notify all players that this guy joined
     
-    give_usernames(new_guy)
+    # tell all players about all players
+    for player in players:
+        give_usernames(player) 
     
 
 def remove_player(player_id):
@@ -212,7 +215,9 @@ def remove_player(player_id):
 
     player_binaries = int.to_bytes(len(players), 1) + player_binaries[1:]
     
-
+    event = int.to_bytes(5, 1) # someone left
+    event += int.to_bytes(player_id, 1) # user id
+    send_event(event)
     
     print(f"Player with id #{player_id} removed successfully.")
     
@@ -311,8 +316,11 @@ def give_usernames(new_player : Player):
         
         event = int.to_bytes(4, 1) # username giving
         event += int.to_bytes(player.player_id, 1) # user id
+        event += int.to_bytes(player.score, 1) #score
         event += player.username.encode() + b'\0' # username
         event = int.to_bytes(len(event)+1 , 1) + event # size 
+        
+        print("sending ", clean_bytes(event))
         
         new_player.add_event(event)
         
@@ -326,6 +334,8 @@ def someone_joined(player: Player):
     
 
 def someone_died(killer: Player, victim: Player):
+    killer.score += 1
+    
     event = int.to_bytes(2, 1) # killing
     event += int.to_bytes(killer.player_id, 1) # killer
     event += int.to_bytes(victim.player_id, 1) # killee
@@ -385,7 +395,7 @@ def update_player(player_info: bytes):
         print("Invalid Player Info Received")
         return None
     
-    player_id, dist2wall, pos_x, pos_y, rot_x, rot_y, flags = struct.unpack(struct_format, player_info)
+    player_id, dist2wall, pos_x, pos_y, rot_x, rot_y, flags, score, username_bytes = struct.unpack(struct_format, player_info)
     
     for player in players:
         if player.player_id == player_id:
@@ -485,15 +495,19 @@ def handle_game():
         
         udp_socket.sendto(encrypt_AES(response , correct_key_bytes), address)
         
-        now = time.time()
-        
-        for player in players:
-            if(player.last_message_time and now - player.last_message_time > 5):
-                remove_player(player.player_id)
         
         #print(end - start)
         #print("boutta send UDP: " + ' '.join([format(byte, '02X') for byte in others]))
-        
+
+def remove_idles():
+    while(True):
+        now = time.time()
+        for player in players:
+            if(player.last_message_time and now - player.last_message_time > 2):
+                print(f"player {player.player_id} is idle. disconnected.")
+                remove_player(player.player_id)
+        time.sleep(2)
+    
 
 # Main server function
 def main():
@@ -509,6 +523,7 @@ def main():
     
     threading.Thread(target=handle_game).start()
 
+    threading.Thread(target=remove_idles).start()
     # Threading for concurrent client handling
 
     print("Server started on", SERVER_ADDRESS)

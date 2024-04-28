@@ -82,7 +82,7 @@ void loginPage(sf::RenderWindow& window, Player& player, Toaster& toaster)
     }
 
     bool logging_in = true;
-    bool enter_pressed = true; // SHOULD BE FALSEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+    bool enter_pressed = false; // SHOULD BE FALSEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
 
     // text box and text
 
@@ -278,8 +278,8 @@ void mainLoop(sf::RenderWindow& window, Player& player, Toaster& toaster)
             }
 
 
-        if (frame_count % 100 == 0)
-            cout << (1 / dt) << "\n";
+        //if (frame_count % 100 == 0)
+        //    cout << (1 / dt) << "\n";
 
 
         //cout << "Frame: " << frame_count << '\n';

@@ -12,7 +12,7 @@ public:
     float scale_by, shrink_by;
 
     v2f position;
-    float rotation_x;
+    float rotation_x = 0;
     int direction_index; // 0, 1, 2, 3, 4, 5, 6, 7
 
     bool moving = false, started_moving = false, forward;

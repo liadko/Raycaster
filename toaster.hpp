@@ -33,7 +33,8 @@ private:
     float leaderboard_scale = 0.8f;
 
     sf::Text leaderboard_text;
-    v2f leaderboard_text_offset = { 9, 6 };
+    v2f leaderboard_name_offset = { 9, 6 };
+    v2f leaderboard_score_offset = { 185, 6 };
 
 public:
     struct LeaderboardEntry
@@ -44,7 +45,7 @@ public:
 
         float position_y;
 
-        LeaderboardEntry(int player_id, const string& username);
+        LeaderboardEntry(int player_id, int score, const string& username);
     };
 
     Toaster();

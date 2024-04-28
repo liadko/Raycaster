@@ -30,8 +30,8 @@ Toaster::Toaster() : first_toast_position(870, -10), goal_y(-10)
 }
 
 
-Toaster::LeaderboardEntry::LeaderboardEntry(int player_id, const string& username) :
-    player_id(player_id), username(username), score(0), position_y(-100)
+Toaster::LeaderboardEntry::LeaderboardEntry(int player_id, int score, const string& username) :
+    player_id(player_id), username(username), score(score), position_y(-100)
 {
 
 }
@@ -57,9 +57,14 @@ void Toaster::drawLeaderboard(sf::RenderWindow& window, vector<LeaderboardEntry>
         board_sprite.setPosition(leaderboard_position.x, leaderboard[i].position_y);
         window.draw(board_sprite);
 
+        //name
         leaderboard_text.setString(leaderboard[i].username);
+        leaderboard_text.setPosition(board_sprite.getPosition() + leaderboard_name_offset);
+        window.draw(leaderboard_text);
 
-        leaderboard_text.setPosition(board_sprite.getPosition() + leaderboard_text_offset);
+        //score
+        leaderboard_text.setString(std::to_string(leaderboard[i].score));
+        leaderboard_text.setPosition(board_sprite.getPosition() + leaderboard_score_offset);
         window.draw(leaderboard_text);
     }
     //first_toast_position.y = lerp(first_toast_position.y, goal_y, 0.05);

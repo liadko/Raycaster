@@ -21,8 +21,7 @@ private:
     sf::Sprite wall_sprite;
 
     sf::Texture enemy_tex;
-    Object objects[10];
-    int object_count = 0;
+    vector<Object> objects;
     vector<Object*> sorted_objects;
 
 
@@ -89,7 +88,7 @@ private:
     int received_events_size = 0;
     char received_events[128];
 
-
+    int score = 0;
 
 public:
     Client client;
@@ -142,11 +141,16 @@ public:
     void listenToServer();
     void handleEvents(char* events, int event_count);
     Client::PlayerInfo getPlayerInfo();
+    
     Object* getObject(int id);
+    Object* getAnyObject();
     void handle_shooting_victim(int victim_id, int shooter_id);
     void handle_killing(int killer_id, int victim_id);
     void getKilled(const string& killer_name);
     void respawn();
+
+    void addToLeaderboard(int player_id, int score, const string& username);
+    void updateLeaderboard(int player_id);
 
 
     string getUsername(int id);

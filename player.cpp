@@ -2,7 +2,7 @@
 #include "player.hpp"
 #include "tools.hpp"
 #include "client.hpp"
-
+#include <time.h>
 
 Player::Player(int x, int y, sf::RenderWindow& window, Toaster& toaster)
     : toaster(toaster),  map(20, window), position(x, y), window(window)
@@ -12,6 +12,7 @@ Player::Player(int x, int y, sf::RenderWindow& window, Toaster& toaster)
 
     loadSFX();
 
+    srand(time(NULL));
 
     // set anchor point
     //sf::Vector2f center(sprite.getLocalBounds().width / 2.0f, sprite.getLocalBounds().height / 2.0f);
@@ -271,13 +272,14 @@ Player::HitInfo Player::shootRay(float angle_offset)
 
 void Player::drawObject(Object& object, float dt)
 {
-
+    //cout << "a\n";
     float projection_distance = 0.5f / tan(fov_y / 2);
 
 
     // object's direction relative to ours.
     float angle_to_object = atan2(position.y - object.position.y, object.position.x - position.x) + rotation_x;
 
+    //cout << "b\n";
     //cout << angle_to_object << "\n";
 
     float projection_position = 0.5f * tan(angle_to_object) / tan(fov_x / 2);
@@ -286,13 +288,13 @@ void Player::drawObject(Object& object, float dt)
 
     float object_distance = sqrt(pow(position.x - object.position.x, 2) + pow(position.y - object.position.y, 2));
     float screen_size = HEIGHT * projection_distance / (object_distance * cos(angle_to_object));
-
+    //cout << "c\n";
     screen_size *= object.scale_by;
 
     if (screen_size < 0) // behind us
         return;
 
-
+    //cout << "d\n";
     v2f player2object = position - object.position;
     v2f object_direction = object.position + v2f(cos(object.rotation_x), sin(object.rotation_x));
     //float direction_offset = angleBetweenVectors(object_direction, player2object) * TO_DEGREES;// + 22.5f;
@@ -303,17 +305,28 @@ void Player::drawObject(Object& object, float dt)
     object.direction_index = ((int)round(direction_offset / 45) % 8 + 8) % 8;
     object.animate(dt);
 
+    //cout << "e\n";
     object.sprite.setScale(screen_size * object.shrink_by, screen_size * object.shrink_by);
+    //cout << "e2\n";
     object.sprite.setPosition(
         screen_x - 0.5f * object.sprite.getTextureRect().height * object.sprite.getScale().x,
         map.floor_level - 0.5f * object.sprite.getTextureRect().height * (object.sprite.getScale().y - screen_size * (1 - object.shrink_by)));
 
+    //cout << "e3\n";
+    //cout << object.sprite.getPosition().x << " " << object.sprite.getPosition().x << " " << object.sprite.getLocalBounds().width << " " << object.sprite.getLocalBounds().height << '\n';
+
+    //cout << "e4\n";
 
     window.draw(object.sprite);
+
+    //cout << "f\n";
 
     if (object.dead) // no nametag on dead guys
         return;
 
+    //cout << "before nametag\n";
+
+    //cout << "g\n";
     // nametag
     sf::Text nametag(object.username, nametag_font, 16);
     nametag.setFillColor(sf::Color::White);
@@ -321,6 +334,8 @@ void Player::drawObject(Object& object, float dt)
         map.floor_level - 0.17f * object.sprite.getTextureRect().height * object.sprite.getScale().y);
     nametag.setScale(screen_size, screen_size);
     window.draw(nametag);
+
+    //cout << "after nametag\n";
 }
 
 
@@ -374,36 +389,41 @@ void Player::drawWorld(HitInfo*& hits, float dt)
     }
 
 
-    /*cout << "Objects: ";
+    cout << "Objects: ";
     for (int i = 0; i < objects.size(); i++)
     {
-        cout << objects[i].distFrom(position) << " ";
+        cout << sorted_objects[i]->player_id << " ";
     }
-    cout << "enough of objects\n";*/
+    cout << "enough of objects\n";
 
     for (Object* object : sorted_objects)
     {
+        //cout << "a\n";
         float object_distance = object->distFrom(position);
         for (int x = 0; x < WIDTH; x++)
         {
+            //cout << "b\n";
             if (!column_drawn[x] && hits[x].distance > object_distance)
             {
                 drawColumn(x, hits[x]);
                 column_drawn[x] = true;
             }
-
+            //cout << "c\n";
         }
 
+        //cout << "d\n";
         drawObject(*object, dt);
+        //cout << "e\n";
     }
 
+    //cout << "done drawing\n";
 
     for (int x = 0; x < WIDTH; x++)
         if (!column_drawn[x])
             drawColumn(x, hits[x]);
 
 
-    Object temp_obj(38, 21, enemy_tex);
+    //Object temp_obj(-1, 38, 21, enemy_tex);
     //drawObject(temp_obj, 0.3);
 }
 
@@ -732,14 +752,15 @@ void Player::listenToServer()
 
         char player_count = *(char*)buffer;
 
-        int other_players_count = player_count - 1;
 
-        if (object_count != other_players_count)
+        int other_players_count = player_count - 1;
+        if (other_players_count != objects.size())
         {
-            object_count = other_players_count;
+
+            objects.resize(other_players_count);
             sorted_objects.resize(other_players_count);
 
-            for (int i = 0; i < other_players_count; i++)
+            for (int i = 0; i < objects.size(); i++)
             {
                 objects[i] = Object(-10, -10, enemy_tex);
                 sorted_objects[i] = &objects[i];
@@ -749,28 +770,35 @@ void Player::listenToServer()
 
         // 1 byte of player_count and then PlayerInfo structs one after the other
 
+        int events_byte_count = buffer_size - 1 - player_count * sizeof(Client::PlayerInfo);
+
+        //cout << events_byte_count << '\n';
+        //printBytes((char*)buffer + 1 + player_count * sizeof(Client::PlayerInfo), events_byte_count);
+        
+        
+
+
         // update all others
         int object_index = 0;
         Client::PlayerInfo* current_info_buffer = (Client::PlayerInfo*)((char*)buffer + 1);
         for (int i = 0; i < player_count; i++, current_info_buffer++) //point to next buffer
         {
             int current_player_id = current_info_buffer->player_id;
+
+            addToLeaderboard(current_player_id, current_info_buffer->score, current_info_buffer->username);
+
             if (current_player_id == client.player_id)
                 continue;
 
-
             objects[object_index].loadPlayerInfo(*current_info_buffer);
+            
             object_index++;
-
         }
 
-        int events_byte_count = buffer_size - 1 - player_count * sizeof(Client::PlayerInfo);
+        updateLeaderboard(-1);
 
-        //cout << events_byte_count << '\n';
-        //printBytes((char*)buffer + 1 + player_count * sizeof(Client::PlayerInfo), events_byte_count);
         if (events_byte_count > 0)
             handleEvents((char*)buffer + 1 + player_count * sizeof(Client::PlayerInfo), events_byte_count);
-
 
 
         free(buffer);
@@ -787,15 +815,15 @@ void Player::handleEvents(char* events, int events_size)
     {
         event_size = *(events + index);
 
-        //cout << "Event: ";
-        //printBytes(events + index, event_size);
+        cout << "Event: ";
+        printBytes(events + index, event_size);
 
         int event_type = *(events + index + 1);
 
         if (event_type == 1) // shooting happened
         {
-            int shooter_id = *(events + index + 2);
-            int victim_id = *(events + index + 3);
+            int shooter_id = *(char*)(events + index + 2);
+            int victim_id = *(char*)(events + index + 3);
             handle_shooting_victim(victim_id, shooter_id);
             
             if (shooter_id == client.player_id) // i shot
@@ -806,30 +834,34 @@ void Player::handleEvents(char* events, int events_size)
         }
         else if (event_type == 2) // death happened
         {
-            int killer_id = *(events + index + 2);
-            int victim_id = *(events + index + 3);
+            int killer_id = *(char*)(events + index + 2);
+            int victim_id = *(char*)(events + index + 3);
             handle_killing(killer_id, victim_id);
             
         }
         else if (event_type == 3) // new person joined
         {
-            int new_guy_id = *(events + index + 2);
+            continue;
+
+            int new_guy_id = *(char*)(events + index + 2);
             char* new_guy_username = events + index + 3;
             
-            leaderboard.emplace_back(new_guy_id, new_guy_username);
+            addToLeaderboard(new_guy_id, 0, new_guy_username);
 
 
             if (new_guy_id == client.player_id) continue;
 
+
+
             Object* object = getObject(new_guy_id);
             if (object == nullptr)
             {
-                cout << "new player not found\n";
-                return;
+                cout << "player with id " << new_guy_id << " not found\n";
+                all_events_intelligible = false;
+                continue;
             }
-
+            
             object->username = new_guy_username;
-
 
             toaster.toast(object->username + " has joined the lobby");
             
@@ -837,24 +869,35 @@ void Player::handleEvents(char* events, int events_size)
         }
         else if (event_type == 4) // username of someone
         {
-            int player_id = *(events + index + 2);
-            char* username = events + index + 3;
+            continue;
 
-            leaderboard.emplace_back(player_id, username);
+            int player_id = *(char*)(events + index + 2);
+            int score = *(char*)(events + index + 3);
+            char* username = events + index + 4;
+
+            addToLeaderboard(player_id, score, username);
 
             if (player_id == client.player_id) continue;
+
+
+            cout << username << " is already here.\n";
+
 
             Object* object = getObject(player_id);
             if (object == nullptr)
             {
-                cout << "existing player not found\n";
-                return;
+                cout << "player with id "<<  player_id << " not found\n";
+                all_events_intelligible = false;
+                continue;
             }
 
+            //set the object to the new player
+            //object->player_id = player_id;
             object->username = username;
         }
         else if (event_type == 5) // someone left
         {
+            continue;
             int player_id = *(events + index + 2);
             cout << "event 5\n";
             //remove from leaderboard
@@ -872,8 +915,9 @@ void Player::handleEvents(char* events, int events_size)
             Object* object = getObject(player_id);
             if (object == nullptr)
             {
-                cout << "existing player not found\n";
-                return;
+                cout << "leaving player not found\n";
+                all_events_intelligible = false;
+                continue;
             }
 
             //toaster.toast(object->username + " has left the lobby");
@@ -910,6 +954,11 @@ void Player::handle_killing(int killer_id, int victim_id)
     string killer_name = getUsername(killer_id);
     toaster.toast(killer_name + " " + verbs[verb_index] + " " + getUsername(victim_id));
 
+    if (client.player_id == killer_id)
+        score++;
+
+    updateLeaderboard(killer_id);
+
     if (victim_id == client.player_id)
     {
         getKilled(killer_name);
@@ -929,24 +978,7 @@ void Player::handle_killing(int killer_id, int victim_id)
 
     // update leaderboard
 
-    for (int i = 0; i < leaderboard.size(); i++)
-    {
-        if (leaderboard[i].player_id == killer_id)
-        {
-            leaderboard[i].score++;
-            break;
-        }
-    }
     
-    for (int i = leaderboard.size() - 1 - 1; i >= 0 ; i--)
-    {
-        if (leaderboard[i].score < leaderboard[i+1].score)
-        {
-            Toaster::LeaderboardEntry temp = leaderboard[i];
-            leaderboard[i] = leaderboard[i + 1];
-            leaderboard[i + 1] = temp;
-        }
-    }
 
 
 }
@@ -991,7 +1023,7 @@ void Player::getShot(int shooter_id)
 
 Object* Player::getObject(int id)
 {
-    for (int i = 0; i < object_count; i++)
+    for (int i = 0; i < objects.size(); i++)
     {
         if (objects[i].player_id == id)
             return &objects[i];
@@ -999,26 +1031,42 @@ Object* Player::getObject(int id)
     return nullptr;
 }
 
+Object* Player::getAnyObject()
+{
+    for (int i = 0; i < objects.size(); i++)
+    {
+        if (objects[i].player_id == -1)
+            return &objects[i];
+    }
+    return nullptr;
+}
+
 Client::PlayerInfo Player::getPlayerInfo()
 {
-    int flags = 0;
-    flags |= moving * Client::PlayerInfo::moving;
-    flags |= moving_forward * Client::PlayerInfo::forward;
-    flags |= gun_shot * Client::PlayerInfo::gun_shot;
-    flags |= has_quit * Client::PlayerInfo::quit;
-    flags |= dead * Client::PlayerInfo::dead;
+    Client::PlayerInfo info = {
+        client.player_id,
+        shootRay(0).distance,
+        position.x, position.y, rotation_x, rotation_y,
+        0,
+        score
+    };
 
+    info.flags = 0;
+    info.flags |= moving * Client::PlayerInfo::moving;
+    info.flags |= moving_forward * Client::PlayerInfo::forward;
+    info.flags |= gun_shot * Client::PlayerInfo::gun_shot;
+    info.flags |= has_quit * Client::PlayerInfo::quit;
+    info.flags |= dead * Client::PlayerInfo::dead;
+
+    if (client.username.size() > 15)
+        cout << "username too long oh nooooooo\n";
+    
+    strcpy_s(info.username, client.username.c_str());
 
     // reset gun shot flag
     gun_shot = false;
 
-    return
-    {
-        client.player_id,
-        shootRay(0).distance,
-        position.x, position.y, rotation_x, rotation_y,
-        flags
-    };
+    return info;
 
 }
 
@@ -1054,11 +1102,43 @@ string Player::getUsername(int id)
     if (victim == nullptr)
     {
         cout << "Username not found\n";
-        return "MISSING USERNAME";
+        return "MISSING USERNAME 2";
     }
 
     return victim->username;
 
+}
+
+void Player::addToLeaderboard(int player_id, int score, const string& username)
+{
+    for (const auto& board : leaderboard)
+        if (board.player_id == player_id)
+            return;
+
+    cout << "adding player " << player_id << " to leaderboard.\n";
+    leaderboard.emplace_back(player_id, score, username);
+}
+
+void Player::updateLeaderboard(int killer_id)
+{
+    for (int i = 0; i < leaderboard.size(); i++)
+    {
+        if (leaderboard[i].player_id == killer_id)
+        {
+            leaderboard[i].score++;
+            break;
+        }
+    }
+
+    for (int i = leaderboard.size() - 1 - 1; i >= 0; i--)
+    {
+        if (leaderboard[i].score < leaderboard[i + 1].score)
+        {
+            Toaster::LeaderboardEntry temp = leaderboard[i];
+            leaderboard[i] = leaderboard[i + 1];
+            leaderboard[i + 1] = temp;
+        }
+    }
 }
 
 void Player::debug()

@@ -4,7 +4,7 @@
 
 
 Object::Object(float x, float y, const sf::Texture& tex)
-    : position(x, y), direction_index(0)
+    : player_id(-1), position(x, y), direction_index(0)
 {
     tex_size = (v2f)tex.getSize();
     sprite.setTexture(tex, true);
@@ -116,6 +116,10 @@ void Object::loadPlayerInfo(Client::PlayerInfo player_info)
 {
     player_id = player_info.player_id;
 
+    username = player_info.username;
+
+    
+
     position.x = player_info.pos_x;
     position.y = player_info.pos_y;
 
@@ -155,5 +159,5 @@ sf::IntRect Object::getTextureRect(float rotation, float frame)
 
 Object::Object()
 {
-
+    player_id = -1;
 }
