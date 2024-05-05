@@ -44,8 +44,8 @@ class Player:
         self.events.append(event)
 
 # Define server address and port
-TCP_PORT = 21567  # Separate port for TCP communication
-SERVER_ADDRESS = ("0.0.0.0", 3000)
+TCP_PORT = 3000  # Separate port for TCP communication
+UDP_PORT = 3001
 players:list[Player] = []
 struct_format = 'ifffffii16s'
 struct_size = struct.calcsize(struct_format)
@@ -450,7 +450,7 @@ def handle_game():
     
     # UDP
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    udp_socket.bind(('0.0.0.0', 3001))
+    udp_socket.bind(('0.0.0.0', UDP_PORT))
 
     
     
@@ -512,7 +512,10 @@ def remove_idles():
 # Main server function
 def main():
     global players
+    
+    
     # TCP
+    SERVER_ADDRESS = ('0.0.0.0', TCP_PORT)
     tcp_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     tcp_socket.bind(SERVER_ADDRESS)
     tcp_socket.listen(5)
@@ -526,7 +529,7 @@ def main():
     threading.Thread(target=remove_idles).start()
     # Threading for concurrent client handling
 
-    print("Server started on", SERVER_ADDRESS)
+    print("Server listening on", SERVER_ADDRESS)
 
     while True:
         client_socket, address = tcp_socket.accept()

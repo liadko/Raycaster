@@ -153,8 +153,6 @@ bool Client::tryLogIn(const string& username, const string& password, string& er
         return false;
 
 
-    cout << "Public IP: " << sf::IpAddress::getPublicAddress() << "\n";
-
     string creds = "LOGIN~" + username + "~" + password + "~";
     
     sendEncryptedTCP(creds, error);
@@ -297,7 +295,7 @@ bool Client::recvEncryptedUDP(void*& buffer, int& buffer_size, string& error)
 bool Client::sendUDP(const string& message, string& error)
 {
 
-    int buffer_size = 128;
+    int buffer_size = 512;
     void* buffer = malloc(buffer_size);
     if (buffer == 0)
     {
@@ -330,7 +328,7 @@ bool Client::sendUDP(const string& message, string& error)
 bool Client::recvUDP(void*& buffer, int& buffer_size)
 {
     //buffer
-    int msg_length = 256;
+    int msg_length = 512;
     buffer = malloc(msg_length);
     if (buffer == 0)
     {

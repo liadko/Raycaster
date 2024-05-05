@@ -72,7 +72,7 @@ def main(code_filename):
         s = e
         e += LINES_IN_PAGE
     
-    pdf_filename = ".".join((code_filename.split('.')[0], "pdf"))
+    pdf_filename = ".".join((code_filename.split('.')[0] + "_" + code_filename.split('.')[1], "pdf"))
     
     canvas = Canvas(pdf_filename, pagesize = A4)
     
@@ -100,15 +100,21 @@ def merge_pdfs(input_folder, output_path):
     merger.close()
 
 if __name__ == '__main__':
-    names = ['client', 'tools', 'toaster', 'player', 'object', 'map', ]
     
-    # main('headers.hpp')
+    # part 1
+    # main('server.py')
+    # main('sql_orm.py')
+    # main('server_address.txt')
+    
     # main('main.cpp')
+    # main('headers.hpp')
+    
+    # names = ['client', 'tools', 'toaster', 'player', 'object', 'map' ]
     
     # for name in names:
     #     main(name + '.cpp')
     #     main(name + '.hpp')
     
-    
-    merge_pdfs('pdfs', 'bruh.pdf')
+    # part 2
+    merge_pdfs('pdfs', 'merged.pdf')
     

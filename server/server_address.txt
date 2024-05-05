@@ -1,4 +1,4 @@
-# line 1: this. line 2: server ip address. line 3: tcp port. line 4: udp port
+# line details. 1: this. 2: server ip address. 3: tcp port. 4: udp port
 87.71.155.68
 21567
 21568

@@ -364,12 +364,12 @@ void Player::drawWorld(HitInfo*& hits, float dt)
     }
 
 
-    cout << "Objects: ";
+    /*cout << "Objects: ";
     for (int i = 0; i < objects.size(); i++)
     {
         cout << sorted_objects[i]->player_id << " ";
     }
-    cout << "enough of objects\n";
+    cout << "enough of objects\n";*/
 
     for (Object* object : sorted_objects)
     {
@@ -744,6 +744,9 @@ void Player::listenToServer()
         for (int i = 0; i < player_count; i++, current_info_buffer++) //point to next buffer
         {
             int current_player_id = current_info_buffer->player_id;
+
+            if (current_player_id > 100)
+                continue;
 
             addToLeaderboard(current_player_id, current_info_buffer->score, current_info_buffer->username);
 
