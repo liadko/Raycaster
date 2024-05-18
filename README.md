@@ -70,7 +70,7 @@ Raycaster is a C++ SFML networking game featuring a 3D environment with real-tim
 
 ## Media
 
-Screenshots and video demonstration links can be added here.
+Screenshots and video demonstration links will be added here.
 
 ## Contact Information
 
@@ -79,6 +79,3 @@ For any questions or feedback, please contact:
 Liad Koren  
 Email: liadkoren@gmail.com
 
----
-
-Feel free to add any images or video links, and let me know if there are any final adjustments you'd like to make!
