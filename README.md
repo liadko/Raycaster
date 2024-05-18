@@ -1,7 +1,3 @@
-Great, thanks for the additional information. Here's the updated README:
-
----
-
 # Raycaster
 
 Raycaster is a C++ SFML networking game featuring a 3D environment with real-time multiplayer interactions. Players can log in or sign up, move around, shoot, and engage in deathmatches with other players in the game.
