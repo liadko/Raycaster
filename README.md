@@ -1,8 +1,10 @@
+Great, thanks for the additional information. Here's the updated README:
+
 ---
 
 # Raycaster
 
-Raycaster is a C++ SFML networking game featuring a 3D environment with real-time multiplayer interactions. Players can login or sign up, move around, shoot, and engage in deathmatches with other players in the game.
+Raycaster is a C++ SFML networking game featuring a 3D environment with real-time multiplayer interactions. Players can log in or sign up, move around, shoot, and engage in deathmatches with other players in the game.
 
 ## Features
 
@@ -14,6 +16,12 @@ Raycaster is a C++ SFML networking game featuring a 3D environment with real-tim
 - **Leaderboard**: Tracks and displays scores based on the number of kills.
 - **Notifications**: In-game notifications for kills.
 - **Sky Texture**: Dynamic environment with a sky texture.
+
+## Security Details
+
+- **Encryption**: Utilizes Diffie-Hellman to create keys for AES encryption. All login information is passed using TCP for lossless transmission.
+- **Password Handling**: Passwords are hashed and salted before being stored, ensuring no plaintext passwords are saved on the server.
+- **Networking Protocol**: After successful login, game communication switches to UDP for faster performance. A custom protocol is used for game data, and all UDP communication is secured using AES encryption with the previously established key.
 
 ## Installation
 
@@ -77,4 +85,4 @@ Email: liadkoren@gmail.com
 
 ---
 
-If you have any images or video links, you can share them with me, and I'll incorporate them into the README. Let me know if there's anything you'd like to adjust or add!
+Feel free to add any images or video links, and let me know if there are any final adjustments you'd like to make!
