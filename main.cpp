@@ -25,11 +25,12 @@ int main()
 
     Player player(40, 21, window, toaster);
 
-    loginPage(window, player, toaster);
 
+    loginPage(window, player, toaster);
 
     // Game loop
     mainLoop(window, player, toaster);
+
 
     return 0;
 }
@@ -217,6 +218,7 @@ void mainLoop(sf::RenderWindow& window, Player& player, Toaster& toaster)
     std::thread udpThread(&Player::listenToServer, &player);
 
     player.setFocus(true);
+    player.go_to_main_menu = false;
 
     while (window.isOpen())
     {
@@ -250,7 +252,6 @@ void mainLoop(sf::RenderWindow& window, Player& player, Toaster& toaster)
 
         //if (frame_count % 100 == 0)
         //    cout << (1 / dt) << "\n";
-
 
 
         player.updateServer();

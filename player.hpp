@@ -14,7 +14,7 @@ private:
     // game logic
     sf::RenderWindow& window;
     Toaster& toaster;
-    bool has_quit;
+    bool has_quit = false;
     bool dead = false;
 
     sf::Texture* wall_texs;
@@ -95,6 +95,7 @@ public:
     std::mutex mtx;
     Map map;
     bool window_focused;
+    bool go_to_main_menu = false;
 
     // leaderboard
     vector<Toaster::LeaderboardEntry> leaderboard;
@@ -135,6 +136,8 @@ public:
     void loadTextures();
 
     void quitGame();
+    void goToMainMenu();
+    bool hasQuit() { return has_quit; };
 
     //server
     void updateServer();
@@ -154,6 +157,8 @@ public:
 
 
     string getUsername(int id);
+
+
 
     //debug
     void debug();

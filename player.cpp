@@ -73,10 +73,18 @@ void Player::handleKeys(float dt)
     
 }
 
+void Player::goToMainMenu()
+{
+    go_to_main_menu = true;
+
+    updateServer();
+
+}
+
+
 void Player::quitGame()
 {
     has_quit = true;
-
 
 
     updateServer();
@@ -697,17 +705,27 @@ void Player::updateServer()
 
 void Player::listenToServer()
 {
-
+    sf::Clock clock;
+    float time_since_last_message = 0;
     while (!has_quit)
     {
-
+        float dt = clock.restart().asSeconds();
         string error;
         void* buffer;
         int buffer_size;
         if (!client.recvEncryptedUDP(buffer, buffer_size, error))
         {
-            continue;
+            time_since_last_message += dt;
+
+            cout << time_since_last_message << "\n";
+
+            if (time_since_last_message > 2)
+                quitGame();
+
+            continue; // Check Again
         }
+
+        time_since_last_message = 0;
 
         //cout << "Got This UDP (with size " << buffer_size << "): ";
         //printBytes(buffer, buffer_size);

@@ -64,7 +64,7 @@ bool Client::connectToServer(string& error)
     sf::Socket::Status connection_status = tcp_socket.connect(ip, server_tcp_port, sf::milliseconds(50));
     if (connection_status != sf::Socket::Done)
     {
-        error = "Failed To Connect To Server";
+        error = "Failed To Connect To Server At " + ip;
         return false;
     }
 
