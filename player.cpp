@@ -717,10 +717,11 @@ void Player::listenToServer()
         {
             time_since_last_message += dt;
 
-            cout << time_since_last_message << "\n";
-
             if (time_since_last_message > 2)
+            {
                 quitGame();
+                return;
+            }
 
             continue; // Check Again
         }

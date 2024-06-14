@@ -170,6 +170,8 @@ bool Client::tryLogIn(const string& username, const string& password, string& er
     string response((char*)buffer, buffer_size);
     free(buffer);                               
 
+    cout << "Server Responded: " << response << "\n";
+
     vector<string> parts = split(response);     
 
     if (parts[0] == "SUCCESS")
@@ -282,7 +284,7 @@ bool Client::recvEncryptedUDP(void*& buffer, int& buffer_size, string& error)
     string decrypted = decryptAES(ciphertext, key_bytes, error);
     if (decrypted == "")
     {
-        cout << "ERROR when decrypting the shit from the cunt: " << error << "\n";
+        cout << "ERROR when decrypting the message from the server: " << error << "\n";
         return false;
     }
 
@@ -377,11 +379,11 @@ bool Client::recvEncryptedTCP(void*& buffer, int& buffer_size, string& error)
     string decrypted = decryptAES(ciphertext, key_bytes, error);
     if (decrypted == "")
     {
-        cout << "ERROR when decrypting the shit from the cunt: " << error << "\n";
+        cout << "ERROR when decrypting the message from the server: " << error << "\n";
         return false;
     }
 
-
+    buffer_size = decrypted.size();
     memcpy(buffer, decrypted.c_str(), decrypted.size());
 
 }

@@ -221,7 +221,7 @@ def remove_player(player_id):
     
     print(f"Player with id #{player_id} removed successfully.")
     
-
+# login and player creation
 def handle_client(client_socket, address, users_db:Users_db, lock: threading.Lock):
     global players, key_bytes, current_player_id
     
@@ -254,13 +254,13 @@ def handle_client(client_socket, address, users_db:Users_db, lock: threading.Loc
     
     #print("key_bytes: " + str(key_bytes))
     
-    cipherbytes = recvfrom(client_socket)
-    # print("cipherbytes: " + ciphertext.hex())
+    encrypted_client_message = recvfrom(client_socket)
+    print("Client Sent This: " + encrypted_client_message.hex())
     
     
-    message = decrypt_AES(cipherbytes, current_key_bytes)
+    message = decrypt_AES(encrypted_client_message, current_key_bytes)
     
-    #print("got this: " + str(message))
+    print("After AES Decryption: " + str(message))
     
     parts = message.decode().split('~')
     print(parts)
@@ -292,7 +292,8 @@ def handle_client(client_socket, address, users_db:Users_db, lock: threading.Loc
     
     lock.release()
     # print("sending this: " + ' '.join([format(byte, '02X') for byte in cipherbytes]))
-    print(f"{response=}")
+    
+    print(f"Response: {response}\n")
     send_bytes(client_socket, encrypt_AES(response.encode(), current_key_bytes))
     
     
@@ -320,7 +321,7 @@ def give_usernames(new_player : Player):
         event += player.username.encode() + b'\0' # username
         event = int.to_bytes(len(event)+1 , 1) + event # size 
         
-        print("sending ", clean_bytes(event))
+        # print("sending ", clean_bytes(event))
         
         new_player.add_event(event)
         
@@ -401,7 +402,7 @@ def update_player(player_info: bytes):
         if player.player_id == player_id:
             break
     else:
-        print("Got message from nonexistant player, id=", player_id)
+        print("Got one message from nonexistant player, id=", player_id)
         return None
     
     player.position_x = pos_x
@@ -486,7 +487,7 @@ def handle_game():
         # print()
         
         
-        #delete the events that the player already received
+        # delete the events that the player already received
         player.update_events(received_events)
         
         response = player_binaries + b''.join(player.events)
